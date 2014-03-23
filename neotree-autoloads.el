@@ -21,7 +21,21 @@
 
 ;;; Code:
 
+;;;### (autoloads (neotree neo-get-buffer) "neotree" "neotree.el"
+;;;;;;  (21294 62799 736784 477000))
+;;; Generated autoloads from neotree.el
 
+(autoload 'neo-get-buffer "neotree" "\
+
+
+\(fn)" nil nil)
+
+(autoload 'neotree "neotree" "\
+
+
+\(fn)" t nil)
+
+;;;***
 
 (provide 'neotree-autoloads)
 ;;; neotree-autoloads.el ends here

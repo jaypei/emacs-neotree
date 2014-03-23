@@ -34,7 +34,34 @@
 
 ;;; Code:
 
+(defconst neo-buffer-name "*NeoTree*"
+  "Name of the buffer where neotree shows directory contents.")
 
+(defun neo-get-working-dir ()
+  (file-name-as-directory (file-truename default-directory)))
+
+(defun neo--create-buffer ()
+  (let ((neo-buffer nil))
+    (save-excursion
+      (split-window-horizontally)
+      (setq neo-buffer
+            (switch-to-buffer
+             (generate-new-buffer-name neo-buffer-name)))
+      (delete-window))
+    neo-buffer))
+
+;;;###autoload
+(defun neo-get-buffer ()
+  (let ((neo-buffer (get-buffer neo-buffer-name)))
+    (if (null neo-buffer)
+        (neo--create-buffer)
+      neo-buffer)))
+
+;;;###autoload
+(defun neotree ()
+  (interactive)
+  (let ((default-directory (neo-get-working-dir)))
+    ))
 
 (provide 'neotree)
 ;;; neotree.el ends here
