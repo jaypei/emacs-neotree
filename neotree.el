@@ -37,7 +37,20 @@
 (defconst neo-buffer-name "*NeoTree*"
   "Name of the buffer where neotree shows directory contents.")
 
-(defun neo-get-working-dir ()
+;; Customization
+(defgroup neotree-options nil
+  "Options for neotree."
+  :prefix "neo-"
+  :group 'neotree
+  :link '(info-link "(neotree)Configuration"))
+
+(defun neo--init-window ()
+  (save-selected-window
+    (select-window (window-at 0 0))
+    (split-window-horizontally)))
+
+
+(defun neo--get-working-dir ()
   (file-name-as-directory (file-truename default-directory)))
 
 (defun neo--create-buffer ()
@@ -60,7 +73,7 @@
 ;;;###autoload
 (defun neotree ()
   (interactive)
-  (let ((default-directory (neo-get-working-dir)))
+  (let ((default-directory (neo--get-working-dir)))
     ))
 
 (provide 'neotree)
