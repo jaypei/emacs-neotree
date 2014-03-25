@@ -63,6 +63,14 @@
       (delete-window))
     neo-buffer))
 
+(defmacro neo-save-window-excursion (&rest body)
+  `(save-window-excursion
+     (switch-to-buffer (neo-get-buffer))
+     (end-of-buffer)
+     (setq buffer-read-only nil)
+     ,@body
+     (setq buffer-read-only t)))
+
 ;;;###autoload
 (defun neo-get-buffer ()
   (let ((neo-buffer (get-buffer neo-buffer-name)))
