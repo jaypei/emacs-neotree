@@ -44,10 +44,10 @@
   :group 'neotree
   :link '(info-link "(neotree)Configuration"))
 
-(defun neo--init-window ()
-  (save-selected-window
-    (select-window (window-at 0 0))
-    (split-window-horizontally)))
+(defcustom neo-width 25
+  "*If non-nil, neo will change its width to this when it show."
+  :type 'integer
+  :group 'neotree)
 
 
 (defun neo--get-working-dir ()
@@ -63,6 +63,25 @@
       (delete-window))
     neo-buffer))
 
+(defun neo-shrink-window-horizontally (delta)
+  (neo-save-selected-window
+   (shrink-window-horizontally delta)))
+
+(defun neo-enlarge-window-horizontally (delta)
+  (neo-save-selected-window
+   (enlarge-window-horizontally delta)))
+
+(defun neo-set-window-width (n)
+  (let ((w (max n window-min-width)))
+    (neo-save-selected-window
+     (if (> (window-width) w)
+           (shrink-window-horizontally (- (window-width) w))
+       (if (< (window-width) w)
+           (enlarge-window-horizontally (- w (window-width))))))))
+
+(defun neo-show ()
+  (neo--init-window))
+
 (defmacro neo-save-window-excursion (&rest body)
   `(save-window-excursion
      (switch-to-buffer (neo-get-buffer))
@@ -71,7 +90,33 @@
      ,@body
      (setq buffer-read-only t)))
 
-;;;###autoload
+(defmacro neo-save-selected-window (&rest body)
+  `(save-selected-window
+     (select-window (get-buffer-window
+                     (neo-get-buffer)))
+     (end-of-buffer)
+     (setq buffer-read-only nil)
+     ,@body
+     (setq buffer-read-only t)))
+
+
+(defun neo--init-window ()
+  (let ((neo-window nil))
+    (select-window (window-at 0 0))
+    (split-window-horizontally)
+    (switch-to-buffer (neo-get-buffer))
+    (setf neo-window (get-buffer-window))
+    (select-window (window-right (get-buffer-window)))
+    (neo-set-window-width neo-width)
+    neo-window))
+
+(defun neo-get-window ()
+  (let* ((buffer (neo-get-buffer))
+         (window (get-buffer-window buffer)))
+    (if (not window)
+        (setf window (neo--init-window)))
+    window))
+
 (defun neo-get-buffer ()
   (let ((neo-buffer (get-buffer neo-buffer-name)))
     (if (null neo-buffer)
