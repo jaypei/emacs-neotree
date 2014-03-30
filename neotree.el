@@ -34,6 +34,8 @@
 
 ;;; Code:
 
+(require 'neotree-util)
+
 (defconst neo-buffer-name "*NeoTree*"
   "Name of the buffer where neotree shows directory contents.")
 
@@ -48,6 +50,14 @@
   "*If non-nil, neo will change its width to this when it show."
   :type 'integer
   :group 'neotree)
+
+(defface neo-header-face
+  '((((type tty pc) (class color)) :foreground "lightblue" :weight bold)
+    (((background dark)) (:foreground "lightblue" :weight bold))
+    (t :foreground "darkblue" :weight bold))
+  "*Face used for the header in Ztree buffer."
+  :group 'neotree :group 'font-lock-highlighting-faces)
+(defvar neo-header-face 'neo-header-face)
 
 
 (defun neo--get-working-dir ()
@@ -123,11 +133,45 @@
         (neo--create-buffer)
       neo-buffer)))
 
+(defun neo-insert-buffer-header ()
+  (let ((start (point)))
+    (insert "press ? for neotree help")
+    (set-text-properties start (point) '(face neo-header-face)))
+  (neo-newline-and-begin)
+  (neo-newline-and-begin))
+
+(defun neo-insert-demo-string ()
+  (neo-save-selected-window
+   (insert ".. (up a dir)")
+   (neo-newline-and-begin)
+   (insert "/home/jaypei/")
+   (neo-newline-and-begin)
+   (insert "▾ aaa_cedet/")
+   (neo-newline-and-begin)
+   (insert "  ▾ cogre/")
+   (neo-newline-and-begin)
+   (insert "    autoloads-compile-script")
+   (neo-newline-and-begin)
+   (insert "    ChangeLog")
+   (neo-newline-and-begin)
+  ))
+
+;;;###autoload
+(defun neotree-dir (path)
+  (interactive "DDirectory: ")
+  (when (and (file-exists-p path) (file-directory-p path))
+    (neo-get-window)
+    (neo-save-window-excursion
+     (neo-insert-buffer-header)
+     (neo-insert-demo-string))
+    ))
+
+
 ;;;###autoload
 (defun neotree ()
   (interactive)
   (let ((default-directory (neo--get-working-dir)))
-    ))
+    (neotree-dir default-directory)))
 
 (provide 'neotree)
 ;;; neotree.el ends here
