@@ -59,6 +59,13 @@
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-header-face 'neo-header-face)
 
+(defface neo-expand-sign-face
+  '((((background dark)) (:foreground "#7f7fff"))
+    (t                   (:foreground "#8d8d8d")))
+  "*Face used for expand sign [+] in Ztree buffer."
+  :group 'neotree :group 'font-lock-highlighting-faces)
+(defvar neo-expand-sign-face 'neo-expand-sign-face)
+
 
 (defun neo--get-working-dir ()
   (file-name-as-directory (file-truename default-directory)))
@@ -137,24 +144,60 @@
   (let ((start (point)))
     (insert "press ? for neotree help")
     (set-text-properties start (point) '(face neo-header-face)))
-  (neo-newline-and-begin)
   (neo-newline-and-begin))
 
-(defun neo-insert-demo-string ()
-  (neo-save-selected-window
-   (insert ".. (up a dir)")
-   (neo-newline-and-begin)
-   (insert "/home/jaypei/")
-   (neo-newline-and-begin)
-   (insert "▾ aaa_cedet/")
-   (neo-newline-and-begin)
-   (insert "  ▾ cogre/")
-   (neo-newline-and-begin)
-   (insert "    autoloads-compile-script")
-   (neo-newline-and-begin)
-   (insert "    ChangeLog")
-   (neo-newline-and-begin)
-  ))
+(defun neo-insert-root-entry (node)
+  (neo-newline-and-begin)
+  (insert ".. (up a dir)")
+  (neo-newline-and-begin)
+  (insert node)
+  (neo-newline-and-begin))
+
+(defun neo-insert-dir-entry (node depth expanded)
+  (insert-char ?\s (* (- depth 1) 2))
+  (insert "▾")
+  ;; (insert "▸")
+  (set-text-properties (- (point) 1)
+                       (point)
+                       '(face neo-expand-sign-face))
+  (insert " ")
+  (insert node)
+  (neo-newline-and-begin)
+  )
+
+(defun neo-insert-file-entry (node depth)
+  (insert-char ?\s (* (- depth 1) 2))
+  (insert-char ?\s 2)
+  (insert node)
+  (neo-newline-and-begin)
+  )
+
+(defun neo-insert-demo-string (path)
+  (neo-insert-root-entry path)
+  (neo-insert-dir-entry "aaa_cedet" 1 t)
+  (neo-insert-dir-entry "cogre" 2 t)
+  (neo-insert-file-entry "autoloads-compile-script" 2)
+  (neo-insert-file-entry "ChangeLog" 2)
+  )
+
+;; TODO
+(defun neo-refresh-buffer ()
+  )
+
+;; TODO
+;;;###autoload
+(defun neotree-toggle ()
+  )
+
+;; TODO
+;;;###autoload
+(defun neotree-show ()
+  )
+
+;; TODO
+;;;###autoload
+(defun neotree-hide ()
+  )
 
 ;;;###autoload
 (defun neotree-dir (path)
@@ -163,7 +206,7 @@
     (neo-get-window)
     (neo-save-window-excursion
      (neo-insert-buffer-header)
-     (neo-insert-demo-string))
+     (neo-insert-demo-string path))
     ))
 
 
