@@ -225,11 +225,8 @@ including . and ..")
     (if expanded
         (insert "▸")
       (insert "▾"))
-    (insert " ")
-    (insert node)
-    (insert "/")
+    (insert (concat " " node "/"))
     (setq btn-end-pos (point))
-    (exz/debug "start %S end %S" btn-start-pos btn-end-pos)
     (make-button btn-start-pos
                  btn-end-pos
                  'face neo-dir-link-face)
@@ -302,9 +299,7 @@ including . and ..")
          (neo-insert-dir-entry node 1 nil))
        (dolist (leaf leafs)
          (neo-insert-file-entry leaf 1))
-       (neo-scroll-to-line (if line line neo-start-line))
-       (exz/debug "%S" nodes)
-       (exz/debug "%S" leafs)))))
+       (neo-scroll-to-line (if line line neo-start-line))))))
 
 
 ;;
@@ -342,6 +337,7 @@ including . and ..")
 
 (defun neo-node-toggle-expand ()
   (interactive)
+  (exz/debug "invoke neo-node-toggle-expand %S" (button-at (point)))
   )
 
 ;; TODO
