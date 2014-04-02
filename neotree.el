@@ -36,10 +36,23 @@
 
 (require 'neotree-util)
 
+
+;;
+;; Constants
+;;
+
 (defconst neo-buffer-name "*NeoTree*"
   "Name of the buffer where neotree shows directory contents.")
 
+(defconst neo-hidden-files-regexp "^\\."
+  "Hidden files regexp. By default all filest starting with dot '.',
+including . and ..")
+
+
+;;
 ;; Customization
+;;
+
 (defgroup neotree-options nil
   "Options for neotree."
   :prefix "neo-"
@@ -51,53 +64,87 @@
   :type 'integer
   :group 'neotree)
 
+
+;;
+;; Faces
+;;
+
 (defface neo-header-face
   '((((type tty pc) (class color)) :foreground "lightblue" :weight bold)
     (((background dark)) (:foreground "lightblue" :weight bold))
     (t :foreground "darkblue" :weight bold))
-  "*Face used for the header in Ztree buffer."
+  "*Face used for the header in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-header-face 'neo-header-face)
 
-(defface neo-expand-sign-face
-  '((((background dark)) (:foreground "#7f7fff"))
+(defface neo-dir-link-face
+  '((((background dark)) (:foreground "DarkOrange"))
     (t                   (:foreground "#8d8d8d")))
-  "*Face used for expand sign [+] in Ztree buffer."
+  "*Face used for expand sign [+] in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
-(defvar neo-expand-sign-face 'neo-expand-sign-face)
+(defvar neo-dir-link-face 'neo-dir-link-face)
 
+(defface neo-file-link-face
+  '((((background dark)) (:foreground "#cccc00"))
+    (t                   (:foreground "#8d8d8d")))
+  "*Face used for open file/dir in neotree buffer."
+  :group 'neotree :group 'font-lock-highlighting-faces)
+(defvar neo-file-link-face 'neo-file-link-face)
+
+
+;;
+;; Variables
+;;
+
+(defvar neo-start-node nil
+  "Start node(i.e. directory) for the window.")
+(make-variable-buffer-local 'neo-start-node)
+
+(defvar neo-start-line nil
+  "Index of the start line - the root")
+(make-variable-buffer-local 'neo-start-line)
+
+(defvar neo-show-hidden-nodes nil
+  "Show hidden nodes in tree.")
+(make-variable-buffer-local 'neo-start-line)
+
+
+;;
+;; Major mode definitions
+;;
+
+(defvar neotree-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "\r") 'neo-node-open)
+    (define-key map (kbd "SPC") 'neo-node-toggle-expand)
+    (define-key map (kbd "TAB") 'neo-node-toggle-expand)
+    (define-key map (kbd "g") 'neo-refresh-buffer)
+    (define-key map (kbd "p") 'neo-previous-node)
+    (define-key map (kbd "n") 'neo-next-node)
+    map)
+  "Keymap for `neotree-mode'.")
+
+;;;###autoload
+(define-derived-mode neotree-mode special-mode "NeoTree"
+  "A major mode for displaying the directory tree in text mode."
+  ;; only spaces
+  (setq indent-tabs-mode nil)
+  ;; fix for electric-indent-mode
+  ;; for emacs 24.4
+  (if (fboundp 'electric-indent-local-mode)
+      (electric-indent-local-mode -1)
+    ;; for emacs 24.3 or less
+    (add-hook 'electric-indent-functions
+              (lambda (arg) 'no-indent) nil 'local)))
+
+
+;;
+;; Privates functions
+;;
 
 (defun neo--get-working-dir ()
   (file-name-as-directory (file-truename default-directory)))
 
-(defun neo--create-buffer ()
-  (let ((neo-buffer nil))
-    (save-excursion
-      (split-window-horizontally)
-      (setq neo-buffer
-            (switch-to-buffer
-             (generate-new-buffer-name neo-buffer-name)))
-      (delete-window))
-    neo-buffer))
-
-(defun neo-shrink-window-horizontally (delta)
-  (neo-save-selected-window
-   (shrink-window-horizontally delta)))
-
-(defun neo-enlarge-window-horizontally (delta)
-  (neo-save-selected-window
-   (enlarge-window-horizontally delta)))
-
-(defun neo-set-window-width (n)
-  (let ((w (max n window-min-width)))
-    (neo-save-selected-window
-     (if (> (window-width) w)
-           (shrink-window-horizontally (- (window-width) w))
-       (if (< (window-width) w)
-           (enlarge-window-horizontally (- w (window-width))))))))
-
-(defun neo-show ()
-  (neo--init-window))
 
 (defmacro neo-save-window-excursion (&rest body)
   `(save-window-excursion
@@ -106,6 +153,7 @@
      (setq buffer-read-only nil)
      ,@body
      (setq buffer-read-only t)))
+
 
 (defmacro neo-save-selected-window (&rest body)
   `(save-selected-window
@@ -127,6 +175,7 @@
     (neo-set-window-width neo-width)
     neo-window))
 
+
 (defun neo-get-window ()
   (let* ((buffer (neo-get-buffer))
          (window (get-buffer-window buffer)))
@@ -134,11 +183,26 @@
         (setf window (neo--init-window)))
     window))
 
+
+(defun neo--create-buffer ()
+  (let ((neo-buffer nil))
+    (save-excursion
+      (split-window-horizontally)
+      (setq neo-buffer
+            (switch-to-buffer
+             (generate-new-buffer-name neo-buffer-name)))
+      (neotree-mode)
+      (setq buffer-read-only t)
+      (delete-window))
+    neo-buffer))
+
+
 (defun neo-get-buffer ()
   (let ((neo-buffer (get-buffer neo-buffer-name)))
     (if (null neo-buffer)
         (neo--create-buffer)
       neo-buffer)))
+
 
 (defun neo-insert-buffer-header ()
   (let ((start (point)))
@@ -155,20 +219,30 @@
 
 (defun neo-insert-dir-entry (node depth expanded)
   (insert-char ?\s (* (- depth 1) 2))
-  (insert "▾")
-  ;; (insert "▸")
-  (set-text-properties (- (point) 1)
-                       (point)
-                       '(face neo-expand-sign-face))
-  (insert " ")
-  (insert node)
-  (neo-newline-and-begin)
-  )
+  (let ((btn-start-pos nil)
+        (btn-end-pos nil))
+    (setq btn-start-pos (point))
+    (if expanded
+        (insert "▸")
+      (insert "▾"))
+    (insert " ")
+    (insert node)
+    (insert "/")
+    (setq btn-end-pos (point))
+    (exz/debug "start %S end %S" btn-start-pos btn-end-pos)
+    (make-button btn-start-pos
+                 btn-end-pos
+                 'face neo-dir-link-face)
+    (neo-newline-and-begin)))
 
 (defun neo-insert-file-entry (node depth)
   (insert-char ?\s (* (- depth 1) 2))
   (insert-char ?\s 2)
-  (insert node)
+  ;; (insert node)
+  ;; (make-text-button (line-beginning-position) (line-end-position)
+  ;;                   'face neo-file-link-face)
+  (insert-button node
+                 'face neo-file-link-face)
   (neo-newline-and-begin)
   )
 
@@ -180,34 +254,117 @@
   (neo-insert-file-entry "ChangeLog" 2)
   )
 
+(defun neo-node-hidden-filter (node)
+  (if (not neo-show-hidden-nodes)
+      (not (string-match neo-hidden-files-regexp
+                         (neo-file-short-name node)))
+    node))
+
+(defun neo-walk-dir (path)
+  (let* ((nodes (directory-files path))
+         (nodes (neo-filter (lambda (node)
+                              (if (not (or (equal node ".")
+                                           (equal node "..")))
+                                  node
+                                nil))
+                            nodes)))
+    nodes))
+
+(defun neo-get-contents (path)
+  (let* ((nodes (neo-walk-dir path))
+         (comp  #'(lambda (x y)
+                    (string< x y)))
+         (nodes (neo-filter 'neo-node-hidden-filter nodes)))
+    (cons (sort (neo-filter 'file-directory-p nodes) comp)
+          (sort (neo-filter #'(lambda (f) (not (file-directory-p f))) nodes) comp))))
+
+
+
 ;; TODO
-(defun neo-refresh-buffer ()
+;; (defun neo-insert-subtree (node depth)
+;;   )
+  
+
+;; TODO
+(defun neo-refresh-buffer (&optional line)
+  (interactive)
+  (let ((start-node neo-start-node))
+    (neo-save-selected-window
+     (erase-buffer)
+     (neo-insert-buffer-header)
+     ;; (neo-insert-demo-string path)
+     (setq neo-start-line (line-number-at-pos (point)))
+     (neo-insert-root-entry start-node)
+     (let* ((contents (neo-get-contents start-node))
+            (nodes (car contents))
+            (leafs (cdr contents)))
+       (dolist (node nodes)
+         (neo-insert-dir-entry node 1 nil))
+       (dolist (leaf leafs)
+         (neo-insert-file-entry leaf 1))
+       (neo-scroll-to-line (if line line neo-start-line))
+       (exz/debug "%S" nodes)
+       (exz/debug "%S" leafs)))))
+
+
+;;
+;; Public functions
+;;
+
+(defun neo-shrink-window-horizontally (delta)
+  (neo-save-selected-window
+   (shrink-window-horizontally delta)))
+
+(defun neo-enlarge-window-horizontally (delta)
+  (neo-save-selected-window
+   (enlarge-window-horizontally delta)))
+
+(defun neo-set-window-width (n)
+  (let ((w (max n window-min-width)))
+    (neo-save-selected-window
+     (if (> (window-width) w)
+           (shrink-window-horizontally (- (window-width) w))
+       (if (< (window-width) w)
+           (enlarge-window-horizontally (- w (window-width))))))))
+
+
+;;
+;; Interactive functions
+;;
+
+(defun neo-previous-node ()
+  (interactive)
+  (backward-button 1 nil))
+
+(defun neo-next-node ()
+  (interactive)
+  (forward-button 1 nil))
+
+(defun neo-node-toggle-expand ()
+  (interactive)
   )
 
 ;; TODO
-;;;###autoload
 (defun neotree-toggle ()
   )
 
 ;; TODO
-;;;###autoload
 (defun neotree-show ()
   )
 
 ;; TODO
-;;;###autoload
 (defun neotree-hide ()
   )
+
 
 ;;;###autoload
 (defun neotree-dir (path)
   (interactive "DDirectory: ")
   (when (and (file-exists-p path) (file-directory-p path))
+    (let ((start-path-name (expand-file-name (substitute-in-file-name path))))
+      (setq neo-start-node start-path-name))
     (neo-get-window)
-    (neo-save-window-excursion
-     (neo-insert-buffer-header)
-     (neo-insert-demo-string path))
-    ))
+    (neo-refresh-buffer)))
 
 
 ;;;###autoload
@@ -215,6 +372,7 @@
   (interactive)
   (let ((default-directory (neo--get-working-dir)))
     (neotree-dir default-directory)))
+
 
 (provide 'neotree)
 ;;; neotree.el ends here
