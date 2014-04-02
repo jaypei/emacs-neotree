@@ -78,14 +78,14 @@ including . and ..")
 (defvar neo-header-face 'neo-header-face)
 
 (defface neo-dir-link-face
-  '((((background dark)) (:foreground "DarkOrange"))
+  '((((background dark)) (:foreground "DeepSkyBlue"))
     (t                   (:foreground "#8d8d8d")))
   "*Face used for expand sign [+] in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-dir-link-face 'neo-dir-link-face)
 
 (defface neo-file-link-face
-  '((((background dark)) (:foreground "#cccc00"))
+  '((((background dark)) (:foreground "White"))
     (t                   (:foreground "#8d8d8d")))
   "*Face used for open file/dir in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
@@ -218,38 +218,30 @@ including . and ..")
   (neo-newline-and-begin))
 
 (defun neo-insert-dir-entry (node depth expanded)
-  (insert-char ?\s (* (- depth 1) 2))
   (let ((btn-start-pos nil)
-        (btn-end-pos nil))
+        (btn-end-pos nil)
+        (node-short-name (neo-file-short-name node)))
+    (insert-char ?\s (* (- depth 1) 2)) ; indent
     (setq btn-start-pos (point))
     (if expanded
         (insert "▸")
       (insert "▾"))
-    (insert (concat " " node "/"))
+    (insert (concat " " node-short-name "/"))
     (setq btn-end-pos (point))
     (make-button btn-start-pos
                  btn-end-pos
-                 'face neo-dir-link-face)
+                 'face neo-dir-link-face
+                 'neo-full-path node)
     (neo-newline-and-begin)))
 
 (defun neo-insert-file-entry (node depth)
-  (insert-char ?\s (* (- depth 1) 2))
-  (insert-char ?\s 2)
-  ;; (insert node)
-  ;; (make-text-button (line-beginning-position) (line-end-position)
-  ;;                   'face neo-file-link-face)
-  (insert-button node
-                 'face neo-file-link-face)
-  (neo-newline-and-begin)
-  )
-
-(defun neo-insert-demo-string (path)
-  (neo-insert-root-entry path)
-  (neo-insert-dir-entry "aaa_cedet" 1 t)
-  (neo-insert-dir-entry "cogre" 2 t)
-  (neo-insert-file-entry "autoloads-compile-script" 2)
-  (neo-insert-file-entry "ChangeLog" 2)
-  )
+  (let ((node-short-name (neo-file-short-name node)))
+    (insert-char ?\s (* (- depth 1) 2)) ; indent
+    (insert-char ?\s 2)
+    (insert-button node-short-name
+                   'face neo-file-link-face
+                   'neo-full-path node)
+    (neo-newline-and-begin)))
 
 (defun neo-node-hidden-filter (node)
   (if (not neo-show-hidden-nodes)
@@ -282,7 +274,6 @@ including . and ..")
 ;;   )
   
 
-;; TODO
 (defun neo-refresh-buffer (&optional line)
   (interactive)
   (let ((start-node neo-start-node))
@@ -294,11 +285,14 @@ including . and ..")
      (neo-insert-root-entry start-node)
      (let* ((contents (neo-get-contents start-node))
             (nodes (car contents))
-            (leafs (cdr contents)))
+            (leafs (cdr contents))
+            (full-path nil))
        (dolist (node nodes)
-         (neo-insert-dir-entry node 1 nil))
+         (setq full-path (file-truename node))
+         (neo-insert-dir-entry full-path 1 nil))
        (dolist (leaf leafs)
-         (neo-insert-file-entry leaf 1))
+         (setq full-path (file-truename leaf))
+         (neo-insert-file-entry full-path 1))
        (neo-scroll-to-line (if line line neo-start-line))))))
 
 
@@ -335,10 +329,16 @@ including . and ..")
   (interactive)
   (forward-button 1 nil))
 
+;; TODO
 (defun neo-node-toggle-expand ()
   (interactive)
-  (exz/debug "invoke neo-node-toggle-expand %S" (button-at (point)))
-  )
+  (catch 'no-node-button
+    (let ((btn (button-at (point)))
+          (btn-full-path nil))
+      (if (null btn) (throw 'no-node-button nil))
+      (setq btn-full-path (button-get btn 'neo-full-path))
+      (if (null btn-full-path) (throw 'no-node-button nil))
+      (message "full path is %S" btn-full-path))))
 
 ;; TODO
 (defun neotree-toggle ()
