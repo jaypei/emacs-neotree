@@ -20,15 +20,20 @@
 ;;; Commentary:
 
 ;;; Code:
-
-;;;### (autoloads (neotree neo-get-buffer) "neotree" "neotree.el"
-;;;;;;  (21294 62799 736784 477000))
+
+;;;### (autoloads (neotree neotree-dir neotree-mode) "neotree" "neotree.el"
+;;;;;;  (21308 10187 416916 138000))
 ;;; Generated autoloads from neotree.el
 
-(autoload 'neo-get-buffer "neotree" "\
+(autoload 'neotree-mode "neotree" "\
+A major mode for displaying the directory tree in text mode.
+
+\(fn)" t nil)
+
+(autoload 'neotree-dir "neotree" "\
 
 
-\(fn)" nil nil)
+\(fn PATH)" t nil)
 
 (autoload 'neotree "neotree" "\
 
