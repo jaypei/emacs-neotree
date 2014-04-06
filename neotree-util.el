@@ -50,7 +50,15 @@
 
 (defun neo-printable-string (string)
   "Strip newline character from file names, like 'Icon\n'"
-  (replace-regexp-in-string "\n" "" string))  
+  (replace-regexp-in-string "\n" "" string))
+
+(defun neo-insert-with-face (content face)
+  (let ((pos-start (point)))
+    (insert content)
+    (set-text-properties pos-start
+                         (point)
+                         (list 'face face))))
+    
 
 (provide 'neotree-util)
 ;;; neotree-util.el ends here

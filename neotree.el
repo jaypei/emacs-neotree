@@ -70,26 +70,34 @@ including . and ..")
 ;;
 
 (defface neo-header-face
-  '((((type tty pc) (class color)) :foreground "lightblue" :weight bold)
-    (((background dark)) (:foreground "lightblue" :weight bold))
-    (t :foreground "darkblue" :weight bold))
+  '((t :foreground "lightblue" :weight bold))
   "*Face used for the header in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-header-face 'neo-header-face)
 
 (defface neo-dir-link-face
-  '((((background dark)) (:foreground "DeepSkyBlue"))
-    (t                   (:foreground "#8d8d8d")))
+  '((t (:foreground "DeepSkyBlue")))
   "*Face used for expand sign [+] in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-dir-link-face 'neo-dir-link-face)
 
 (defface neo-file-link-face
-  '((((background dark)) (:foreground "White"))
-    (t                   (:foreground "#8d8d8d")))
+  '((t (:foreground "White")))
   "*Face used for open file/dir in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-file-link-face 'neo-file-link-face)
+
+(defface neo-expand-btn-face
+  '((t (:foreground "Brightgreen")))
+  "*Face used for open file/dir in neotree buffer."
+  :group 'neotree :group 'font-lock-highlighting-faces)
+(defvar neo-expand-btn-face 'neo-expand-btn-face)
+  
+(defface neo-button-face
+  '((t (:underline nil)))
+  "*Face used for open file/dir in neotree buffer."
+  :group 'neotree :group 'font-lock-highlighting-faces)
+(defvar neo-button-face 'neo-button-face)
 
 
 ;;
@@ -119,8 +127,8 @@ including . and ..")
 (defvar neotree-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "\r") 'neo-node-open)
-    (define-key map (kbd "SPC") 'neo-node-do-expand)
-    (define-key map (kbd "TAB") 'neo-node-do-expand)
+    (define-key map (kbd "SPC") 'neo-node-do-enter)
+    (define-key map (kbd "TAB") 'neo-node-do-enter)
     (define-key map (kbd "RET") 'neo-node-do-enter)
     (define-key map (kbd "g") 'neo-refresh-buffer)
     (define-key map (kbd "p") 'previous-line)
@@ -218,12 +226,15 @@ including . and ..")
         (node-short-name (neo-file-short-name node)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (setq btn-start-pos (point))
-    (insert (if expanded "▸" "▾"))
-    (insert (concat " " node-short-name "/"))
+    (neo-insert-with-face (if expanded "-" "+")
+                          neo-expand-btn-face)
+    (neo-insert-with-face (concat " " node-short-name "/")
+                          neo-dir-link-face)
     (setq btn-end-pos (point))
     (make-button btn-start-pos
                  btn-end-pos
-                 'face neo-dir-link-face
+                 'action '(lambda (x) (neo-node-do-enter))
+                 'face neo-button-face
                  'neo-full-path node)
     (neo-newline-and-begin)))
 
@@ -232,6 +243,7 @@ including . and ..")
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (insert-char ?\s 2)
     (insert-button node-short-name
+                   'action '(lambda (x) (neo-node-do-enter))
                    'face neo-file-link-face
                    'neo-full-path node)
     (neo-newline-and-begin)))
@@ -247,10 +259,8 @@ including . and ..")
          (nodes (directory-files path))
          (nodes (neo-filter
                  (lambda (node)
-                   (if (not (or (equal node ".")
-                                (equal node "..")))
-                       node
-                     nil))
+                   (not (or (equal node ".")
+                            (equal node ".."))))
                  nodes))
          (nodes (mapcar (lambda (x) (concat full-path x)) nodes)))
     nodes))
@@ -281,7 +291,6 @@ including . and ..")
   (neo-expand-set node (not (neo-is-expanded-node node))))
 
 
-;; TODO
 (defun neo-insert-dirtree (path depth)
   (if (eq depth 1)
       (neo-insert-root-entry start-node))
@@ -295,8 +304,8 @@ including . and ..")
         (if expanded (neo-insert-dirtree (concat node "/") (+ depth 1)))))
     (dolist (leaf leafs)
       (neo-insert-file-entry leaf depth))))
+
   
-;; TODO
 (defun neo-refresh-buffer (&optional line)
   (interactive)
   (neo-save-window-excursion
@@ -312,21 +321,15 @@ including . and ..")
 ;; Public functions
 ;;
 
-(defun neo-shrink-window-horizontally (delta)
-  (neo-save-window-excursion
-   (shrink-window-horizontally delta)))
-
-(defun neo-enlarge-window-horizontally (delta)
-  (neo-save-window-excursion
-   (enlarge-window-horizontally delta)))
-
 (defun neo-set-window-width (n)
-  (let ((w (max n window-min-width)))
-    (neo-save-window-excursion
-     (if (> (window-width) w)
-           (shrink-window-horizontally (- (window-width) w))
-       (if (< (window-width) w)
-           (enlarge-window-horizontally (- w (window-width))))))))
+  (let ((w (max n window-min-width))
+        (window (neo-get-window)))
+    (save-selected-window
+      (select-window window)
+      (if (> (window-width) w)
+          (shrink-window-horizontally (- (window-width) w))
+        (if (< (window-width) w)
+            (enlarge-window-horizontally (- w (window-width))))))))
 
 
 ;;
@@ -342,15 +345,18 @@ including . and ..")
   (forward-button 1 nil))
 
 (defun neo-get-current-line-button ()
-  (let ((btn-position nil)
-        (current-button (button-at (point))))
+  (let* ((btn-position nil)
+         (pos-line-start (line-beginning-position))
+         (pos-line-end (line-end-position))
+         ;; NOTE: cannot find button when the button
+         ;;       at beginning of the line
+         (current-button (or (button-at (point))
+                             (button-at pos-line-start))))
     (if (null current-button)
         (progn
           (setf btn-position
                 (catch 'ret-button
-                  (let* ((pos-line-start (line-beginning-position))
-                         (pos-line-end (line-end-position))
-                         (next-button (next-button pos-line-start))
+                  (let* ((next-button (next-button pos-line-start))
                          (pos-btn nil))
                     (if (null next-button) (throw 'ret-button nil))
                     (setf pos-btn (overlay-start next-button))
@@ -361,7 +367,8 @@ including . and ..")
             (setf current-button (button-at btn-position)))))
     current-button))
 
-(defun neo-node-do-expand ()
+
+(defun neo-node-do-enter ()
   (interactive)
   (catch 'no-node-button
     (let ((btn (neo-get-current-line-button))
@@ -369,13 +376,11 @@ including . and ..")
       (if (null btn) (throw 'no-node-button nil))
       (setq btn-full-path (button-get btn 'neo-full-path))
       (if (null btn-full-path) (throw 'no-node-button nil))
-      (neo-expand-toggle btn-full-path)
-      (neo-refresh-buffer))))
-
-;; TODO
-(defun neo-node-do-enter ()
-  (interactive)
-  )
+      (if (file-directory-p btn-full-path)
+          (progn
+            (neo-expand-toggle btn-full-path)
+            (neo-refresh-buffer))
+        (find-file-other-window btn-full-path)))))
 
 ;; TODO
 (defun neotree-toggle ()
