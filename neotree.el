@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 jaypei
 
 ;; Author: jaypei <jaypei97159@gmail.com>
-;; Version: 0.0.1
+;; Version: 0.1.1
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -88,7 +88,8 @@ including . and ..")
 (defvar neo-file-link-face 'neo-file-link-face)
 
 (defface neo-expand-btn-face
-  '((t (:foreground "Brightgreen")))
+  '((((background dark)) (:foreground "SkyBlue"))
+    (t                   (:foreground "DarkCyan")))
   "*Face used for open file/dir in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-expand-btn-face 'neo-expand-btn-face)
@@ -215,9 +216,12 @@ including . and ..")
 
 (defun neo-insert-root-entry (node)
   (neo-newline-and-begin)
-  (insert ".. (up a dir)")
+  (neo-insert-with-face ".."
+                        'neo-dir-link-face)
+  (insert " (up a dir)")
   (neo-newline-and-begin)
-  (insert node)
+  (neo-insert-with-face node
+                        'neo-header-face)
   (neo-newline-and-begin))
 
 (defun neo-insert-dir-entry (node depth expanded)
