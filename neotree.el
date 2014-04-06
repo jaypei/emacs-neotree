@@ -119,11 +119,12 @@ including . and ..")
 (defvar neotree-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "\r") 'neo-node-open)
-    (define-key map (kbd "SPC") 'neo-node-toggle-expand)
-    (define-key map (kbd "TAB") 'neo-node-toggle-expand)
+    (define-key map (kbd "SPC") 'neo-node-do-expand)
+    (define-key map (kbd "TAB") 'neo-node-do-expand)
+    (define-key map (kbd "RET") 'neo-node-do-enter)
     (define-key map (kbd "g") 'neo-refresh-buffer)
-    (define-key map (kbd "p") 'neo-previous-node)
-    (define-key map (kbd "n") 'neo-next-node)
+    (define-key map (kbd "p") 'previous-line)
+    (define-key map (kbd "n") 'next-line)
     map)
   "Keymap for `neotree-mode'.")
 
@@ -153,17 +154,6 @@ including . and ..")
   `(save-window-excursion
      (let ((rlt nil))
        (switch-to-buffer (neo-get-buffer))
-       (setq buffer-read-only nil)
-       (setf rlt (progn ,@body))
-       (setq buffer-read-only t)
-       rlt)))
-
-
-(defmacro neo-save-selected-window (&rest body)
-  `(save-selected-window
-     (let ((rlt nil))
-       (select-window (get-buffer-window
-                       (neo-get-buffer)))
        (setq buffer-read-only nil)
        (setf rlt (progn ,@body))
        (setq buffer-read-only t)
@@ -228,9 +218,7 @@ including . and ..")
         (node-short-name (neo-file-short-name node)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (setq btn-start-pos (point))
-    (if expanded
-        (insert "▸")
-      (insert "▾"))
+    (insert (if expanded "▸" "▾"))
     (insert (concat " " node-short-name "/"))
     (setq btn-end-pos (point))
     (make-button btn-start-pos
@@ -255,14 +243,16 @@ including . and ..")
     node))
 
 (defun neo-walk-dir (path)
-  (let* ((nodes (directory-files path))
+  (let* ((full-path (file-truename path))
+         (nodes (directory-files path))
          (nodes (neo-filter
                  (lambda (node)
                    (if (not (or (equal node ".")
                                 (equal node "..")))
                        node
                      nil))
-                 nodes)))
+                 nodes))
+         (nodes (mapcar (lambda (x) (concat full-path x)) nodes)))
     nodes))
 
 (defun neo-get-contents (path)
@@ -292,30 +282,30 @@ including . and ..")
 
 
 ;; TODO
-;; (defun neo-insert-subtree (node depth)
-;;   )
+(defun neo-insert-dirtree (path depth)
+  (if (eq depth 1)
+      (neo-insert-root-entry start-node))
+  (let* ((contents (neo-get-contents path))
+         (nodes (car contents))
+         (leafs (cdr contents)))
+    (dolist (node nodes)
+      (let ((expanded (neo-is-expanded-node node)))
+        (neo-insert-dir-entry 
+         node depth expanded)
+        (if expanded (neo-insert-dirtree (concat node "/") (+ depth 1)))))
+    (dolist (leaf leafs)
+      (neo-insert-file-entry leaf depth))))
   
 ;; TODO
 (defun neo-refresh-buffer (&optional line)
   (interactive)
-  (neo-save-selected-window
+  (neo-save-window-excursion
    (let ((start-node neo-start-node))
      (setq neo-start-line (line-number-at-pos (point)))
      (erase-buffer)
      (neo-insert-buffer-header)
-     (neo-insert-root-entry start-node)
-     (let* ((contents (neo-get-contents start-node))
-            (nodes (car contents))
-            (leafs (cdr contents))
-            (full-path nil))
-       (dolist (node nodes)
-         (setq full-path (file-truename node))
-         (neo-insert-dir-entry full-path 1
-                               (neo-is-expanded-node full-path)))
-       (dolist (leaf leafs)
-         (setq full-path (file-truename leaf))
-         (neo-insert-file-entry full-path 1))
-       (neo-scroll-to-line (if line line neo-start-line))))))
+     (neo-insert-dirtree start-node 1)
+     (neo-scroll-to-line (if line line neo-start-line)))))
 
 
 ;;
@@ -323,16 +313,16 @@ including . and ..")
 ;;
 
 (defun neo-shrink-window-horizontally (delta)
-  (neo-save-selected-window
+  (neo-save-window-excursion
    (shrink-window-horizontally delta)))
 
 (defun neo-enlarge-window-horizontally (delta)
-  (neo-save-selected-window
+  (neo-save-window-excursion
    (enlarge-window-horizontally delta)))
 
 (defun neo-set-window-width (n)
   (let ((w (max n window-min-width)))
-    (neo-save-selected-window
+    (neo-save-window-excursion
      (if (> (window-width) w)
            (shrink-window-horizontally (- (window-width) w))
        (if (< (window-width) w)
@@ -351,18 +341,41 @@ including . and ..")
   (interactive)
   (forward-button 1 nil))
 
-;; TODO
-(defun neo-node-toggle-expand ()
+(defun neo-get-current-line-button ()
+  (let ((btn-position nil)
+        (current-button (button-at (point))))
+    (if (null current-button)
+        (progn
+          (setf btn-position
+                (catch 'ret-button
+                  (let* ((pos-line-start (line-beginning-position))
+                         (pos-line-end (line-end-position))
+                         (next-button (next-button pos-line-start))
+                         (pos-btn nil))
+                    (if (null next-button) (throw 'ret-button nil))
+                    (setf pos-btn (overlay-start next-button))
+                    (if (> pos-btn pos-line-end) (throw 'ret-button nil))
+                    (throw 'ret-button pos-btn))))
+          (if (null btn-position)
+              nil
+            (setf current-button (button-at btn-position)))))
+    current-button))
+
+(defun neo-node-do-expand ()
   (interactive)
   (catch 'no-node-button
-    (let ((btn (button-at (point)))
+    (let ((btn (neo-get-current-line-button))
           (btn-full-path nil))
       (if (null btn) (throw 'no-node-button nil))
       (setq btn-full-path (button-get btn 'neo-full-path))
       (if (null btn-full-path) (throw 'no-node-button nil))
       (neo-expand-toggle btn-full-path)
-      (neo-refresh-buffer)
-      (message "full path is %S" btn-full-path))))
+      (neo-refresh-buffer))))
+
+;; TODO
+(defun neo-node-do-enter ()
+  (interactive)
+  )
 
 ;; TODO
 (defun neotree-toggle ()
