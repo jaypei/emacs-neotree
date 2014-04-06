@@ -26,6 +26,14 @@
     (delq nil
           (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
 
+(defun neo-find (where which)
+  "find element of the list `where` matching predicate `which`"
+  (catch 'found
+    (dolist (elt where)
+      (when (funcall which elt)
+        (throw 'found elt)))
+    nil))
+
 (defun neo-newline-and-begin ()
   (newline)
   (beginning-of-line))
