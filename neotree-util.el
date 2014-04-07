@@ -38,10 +38,11 @@
   (newline)
   (beginning-of-line))
 
-(defun neo-scroll-to-line (line)
+(defun neo-scroll-to-line (line &optional wind start-pos)
   "Recommended way to set the cursor to specified line"
   (goto-char (point-min))
-  (forward-line (1- line)))
+  (forward-line (1- line))
+  (if start-pos (set-window-start wind start-pos)))
 
 (defun neo-file-short-name (file)
   "Base file/directory name. Taken from

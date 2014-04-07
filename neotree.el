@@ -134,8 +134,11 @@ including . and ..")
     (define-key map (kbd "g") 'neo-refresh-buffer)
     (define-key map (kbd "p") 'previous-line)
     (define-key map (kbd "n") 'next-line)
+    (define-key map (kbd "C-c C-d") 'neotree-dir)
     map)
   "Keymap for `neotree-mode'.")
+
+
 
 ;;;###autoload
 (define-derived-mode neotree-mode special-mode "NeoTree"
@@ -312,13 +315,17 @@ including . and ..")
   
 (defun neo-refresh-buffer (&optional line)
   (interactive)
-  (neo-save-window-excursion
-   (let ((start-node neo-start-node))
+  (let ((start-node neo-start-node)
+        (ws-wind (selected-window))
+        (ws-pos (window-start)))
+    (neo-save-window-excursion
      (setq neo-start-line (line-number-at-pos (point)))
      (erase-buffer)
      (neo-insert-buffer-header)
-     (neo-insert-dirtree start-node 1)
-     (neo-scroll-to-line (if line line neo-start-line)))))
+     (neo-insert-dirtree start-node 1))
+    (neo-scroll-to-line
+     (if line line neo-start-line)
+     ws-wind ws-pos)))
 
 
 ;;
