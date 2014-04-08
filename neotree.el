@@ -134,7 +134,10 @@ including . and ..")
     (define-key map (kbd "g") 'neo-refresh-buffer)
     (define-key map (kbd "p") 'previous-line)
     (define-key map (kbd "n") 'next-line)
-    (define-key map (kbd "C-c C-d") 'neotree-dir)
+    (define-key map (kbd "C-x C-f") 'neo-create-file)
+    (define-key map (kbd "C-c C-c") 'neotree-dir)
+    (define-key map (kbd "C-c C-f") 'neo-create-file)
+    (define-key map (kbd "C-c C-d") 'neo-delete-current-file)
     map)
   "Keymap for `neotree-mode'.")
 
@@ -262,7 +265,9 @@ including . and ..")
     node))
 
 (defun neo-walk-dir (path)
-  (let* ((full-path (file-truename path))
+  (exz/debug path)
+  (exz/debug (neo-file-truename path))
+  (let* ((full-path (neo-file-truename path))
          (nodes (directory-files path))
          (nodes (neo-filter
                  (lambda (node)
@@ -379,19 +384,52 @@ including . and ..")
     current-button))
 
 
+(defun neo-get-current-line-filename ()
+  (let ((btn (neo-get-current-line-button)))
+    (if (null btn)
+        nil
+      (button-get btn 'neo-full-path))))
+
+
 (defun neo-node-do-enter ()
   (interactive)
-  (catch 'no-node-button
-    (let ((btn (neo-get-current-line-button))
-          (btn-full-path nil))
-      (if (null btn) (throw 'no-node-button nil))
-      (setq btn-full-path (button-get btn 'neo-full-path))
-      (if (null btn-full-path) (throw 'no-node-button nil))
+  (let ((btn-full-path (neo-get-current-line-filename)))
+    (when (not (null btn-full-path))
       (if (file-directory-p btn-full-path)
           (progn
             (neo-expand-toggle btn-full-path)
             (neo-refresh-buffer))
-        (find-file-other-window btn-full-path)))))
+        (find-file-other-window btn-full-path)))
+    btn-full-path))
+
+(defun neo-create-file (filename)
+  (interactive
+   (let* ((current-dir (neo-get-current-line-filename))
+          (filename (read-file-name "Filename:" current-dir)))
+     (if (file-directory-p filename)
+         (setq filename (concat filename "/")))
+     (list filename)))
+  (if (not (file-exists-p filename))
+      (if (yes-or-no-p (format "Do you really want to create file %S ?" filename))
+          (progn
+            (write-region "" nil filename)
+            (find-file-other-window filename)
+            (neo-refresh-buffer)))))
+
+(defun neo-delete-current-file ()
+  (interactive)
+  (let ((filename (neo-get-current-line-filename)))
+    (when (and (not (null filename))
+               (yes-or-no-p (format "Do you really want to delete %S ?" filename)))
+      (if (file-directory-p filename)
+          (if (yes-or-no-p (format "%S is directory, delete it by recursive ?" filename))
+              (delete-directory filename t)
+            (delete-directory filename))
+        (delete-file filename))
+      (neo-refresh-buffer)
+      (message "Delete %S successed!"))
+    filename))
+
 
 ;; TODO
 (defun neotree-toggle ()
@@ -413,7 +451,8 @@ including . and ..")
     (neo-get-window)
     (neo-save-window-excursion
      (let ((start-path-name (expand-file-name (substitute-in-file-name path))))
-       (setq neo-start-node start-path-name))
+       (setq neo-start-node start-path-name)
+       (cd start-path-name))
      (neo-refresh-buffer))))
 
 

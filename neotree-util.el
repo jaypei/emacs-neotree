@@ -59,7 +59,19 @@
     (set-text-properties pos-start
                          (point)
                          (list 'face face))))
-    
 
+
+(defun neo-file-truename (path)
+  (let ((rlt (file-truename path)))
+    (if (not (null rlt))
+        (progn
+          (if (and (file-directory-p rlt)
+                   (> (length rlt) 0)
+                   (not (equal (substring rlt -1) "/")))
+              (setq rlt (concat rlt "/")))
+          rlt)
+      nil)))
+
+      
 (provide 'neotree-util)
 ;;; neotree-util.el ends here
