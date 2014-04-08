@@ -32,6 +32,14 @@ M-x neotree RET
 Usage
 -----
 
+* `n` - next line
+* `p` - previous line
+* `SPC` or `RET` or `TAB` - open file / toggle expand folder
+* `g` - refresh tree
+* `C-x C-f` or `C-c C-f` - find or create file
+* `C-c C-d` - delete file or directory
+
+
 ChangeLog
 ---------
 
@@ -39,4 +47,7 @@ ChangeLog
 
 基本功能完成
 
+### 0.1.2 (2014-04-08)
+
+增加基本文件操作
 
