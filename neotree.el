@@ -220,6 +220,7 @@ including . and ..")
     (set-text-properties start (point) '(face neo-header-face)))
   (neo-newline-and-begin))
 
+
 (defun neo-insert-root-entry (node)
   (neo-newline-and-begin)
   (neo-insert-with-face ".."
@@ -229,6 +230,7 @@ including . and ..")
   (neo-insert-with-face node
                         'neo-header-face)
   (neo-newline-and-begin))
+
 
 (defun neo-insert-dir-entry (node depth expanded)
   (let ((btn-start-pos nil)
@@ -244,9 +246,11 @@ including . and ..")
     (make-button btn-start-pos
                  btn-end-pos
                  'action '(lambda (x) (neo-node-do-enter))
+                 'follow-link t
                  'face neo-button-face
                  'neo-full-path node)
     (neo-newline-and-begin)))
+
 
 (defun neo-insert-file-entry (node depth)
   (let ((node-short-name (neo-file-short-name node)))
@@ -254,9 +258,11 @@ including . and ..")
     (insert-char ?\s 2)
     (insert-button node-short-name
                    'action '(lambda (x) (neo-node-do-enter))
+                   'follow-link t
                    'face neo-file-link-face
                    'neo-full-path node)
     (neo-newline-and-begin)))
+
 
 (defun neo-node-hidden-filter (node)
   (if (not neo-show-hidden-nodes)
@@ -264,9 +270,8 @@ including . and ..")
                          (neo-file-short-name node)))
     node))
 
+
 (defun neo-walk-dir (path)
-  (exz/debug path)
-  (exz/debug (neo-file-truename path))
   (let* ((full-path (neo-file-truename path))
          (nodes (directory-files path))
          (nodes (neo-filter
@@ -277,6 +282,7 @@ including . and ..")
          (nodes (mapcar (lambda (x) (concat full-path x)) nodes)))
     nodes))
 
+
 (defun neo-get-contents (path)
   (let* ((nodes (neo-walk-dir path))
          (comp  #'(lambda (x y)
@@ -285,10 +291,12 @@ including . and ..")
     (cons (sort (neo-filter 'file-directory-p nodes) comp)
           (sort (neo-filter #'(lambda (f) (not (file-directory-p f))) nodes) comp))))
 
+
 (defun neo-is-expanded-node (node)
   (if (neo-find neo-expanded-nodes-list
                 #'(lambda (x) (equal x node)))
       t nil))
+
 
 (defun neo-expand-set (node do-expand)
   "Set the expanded state of the node to do-expand"
@@ -298,6 +306,7 @@ including . and ..")
              #'(lambda (x) (not (equal node x)))
              neo-expanded-nodes-list))
     (push node neo-expanded-nodes-list)))
+
 
 (defun neo-expand-toggle (node)
   (neo-expand-set node (not (neo-is-expanded-node node))))
@@ -348,18 +357,6 @@ including . and ..")
             (enlarge-window-horizontally (- w (window-width))))))))
 
 
-;;
-;; Interactive functions
-;;
-
-(defun neo-previous-node ()
-  (interactive)
-  (backward-button 1 nil))
-
-(defun neo-next-node ()
-  (interactive)
-  (forward-button 1 nil))
-
 (defun neo-get-current-line-button ()
   (let* ((btn-position nil)
          (pos-line-start (line-beginning-position))
@@ -391,16 +388,37 @@ including . and ..")
       (button-get btn 'neo-full-path))))
 
 
+;;
+;; Interactive functions
+;;
+
+(defun neo-previous-node ()
+  (interactive)
+  (backward-button 1 nil))
+
+(defun neo-next-node ()
+  (interactive)
+  (forward-button 1 nil))
+
+
+(defun neo-select-window ()
+  (interactive)
+  (let ((window (neo-get-window)))
+    (select-window window)))
+
+
 (defun neo-node-do-enter ()
   (interactive)
   (let ((btn-full-path (neo-get-current-line-filename)))
     (when (not (null btn-full-path))
+      (neo-select-window)
       (if (file-directory-p btn-full-path)
           (progn
             (neo-expand-toggle btn-full-path)
             (neo-refresh-buffer))
         (find-file-other-window btn-full-path)))
     btn-full-path))
+
 
 (defun neo-create-file (filename)
   (interactive
@@ -415,6 +433,7 @@ including . and ..")
             (write-region "" nil filename)
             (find-file-other-window filename)
             (neo-refresh-buffer)))))
+
 
 (defun neo-delete-current-file ()
   (interactive)
@@ -435,9 +454,11 @@ including . and ..")
 (defun neotree-toggle ()
   )
 
+
 ;; TODO
 (defun neotree-show ()
   )
+
 
 ;; TODO
 (defun neotree-hide ()
