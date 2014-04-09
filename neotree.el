@@ -431,8 +431,8 @@ including . and ..")
       (if (yes-or-no-p (format "Do you really want to create file %S ?" filename))
           (progn
             (write-region "" nil filename)
-            (find-file-other-window filename)
-            (neo-refresh-buffer)))))
+            (neo-refresh-buffer)
+            (find-file-other-window filename)))))
 
 
 (defun neo-delete-current-file ()
@@ -446,7 +446,7 @@ including . and ..")
             (delete-directory filename))
         (delete-file filename))
       (neo-refresh-buffer)
-      (message "Delete %S successed!"))
+      (message "Delete successed!"))
     filename))
 
 
