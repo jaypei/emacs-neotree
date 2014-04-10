@@ -72,6 +72,16 @@
           rlt)
       nil)))
 
+
+(defun neo-path-join (root &rest dirs)
+  "Joins a series of directories together, like Python's os.path.join,
+  (neo-path-join \"/tmp\" \"a\" \"b\" \"c\") => /tmp/a/b/c"
+  (if (not dirs)
+      root
+    (apply 'neo-path-join
+           (expand-file-name (car dirs) root)
+           (cdr dirs))))
+
       
 (provide 'neotree-util)
 ;;; neotree-util.el ends here
