@@ -82,6 +82,36 @@
            (expand-file-name (car dirs) root)
            (cdr dirs))))
 
+
+(defun neo-walk-dir (path)
+  (let* ((full-path (neo-file-truename path)))
+    (directory-files path 'full
+                     directory-files-no-dot-files-regexp)))
+
+
+(defun neo-directory-has-file (dir)
+  "To determine whether a directory(DIR) contains files"
+  (and (file-exists-p dir)
+       (file-directory-p dir)
+       (neo-walk-dir dir)
+       t))
+
+
+(defun neo-match-path-directory (path)
+  (let ((true-path (neo-file-truename path))
+        (rlt-path nil))
+    (setq rlt-path
+          (catch 'rlt
+            (if (file-directory-p true-path)
+                (throw 'rlt true-path))
+            (setq true-path
+                  (file-name-directory true-path))
+            (if (file-directory-p true-path)
+                (throw 'rlt true-path))))
+    (if (not (null rlt-path))
+        (setq rlt-path (neo-path-join "." rlt-path "./")))
+    rlt-path))
+
       
 (provide 'neotree-util)
 ;;; neotree-util.el ends here
