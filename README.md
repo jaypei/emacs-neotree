@@ -36,8 +36,9 @@ Usage
 * `p` - previous line
 * `SPC` or `RET` or `TAB` - open file / toggle expand folder
 * `g` - refresh tree
-* `C-x C-f` or `C-c C-f` - find or create file
+* `C-c C-n` - create file or directory
 * `C-c C-d` - delete file or directory
+* `C-c C-c` - change root directory
 
 
 ChangeLog
