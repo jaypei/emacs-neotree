@@ -184,6 +184,7 @@ including . and ..")
     (setf neo-window (get-buffer-window))
     (select-window (window-right (get-buffer-window)))
     (neo-set-window-width neo-width)
+    (set-window-dedicated-p neo-window t)
     neo-window))
 
 
@@ -399,6 +400,7 @@ including . and ..")
 
 (defun neo-node-do-enter ()
   (interactive)
+  (neo-select-window)
   (let ((btn-full-path (neo-get-current-line-filename)))
     (when (not (null btn-full-path))
       (if (file-directory-p btn-full-path)
