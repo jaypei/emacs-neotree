@@ -1,7 +1,8 @@
 emacs-neotree
 =============
 
-A emacs tree plugin like NerdTree.
+A emacs tree plugin like NerdTree for Vim.
+
 
 Screenshots
 -----------
@@ -10,13 +11,13 @@ Screenshots
 Installation
 ------------
 
-Clone project
+Clone project:
 ```sh
 $ cd /some/path
 $ git clone https://github.com/jaypei/emacs-neotree.git neotree
 ```
 
-Add emacs config:    
+Add emacs config:
 
 ```elisp
 (add-to-list 'load-path "/some/path/neotree")
@@ -51,4 +52,8 @@ ChangeLog
 ### 0.1.2 (2014-04-08)
 
 增加基本文件操作，支持鼠标选中
+
+### 0.1.3 (2014-04-13)
+
+支持改变根节点目录，增加目录和文件根据末尾/判断，删除空目录时去掉递归提醒
 
