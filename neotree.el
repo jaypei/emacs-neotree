@@ -127,7 +127,6 @@ including . and ..")
 
 (defvar neotree-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "\r") 'neo-node-open)
     (define-key map (kbd "SPC") 'neo-node-do-enter)
     (define-key map (kbd "TAB") 'neo-node-do-enter)
     (define-key map (kbd "RET") 'neo-node-do-enter)
@@ -135,7 +134,7 @@ including . and ..")
     (define-key map (kbd "p") 'previous-line)
     (define-key map (kbd "n") 'next-line)
     (define-key map (kbd "C-x C-f") 'find-file-other-window)
-    (define-key map (kbd "C-c C-c") 'neotree-dir)
+    (define-key map (kbd "C-c C-c") 'neo-node-do-change-root)
     (define-key map (kbd "C-c C-f") 'find-file-other-window)
     (define-key map (kbd "C-c C-n") 'neo-create-node)
     (define-key map (kbd "C-c C-d") 'neo-delete-current-node)
@@ -225,8 +224,11 @@ including . and ..")
 
 (defun neo-insert-root-entry (node)
   (neo-newline-and-begin)
-  (neo-insert-with-face ".."
-                        'neo-dir-link-face)
+  (insert-button ".."
+                 'action '(lambda (x) (neo-node-do-change-root))
+                 'follow-link t
+                 'face neo-file-link-face
+                 'neo-full-path (neo-path-updir neo-start-node))
   (insert " (up a dir)")
   (neo-newline-and-begin)
   (neo-insert-with-face node
@@ -374,9 +376,9 @@ including . and ..")
 
 (defun neo-get-current-line-filename (&optional default)
   (let ((btn (neo-get-current-line-button)))
-    (or (null btn)
+    (if (not (null btn))
         (button-get btn 'neo-full-path)
-        default)))
+      default)))
 
 
 ;;
@@ -411,6 +413,15 @@ including . and ..")
     btn-full-path))
 
 
+(defun neo-node-do-change-root ()
+  (interactive)
+  (neo-select-window)
+  (let ((btn-full-path (neo-get-current-line-filename)))
+    (if (null btn-full-path)
+        (call-interactively 'neotree-dir)
+      (neotree-dir btn-full-path))))
+
+
 (defun neo-create-node (filename)
   (interactive
    (let* ((current-dir (neo-get-current-line-filename neo-start-node))
@@ -423,7 +434,6 @@ including . and ..")
     (let ((is-file nil))
       (when (= (length filename) 0)
         (throw 'rlt nil))
-      (message "%S" (equal (substring filename -1) "/"))
       (setq is-file (not (equal (substring filename -1) "/")))
       (when (file-exists-p filename)
         (message "File %S already exists." filename)
@@ -483,7 +493,8 @@ including . and ..")
 ;;;###autoload
 (defun neotree-dir (path)
   (interactive "DDirectory: ")
-  (when (and (file-exists-p path) (file-directory-p path))
+  (when (and (file-exists-p path)
+             (file-directory-p path))
     (neo-get-window)
     (neo-save-window-excursion
      (let ((start-path-name (expand-file-name (substitute-in-file-name path))))

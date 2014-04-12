@@ -73,14 +73,38 @@
       nil)))
 
 
+(defun neo-path-get-expanded-name (path &optional current-dir)
+  (or (if (file-name-absolute-p path) path)
+      (let ((r-path path))
+        (setq r-path (substitute-in-file-name r-path))
+        (setq r-path (expand-file-name r-path current-dir))
+        r-path)))
+  
+
 (defun neo-path-join (root &rest dirs)
   "Joins a series of directories together, like Python's os.path.join,
   (neo-path-join \"/tmp\" \"a\" \"b\" \"c\") => /tmp/a/b/c"
-  (if (not dirs)
-      root
-    (apply 'neo-path-join
-           (expand-file-name (car dirs) root)
-           (cdr dirs))))
+  (or (if (not dirs) root)
+      (let ((tdir (car dirs))
+            (epath nil))
+        (setq epath
+              (or (if (equal tdir ".") root)
+                  (if (equal tdir "..") (neo-path-updir root))
+                  (neo-path-get-expanded-name tdir root)))
+        (apply 'neo-path-join
+               epath
+               (cdr dirs)))))
+
+
+(defun neo-path-updir (path)
+  (let ((r-path (neo-path-get-expanded-name path)))
+    (if (and (> (length r-path) 0)
+             (equal (substring r-path -1) "/"))
+        (setq r-path (substring r-path 0 -1)))
+    (if (eq (length r-path) 0)
+        (setq r-path "/"))
+    (directory-file-name
+     (file-name-directory r-path))))
 
 
 (defun neo-walk-dir (path)
