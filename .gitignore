@@ -1,0 +1,4 @@
+*.elc
+ert.el
+*.tar.bz2
+*.tar
