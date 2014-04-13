@@ -21,7 +21,27 @@
 
 ;;; Code:
 
+(require 'neotree-util)
 
 
-(provide 'util-test)
+(ert-deftest neo-test-filter ()
+  (should (equal (neo-filter (lambda (x) (> x 10)) '(1 2 8 12 30))
+                 '(12 30)))
+  (should (null (neo-filter (lambda (x) nil) '(1 2 8 12 30))))
+  (should (equal (neo-filter (lambda (x) t) '(1 2 8 12 30))
+                 '(1 2 8 12 30)))
+  (should (equal (neo-filter (lambda (x) (and (not (equal x "."))
+                                              (not (equal x ".."))))
+                             '("." ".." ".neotree/" "otherfiles"))
+                 '(".neotree/" "otherfiles"))))
+
+
+(ert-deftest neo-test-find ()
+  (should (equal (neo-find '("hello" 1 "world") 'integerp) 1)))
+
+(ert-deftest neo-test-newline-and-begin ()
+  (with-temp-buffer
+    (neo-newline-and-begin)))
+
+
 ;;; util-test.el ends here
