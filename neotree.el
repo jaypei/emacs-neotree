@@ -243,9 +243,9 @@ including . and ..")
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (setq btn-start-pos (point))
     (neo-insert-with-face (if expanded "-" "+")
-                          neo-expand-btn-face)
+                          'neo-expand-btn-face)
     (neo-insert-with-face (concat " " node-short-name "/")
-                          neo-dir-link-face)
+                          'neo-dir-link-face)
     (setq btn-end-pos (point))
     (make-button btn-start-pos
                  btn-end-pos

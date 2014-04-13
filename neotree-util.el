@@ -46,7 +46,8 @@
 (defun neo-file-short-name (file)
   "Base file/directory name. Taken from
  http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
-  (neo-printable-string (file-name-nondirectory (directory-file-name file))))
+  (or (if (string= file "/") "/")
+      (neo-printable-string (file-name-nondirectory (directory-file-name file)))))
 
 (defun neo-printable-string (string)
   "Strip newline character from file names, like 'Icon\n'"
@@ -72,7 +73,7 @@
       nil)))
 
 
-(defun neo-path-get-expanded-name (path &optional current-dir)
+(defun neo-path-expand-name (path &optional current-dir)
   (or (if (file-name-absolute-p path) path)
       (let ((r-path path))
         (setq r-path (substitute-in-file-name r-path))
@@ -89,14 +90,14 @@
         (setq epath
               (or (if (equal tdir ".") root)
                   (if (equal tdir "..") (neo-path-updir root))
-                  (neo-path-get-expanded-name tdir root)))
+                  (neo-path-expand-name tdir root)))
         (apply 'neo-path-join
                epath
                (cdr dirs)))))
 
 
 (defun neo-path-updir (path)
-  (let ((r-path (neo-path-get-expanded-name path)))
+  (let ((r-path (neo-path-expand-name path)))
     (if (and (> (length r-path) 0)
              (equal (substring r-path -1) "/"))
         (setq r-path (substring r-path 0 -1)))
