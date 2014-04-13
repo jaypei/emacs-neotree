@@ -3,6 +3,7 @@ emacs-neotree
 
 A emacs tree plugin like NerdTree for Vim.
 
+[![Build Status](https://travis-ci.org/jaypei/emacs-neotree.svg?branch=master)](https://travis-ci.org/jaypei/emacs-neotree)
 
 Screenshots
 -----------
