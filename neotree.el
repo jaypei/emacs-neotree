@@ -70,19 +70,22 @@ including . and ..")
 ;;
 
 (defface neo-header-face
-  '((t :foreground "lightblue" :weight bold))
+  '((((background dark)) (:foreground "lightblue" :weight bold))
+    (t (:foreground "DarkMagenta")))
   "*Face used for the header in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-header-face 'neo-header-face)
 
 (defface neo-dir-link-face
-  '((t (:foreground "DeepSkyBlue")))
+  '((((background dark)) (:foreground "DeepSkyBlue"))
+    (t (:foreground "MediumBlue")))
   "*Face used for expand sign [+] in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-dir-link-face 'neo-dir-link-face)
 
 (defface neo-file-link-face
-  '((t (:foreground "White")))
+  '((((background dark)) (:foreground "White"))
+    (t (:foreground "Black")))
   "*Face used for open file/dir in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-file-link-face 'neo-file-link-face)
@@ -93,7 +96,7 @@ including . and ..")
   "*Face used for open file/dir in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-expand-btn-face 'neo-expand-btn-face)
-  
+
 (defface neo-button-face
   '((t (:underline nil)))
   "*Face used for open file/dir in neotree buffer."
