@@ -21,7 +21,7 @@
 
 ;;; Code:
 
-(require 'neotree-util)
+(require 'neotree)
 
 
 (ert-deftest neo-test-filter ()
