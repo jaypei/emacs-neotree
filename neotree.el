@@ -1,9 +1,10 @@
-;;; neotree.el --- summary
+;;; neotree.el --- A emacs tree plugin like NerdTree for Vim
 
 ;; Copyright (C) 2014 jaypei
 
 ;; Author: jaypei <jaypei97159@gmail.com>
-;; Version: 0.1.3
+;; Version: 0.1.4
+;; URL: https://github.com/jaypei/emacs-neotree
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -33,9 +34,6 @@
 ;;
 
 ;;; Code:
-
-(require 'neotree-util)
-
 
 ;;
 ;; Constants
@@ -70,19 +68,22 @@ including . and ..")
 ;;
 
 (defface neo-header-face
-  '((t :foreground "lightblue" :weight bold))
+  '((((background dark)) (:foreground "lightblue" :weight bold))
+    (t (:foreground "DarkMagenta")))
   "*Face used for the header in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-header-face 'neo-header-face)
 
 (defface neo-dir-link-face
-  '((t (:foreground "DeepSkyBlue")))
+  '((((background dark)) (:foreground "DeepSkyBlue"))
+    (t (:foreground "MediumBlue")))
   "*Face used for expand sign [+] in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-dir-link-face 'neo-dir-link-face)
 
 (defface neo-file-link-face
-  '((t (:foreground "White")))
+  '((((background dark)) (:foreground "White"))
+    (t (:foreground "Black")))
   "*Face used for open file/dir in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-file-link-face 'neo-file-link-face)
@@ -93,7 +94,7 @@ including . and ..")
   "*Face used for open file/dir in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-expand-btn-face 'neo-expand-btn-face)
-  
+
 (defface neo-button-face
   '((t (:underline nil)))
   "*Face used for open file/dir in neotree buffer."
@@ -158,6 +159,119 @@ including . and ..")
 
 
 ;;
+;; internal utility functions
+;;
+
+(defun neo-filter (condp lst)
+    (delq nil
+          (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
+
+(defun neo-find (where which)
+  "find element of the list `where` matching predicate `which`"
+  (catch 'found
+    (dolist (elt where)
+      (when (funcall which elt)
+        (throw 'found elt)))
+    nil))
+
+(defun neo-newline-and-begin ()
+  (newline)
+  (beginning-of-line))
+
+(defun neo-scroll-to-line (line &optional wind start-pos)
+  "Recommended way to set the cursor to specified line"
+  (goto-char (point-min))
+  (forward-line (1- line))
+  (if start-pos (set-window-start wind start-pos)))
+
+(defun neo-file-short-name (file)
+  "Base file/directory name. Taken from
+ http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
+  (or (if (string= file "/") "/")
+      (neo-printable-string (file-name-nondirectory (directory-file-name file)))))
+
+(defun neo-printable-string (string)
+  "Strip newline character from file names, like 'Icon\n'"
+  (replace-regexp-in-string "\n" "" string))
+
+(defun neo-insert-with-face (content face)
+  (let ((pos-start (point)))
+    (insert content)
+    (set-text-properties pos-start
+                         (point)
+                         (list 'face face))))
+
+(defun neo-file-truename (path)
+  (let ((rlt (file-truename path)))
+    (if (not (null rlt))
+        (progn
+          (if (and (file-directory-p rlt)
+                   (> (length rlt) 0)
+                   (not (equal (substring rlt -1) "/")))
+              (setq rlt (concat rlt "/")))
+          rlt)
+      nil)))
+
+(defun neo-path-expand-name (path &optional current-dir)
+  (or (if (file-name-absolute-p path) path)
+      (let ((r-path path))
+        (setq r-path (substitute-in-file-name r-path))
+        (setq r-path (expand-file-name r-path current-dir))
+        r-path)))
+
+(defun neo-path-join (root &rest dirs)
+  "Joins a series of directories together, like Python's os.path.join,
+  (neo-path-join \"/tmp\" \"a\" \"b\" \"c\") => /tmp/a/b/c"
+  (or (if (not dirs) root)
+      (let ((tdir (car dirs))
+            (epath nil))
+        (setq epath
+              (or (if (equal tdir ".") root)
+                  (if (equal tdir "..") (neo-path-updir root))
+                  (neo-path-expand-name tdir root)))
+        (apply 'neo-path-join
+               epath
+               (cdr dirs)))))
+
+(defun neo-path-updir (path)
+  (let ((r-path (neo-path-expand-name path)))
+    (if (and (> (length r-path) 0)
+             (equal (substring r-path -1) "/"))
+        (setq r-path (substring r-path 0 -1)))
+    (if (eq (length r-path) 0)
+        (setq r-path "/"))
+    (directory-file-name
+     (file-name-directory r-path))))
+
+(defun neo-walk-dir (path)
+  (let* ((full-path (neo-file-truename path)))
+    (directory-files path 'full
+                     directory-files-no-dot-files-regexp)))
+
+(defun neo-directory-has-file (dir)
+  "To determine whether a directory(DIR) contains files"
+  (and (file-exists-p dir)
+       (file-directory-p dir)
+       (neo-walk-dir dir)
+       t))
+
+(defun neo-match-path-directory (path)
+  (let ((true-path (neo-file-truename path))
+        (rlt-path nil))
+    (setq rlt-path
+          (catch 'rlt
+            (if (file-directory-p true-path)
+                (throw 'rlt true-path))
+            (setq true-path
+                  (file-name-directory true-path))
+            (if (file-directory-p true-path)
+                (throw 'rlt true-path))))
+    (if (not (null rlt-path))
+        (setq rlt-path (neo-path-join "." rlt-path "./")))
+    rlt-path))
+
+
+;;
 ;; Privates functions
 ;;
 
@@ -180,6 +294,9 @@ including . and ..")
     (select-window (window-at 0 0))
     (split-window-horizontally)
     (switch-to-buffer (neo-get-buffer))
+    (if (and (boundp 'linum-mode)
+             (not (null linum-mode)))
+        (linum-mode -1))
     (setf neo-window (get-buffer-window))
     (select-window (window-right (get-buffer-window)))
     (neo-set-window-width neo-width)
@@ -243,9 +360,9 @@ including . and ..")
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (setq btn-start-pos (point))
     (neo-insert-with-face (if expanded "-" "+")
-                          neo-expand-btn-face)
+                          'neo-expand-btn-face)
     (neo-insert-with-face (concat " " node-short-name "/")
-                          neo-dir-link-face)
+                          'neo-dir-link-face)
     (setq btn-end-pos (point))
     (make-button btn-start-pos
                  btn-end-pos

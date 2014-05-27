@@ -3,7 +3,9 @@ emacs-neotree
 
 A emacs tree plugin like NerdTree for Vim.
 
-[![Build Status](https://travis-ci.org/jaypei/emacs-neotree.svg?branch=master)](https://travis-ci.org/jaypei/emacs-neotree)
+`Develop` [![Build Status](https://travis-ci.org/jaypei/emacs-neotree.svg?branch=dev)](https://travis-ci.org/jaypei/emacs-neotree)
+`Master` [![Build Status](https://travis-ci.org/jaypei/emacs-neotree.svg?branch=master)](https://travis-ci.org/jaypei/emacs-neotree)
+
 
 Screenshots
 -----------
@@ -58,3 +60,8 @@ ChangeLog
 
 支持改变根节点目录，增加目录和文件根据末尾/判断，删除空目录时去掉递归提醒
 
+### 0.1.4 (2014-05-27)
+
+* Fix issue #1 #2
+* Add some unit tests
+* Remove neotree-util.el
