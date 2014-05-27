@@ -60,3 +60,8 @@ ChangeLog
 
 支持改变根节点目录，增加目录和文件根据末尾/判断，删除空目录时去掉递归提醒
 
+### 0.1.4 (2014-05-27)
+
+* Fix issue #1 #2
+* Add some unit tests
+* Remove neotree-util.el
