@@ -106,6 +106,11 @@ including . and ..")
 ;; Variables
 ;;
 
+(defvar neo-buffer nil)
+
+(defvar neo-window nil)
+(make-variable-frame-local 'neo-window)
+
 (defvar neo-start-node nil
   "Start node(i.e. directory) for the window.")
 (make-variable-buffer-local 'neo-start-node)
@@ -121,6 +126,7 @@ including . and ..")
 (defvar neo-expanded-nodes-list nil
   "A list of expanded dir nodes.")
 (make-variable-buffer-local 'neo-enlarge-window-horizontally)
+
 
 ;;
 ;; Major mode definitions
@@ -290,46 +296,51 @@ including . and ..")
 
 
 (defun neo--init-window ()
-  (let ((neo-window nil))
-    (select-window (window-at 0 0))
-    (split-window-horizontally)
-    (switch-to-buffer (neo-get-buffer))
-    (if (and (boundp 'linum-mode)
-             (not (null linum-mode)))
-        (linum-mode -1))
-    (setf neo-window (get-buffer-window))
-    (select-window (window-right (get-buffer-window)))
-    (neo-set-window-width neo-width)
-    (set-window-dedicated-p neo-window t)
-    neo-window))
+  (select-window (window-at 0 0))
+  (split-window-horizontally)
+  (switch-to-buffer (neo-get-buffer))
+  (if (and (boundp 'linum-mode)         ; disable line number
+           (not (null linum-mode)))
+      (linum-mode -1))
+  (setf neo-window (get-buffer-window))
+  (select-window (window-right (get-buffer-window)))
+  (neo-set-window-width neo-width)
+  (set-window-dedicated-p neo-window t)
+  neo-window)
 
 
-(defun neo-get-window ()
-  (let* ((buffer (neo-get-buffer))
-         (window (get-buffer-window buffer)))
-    (if (not window)
-        (setf window (neo--init-window)))
-    window))
+(defun neo-window-exists-p ()
+  (eql (window-buffer neo-window) (neo-get-buffer)))
+  
+
+(defun neo-get-window (&optional auto-create-p)
+  (if (not (neo-window-exists-p))
+      (setf neo-window nil))
+  (if (and (null neo-window)
+           auto-create-p)
+      (neo--init-window))
+  neo-window)
 
 
 (defun neo--create-buffer ()
-  (let ((neo-buffer nil))
-    (save-excursion
-      (split-window-horizontally)
-      (setq neo-buffer
-            (switch-to-buffer
-             (generate-new-buffer-name neo-buffer-name)))
-      (neotree-mode)
-      (setq buffer-read-only t)
-      (delete-window))
-    neo-buffer))
+  (save-excursion
+    (split-window-horizontally)
+    (setq neo-buffer
+          (switch-to-buffer
+           (generate-new-buffer-name neo-buffer-name)))
+    (neotree-mode)
+    (setq buffer-read-only t)
+    (delete-window))
+  neo-buffer)
 
 
 (defun neo-get-buffer ()
-  (let ((neo-buffer (get-buffer neo-buffer-name)))
-    (if (null neo-buffer)
-        (neo--create-buffer)
-      neo-buffer)))
+  (if (not (equal (buffer-name neo-buffer)
+                  neo-buffer-name))
+      (setf neo-buffer nil))
+  (if (null neo-buffer)
+      (neo--create-buffer))
+  neo-buffer)
 
 
 (defun neo-insert-buffer-header ()
@@ -459,12 +470,13 @@ including . and ..")
 (defun neo-set-window-width (n)
   (let ((w (max n window-min-width))
         (window (neo-get-window)))
-    (save-selected-window
-      (select-window window)
-      (if (> (window-width) w)
-          (shrink-window-horizontally (- (window-width) w))
-        (if (< (window-width) w)
-            (enlarge-window-horizontally (- w (window-width))))))))
+    (when (not (null window))
+      (save-selected-window
+        (select-window window)
+        (if (> (window-width) w)
+            (shrink-window-horizontally (- (window-width) w))
+          (if (< (window-width) w)
+              (enlarge-window-horizontally (- w (window-width)))))))))
 
 
 (defun neo-get-current-line-button ()
@@ -513,7 +525,7 @@ including . and ..")
 
 (defun neo-select-window ()
   (interactive)
-  (let ((window (neo-get-window)))
+  (let ((window (neo-get-window t)))
     (select-window window)))
 
 
@@ -592,19 +604,20 @@ including . and ..")
       filename)))
 
 
-;; TODO
+;;;###autoload
 (defun neotree-toggle ()
-  )
+  (interactive)
+  (if (neo-window-exists-p)
+      (neotree-hide)
+    (neotree-show)))
 
-
-;; TODO
 (defun neotree-show ()
-  )
+  (interactive)
+  (neo-get-window t))
 
-
-;; TODO
 (defun neotree-hide ()
-  )
+  (interactive)
+  (delete-window neo-window))
 
 
 ;;;###autoload
@@ -612,7 +625,7 @@ including . and ..")
   (interactive "DDirectory: ")
   (when (and (file-exists-p path)
              (file-directory-p path))
-    (neo-get-window)
+    (neo-get-window t)
     (neo-save-window-excursion
      (let ((start-path-name (expand-file-name (substitute-in-file-name path))))
        (setq neo-start-node start-path-name)

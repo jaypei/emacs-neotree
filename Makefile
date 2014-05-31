@@ -12,12 +12,16 @@ clean:
 	@rm -rf neotree-*/ neotree-*.tar neotree-*.tar.bz2 *.elc ert.el
 
 test:
-	${EMACS} -Q -nw -L . -l test/*.el \
-	--eval "(let (pop-up-windows) (ert t))"
+	${EMACS} -Q -nw -L . \
+		-l test/command-test.el \
+		-l test/util-test.el \
+		--eval "(let (pop-up-windows) (ert t))"
 
 test-batch:
-	${EMACS} -Q --batch -L . -l test/*.el \
-	--eval "(ert-run-tests-batch-and-exit '(not (tag interactive)))"
+	${EMACS} -Q --batch -L . \
+		-l test/command-test.el \
+		-l test/util-test.el \
+		--eval "(ert-run-tests-batch-and-exit '(not (tag interactive)))"
 
 downloads:
 	${EMACS} -Q --batch -l ert || \
