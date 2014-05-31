@@ -21,12 +21,17 @@
 
 ;;; Code:
 
-;;;### (autoloads (neotree neotree-dir neotree-mode) "neotree" "neotree.el"
-;;;;;;  (21308 10187 416916 138000))
+;;;### (autoloads (neotree neotree-dir neotree-toggle neotree-mode)
+;;;;;;  "neotree" "neotree.el" (21385 31699 0 0))
 ;;; Generated autoloads from neotree.el
 
 (autoload 'neotree-mode "neotree" "\
 A major mode for displaying the directory tree in text mode.
+
+\(fn)" t nil)
+
+(autoload 'neotree-toggle "neotree" "\
+
 
 \(fn)" t nil)
 
