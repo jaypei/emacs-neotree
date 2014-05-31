@@ -19,7 +19,6 @@ test:
 
 test-batch:
 	${EMACS} -Q --batch -L . \
-		-l test/command-test.el \
 		-l test/util-test.el \
 		--eval "(ert-run-tests-batch-and-exit '(not (tag interactive)))"
 

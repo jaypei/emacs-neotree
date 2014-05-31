@@ -284,6 +284,9 @@ including . and ..")
 (defun neo--get-working-dir ()
   (file-name-as-directory (file-truename default-directory)))
 
+(defun neo-valid-start-node-p ()
+  (and (not (null neo-start-node))
+       (file-accessible-directory-p neo-start-node)))
 
 (defmacro neo-save-window-excursion (&rest body)
   `(save-window-excursion
@@ -293,7 +296,6 @@ including . and ..")
        (setf rlt (progn ,@body))
        (setq buffer-read-only t)
        rlt)))
-
 
 (defun neo--init-window ()
   (select-window (window-at 0 0))
@@ -308,10 +310,8 @@ including . and ..")
   (set-window-dedicated-p neo-window t)
   neo-window)
 
-
 (defun neo-window-exists-p ()
   (eql (window-buffer neo-window) (neo-get-buffer)))
-  
 
 (defun neo-get-window (&optional auto-create-p)
   (if (not (neo-window-exists-p))
@@ -320,7 +320,6 @@ including . and ..")
            auto-create-p)
       (neo--init-window))
   neo-window)
-
 
 (defun neo--create-buffer ()
   (save-excursion
@@ -333,7 +332,6 @@ including . and ..")
     (delete-window))
   neo-buffer)
 
-
 (defun neo-get-buffer ()
   (if (not (equal (buffer-name neo-buffer)
                   neo-buffer-name))
@@ -342,13 +340,11 @@ including . and ..")
       (neo--create-buffer))
   neo-buffer)
 
-
 (defun neo-insert-buffer-header ()
   (let ((start (point)))
     (insert "press ? for neotree help")
     (set-text-properties start (point) '(face neo-header-face)))
   (neo-newline-and-begin))
-
 
 (defun neo-insert-root-entry (node)
   (neo-newline-and-begin)
@@ -362,7 +358,6 @@ including . and ..")
   (neo-insert-with-face node
                         'neo-header-face)
   (neo-newline-and-begin))
-
 
 (defun neo-insert-dir-entry (node depth expanded)
   (let ((btn-start-pos nil)
@@ -383,7 +378,6 @@ including . and ..")
                  'neo-full-path node)
     (neo-newline-and-begin)))
 
-
 (defun neo-insert-file-entry (node depth)
   (let ((node-short-name (neo-file-short-name node)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
@@ -395,13 +389,11 @@ including . and ..")
                    'neo-full-path node)
     (neo-newline-and-begin)))
 
-
 (defun neo-node-hidden-filter (node)
   (if (not neo-show-hidden-nodes)
       (not (string-match neo-hidden-files-regexp
                          (neo-file-short-name node)))
     node))
-
 
 (defun neo-get-contents (path)
   (let* ((nodes (neo-walk-dir path))
@@ -411,12 +403,10 @@ including . and ..")
     (cons (sort (neo-filter 'file-directory-p nodes) comp)
           (sort (neo-filter #'(lambda (f) (not (file-directory-p f))) nodes) comp))))
 
-
 (defun neo-is-expanded-node (node)
   (if (neo-find neo-expanded-nodes-list
                 #'(lambda (x) (equal x node)))
       t nil))
-
 
 (defun neo-expand-set (node do-expand)
   "Set the expanded state of the node to do-expand"
@@ -427,10 +417,8 @@ including . and ..")
              neo-expanded-nodes-list))
     (push node neo-expanded-nodes-list)))
 
-
 (defun neo-expand-toggle (node)
   (neo-expand-set node (not (neo-is-expanded-node node))))
-
 
 (defun neo-insert-dirtree (path depth)
   (if (eq depth 1)
@@ -446,7 +434,11 @@ including . and ..")
     (dolist (leaf leafs)
       (neo-insert-file-entry leaf depth))))
 
-  
+
+;;
+;; Public functions
+;;
+
 (defun neo-refresh-buffer (&optional line)
   (interactive)
   (neo-select-window)
@@ -461,11 +453,6 @@ including . and ..")
     (neo-scroll-to-line
      (if line line neo-start-line)
      ws-wind ws-pos)))
-
-
-;;
-;; Public functions
-;;
 
 (defun neo-set-window-width (n)
   (let ((w (max n window-min-width))
@@ -611,14 +598,17 @@ including . and ..")
       (neotree-hide)
     (neotree-show)))
 
+;;;###autoload
 (defun neotree-show ()
   (interactive)
-  (neo-get-window t))
+  (if (not (neo-valid-start-node-p))
+      (neotree-dir (neo--get-working-dir))
+    (neo-get-window t)))
 
+;;;###autoload
 (defun neotree-hide ()
   (interactive)
   (delete-window neo-window))
-
 
 ;;;###autoload
 (defun neotree-dir (path)
@@ -632,12 +622,10 @@ including . and ..")
        (cd start-path-name))
      (neo-refresh-buffer))))
 
-
 ;;;###autoload
 (defun neotree ()
   (interactive)
-  (let ((default-directory (neo--get-working-dir)))
-    (neotree-dir default-directory)))
+  (neotree-show))
 
 
 (provide 'neotree)
