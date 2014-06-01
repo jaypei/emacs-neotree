@@ -62,7 +62,7 @@
 
 (ert-deftest neo-test-newline-and-begin ()
   (with-temp-buffer
-    (neo-newline-and-begin)))
+    (neo-buffer--newline-and-begin)))
 
 
 (ert-deftest neo-test-file-short-name ()
@@ -82,7 +82,7 @@
 (ert-deftest neo-test-insert-with-face ()
   (with-temp-buffer
     (insert "foo")
-    (neo-insert-with-face "ButtonContent" 'default)
+    (neo-buffer--insert-with-face "ButtonContent" 'default)
     (insert "bar")
     (goto-char 4)
     (should (eq (face-at-point) 'default))
