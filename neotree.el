@@ -187,15 +187,85 @@ including . and ..")
   (replace-regexp-in-string "\n" "" string))
 
 (defun neo-util--walk-dir (path)
-  (let* ((full-path (neo-file-truename path)))
+  (let* ((full-path (neo-path--file-truename path)))
     (directory-files path 'full
                      directory-files-no-dot-files-regexp)))
 
 (defun neo-util--hidden-path-filter (node)
   (if (not neo-buffer--show-hidden-p)
       (not (string-match neo-hidden-files-regexp
-                         (neo-file-short-name node)))
+                         (neo-path--file-short-name node)))
     node))
+
+(defun neo-path--expand-name (path &optional current-dir)
+  (or (if (file-name-absolute-p path) path)
+      (let ((r-path path))
+        (setq r-path (substitute-in-file-name r-path))
+        (setq r-path (expand-file-name r-path current-dir))
+        r-path)))
+
+(defun neo-path--updir (path)
+  (let ((r-path (neo-path--expand-name path)))
+    (if (and (> (length r-path) 0)
+             (equal (substring r-path -1) "/"))
+        (setq r-path (substring r-path 0 -1)))
+    (if (eq (length r-path) 0)
+        (setq r-path "/"))
+    (directory-file-name
+     (file-name-directory r-path))))
+
+(defun neo-path--join (root &rest dirs)
+  "Joins a series of directories together, like Python's os.path.join,
+  (neo-path--join \"/tmp\" \"a\" \"b\" \"c\") => /tmp/a/b/c"
+  (or (if (not dirs) root)
+      (let ((tdir (car dirs))
+            (epath nil))
+        (setq epath
+              (or (if (equal tdir ".") root)
+                  (if (equal tdir "..") (neo-path--updir root))
+                  (neo-path--expand-name tdir root)))
+        (apply 'neo-path--join
+               epath
+               (cdr dirs)))))
+
+(defun neo-path--file-short-name (file)
+  "Base file/directory name. Taken from
+ http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
+  (or (if (string= file "/") "/")
+      (neo-util--make-printable-string (file-name-nondirectory (directory-file-name file)))))
+
+(defun neo-path--file-truename (path)
+  (let ((rlt (file-truename path)))
+    (if (not (null rlt))
+        (progn
+          (if (and (file-directory-p rlt)
+                   (> (length rlt) 0)
+                   (not (equal (substring rlt -1) "/")))
+              (setq rlt (concat rlt "/")))
+          rlt)
+      nil)))
+
+(defun neo-path--has-subfile-p (dir)
+  "To determine whether a directory(DIR) contains files"
+  (and (file-exists-p dir)
+       (file-directory-p dir)
+       (neo-util--walk-dir dir)
+       t))
+
+(defun neo-path--match-path-directory (path)
+  (let ((true-path (neo-path--file-truename path))
+        (rlt-path nil))
+    (setq rlt-path
+          (catch 'rlt
+            (if (file-directory-p true-path)
+                (throw 'rlt true-path))
+            (setq true-path
+                  (file-name-directory true-path))
+            (if (file-directory-p true-path)
+                (throw 'rlt true-path))))
+    (if (not (null rlt-path))
+        (setq rlt-path (neo-path--join "." rlt-path "./")))
+    rlt-path))
 
 
 ;;
@@ -221,12 +291,6 @@ including . and ..")
   (forward-line (1- line))
   (if start-pos (set-window-start wind start-pos)))
 
-(defun neo-file-short-name (file)
-  "Base file/directory name. Taken from
- http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
-  (or (if (string= file "/") "/")
-      (neo-util--make-printable-string (file-name-nondirectory (directory-file-name file)))))
-
 (defun neo-insert-with-face (content face)
   (let ((pos-start (point)))
     (insert content)
@@ -234,77 +298,13 @@ including . and ..")
                          (point)
                          (list 'face face))))
 
-(defun neo-file-truename (path)
-  (let ((rlt (file-truename path)))
-    (if (not (null rlt))
-        (progn
-          (if (and (file-directory-p rlt)
-                   (> (length rlt) 0)
-                   (not (equal (substring rlt -1) "/")))
-              (setq rlt (concat rlt "/")))
-          rlt)
-      nil)))
-
-(defun neo-path-expand-name (path &optional current-dir)
-  (or (if (file-name-absolute-p path) path)
-      (let ((r-path path))
-        (setq r-path (substitute-in-file-name r-path))
-        (setq r-path (expand-file-name r-path current-dir))
-        r-path)))
-
-(defun neo-path-join (root &rest dirs)
-  "Joins a series of directories together, like Python's os.path.join,
-  (neo-path-join \"/tmp\" \"a\" \"b\" \"c\") => /tmp/a/b/c"
-  (or (if (not dirs) root)
-      (let ((tdir (car dirs))
-            (epath nil))
-        (setq epath
-              (or (if (equal tdir ".") root)
-                  (if (equal tdir "..") (neo-path-updir root))
-                  (neo-path-expand-name tdir root)))
-        (apply 'neo-path-join
-               epath
-               (cdr dirs)))))
-
-(defun neo-path-updir (path)
-  (let ((r-path (neo-path-expand-name path)))
-    (if (and (> (length r-path) 0)
-             (equal (substring r-path -1) "/"))
-        (setq r-path (substring r-path 0 -1)))
-    (if (eq (length r-path) 0)
-        (setq r-path "/"))
-    (directory-file-name
-     (file-name-directory r-path))))
-
-(defun neo-directory-has-file (dir)
-  "To determine whether a directory(DIR) contains files"
-  (and (file-exists-p dir)
-       (file-directory-p dir)
-       (neo-util--walk-dir dir)
-       t))
-
-(defun neo-match-path-directory (path)
-  (let ((true-path (neo-file-truename path))
-        (rlt-path nil))
-    (setq rlt-path
-          (catch 'rlt
-            (if (file-directory-p true-path)
-                (throw 'rlt true-path))
-            (setq true-path
-                  (file-name-directory true-path))
-            (if (file-directory-p true-path)
-                (throw 'rlt true-path))))
-    (if (not (null rlt-path))
-        (setq rlt-path (neo-path-join "." rlt-path "./")))
-    rlt-path))
+(defun neo-path--get-working-dir ()
+  (file-name-as-directory (file-truename default-directory)))
 
 
 ;;
 ;; Privates functions
 ;;
-
-(defun neo--get-working-dir ()
-  (file-name-as-directory (file-truename default-directory)))
 
 (defun neo-valid-start-node-p ()
   (and (not (null neo-buffer--start-node))
@@ -375,7 +375,7 @@ including . and ..")
                  'action '(lambda (x) (neo-node-do-change-root))
                  'follow-link t
                  'face neo-file-link-face
-                 'neo-full-path (neo-path-updir neo-buffer--start-node))
+                 'neo-full-path (neo-path--updir neo-buffer--start-node))
   (insert " (up a dir)")
   (neo-newline-and-begin)
   (neo-insert-with-face node
@@ -385,7 +385,7 @@ including . and ..")
 (defun neo-insert-dir-entry (node depth expanded)
   (let ((btn-start-pos nil)
         (btn-end-pos nil)
-        (node-short-name (neo-file-short-name node)))
+        (node-short-name (neo-path--file-short-name node)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (setq btn-start-pos (point))
     (neo-insert-with-face (if expanded "-" "+")
@@ -402,7 +402,7 @@ including . and ..")
     (neo-newline-and-begin)))
 
 (defun neo-insert-file-entry (node depth)
-  (let ((node-short-name (neo-file-short-name node)))
+  (let ((node-short-name (neo-path--file-short-name node)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (insert-char ?\s 2)
     (insert-button node-short-name
@@ -564,7 +564,7 @@ including . and ..")
 (defun neo-create-node (filename)
   (interactive
    (let* ((current-dir (neo-get-current-line-filename neo-buffer--start-node))
-          (current-dir (neo-match-path-directory current-dir))
+          (current-dir (neo-path--match-path-directory current-dir))
           (filename (read-file-name "Filename:" current-dir)))
      (if (file-directory-p filename)
          (setq filename (concat filename "/")))
@@ -602,7 +602,7 @@ including . and ..")
           (throw 'end nil))
       (if (file-directory-p filename)
           (progn
-            (if (neo-directory-has-file filename)
+            (if (neo-path--has-subfile-p filename)
                 (if (yes-or-no-p (format
                                   "%S is directory, delete it by recursive ?"
                                   filename))
@@ -625,7 +625,7 @@ including . and ..")
 (defun neotree-show ()
   (interactive)
   (if (not (neo-valid-start-node-p))
-      (neotree-dir (neo--get-working-dir))
+      (neotree-dir (neo-path--get-working-dir))
     (neo-get-window t)))
 
 ;;;###autoload

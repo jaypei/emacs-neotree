@@ -67,7 +67,7 @@
 
 (ert-deftest neo-test-file-short-name ()
   (let ((should-equal (lambda (x y)
-                        (should (string= (neo-file-short-name x) y)))))
+                        (should (string= (neo-path--file-short-name x) y)))))
     (apply should-equal '("~/" "~"))
     (apply should-equal '("/" "/"))
     (apply should-equal '("~/." "."))
