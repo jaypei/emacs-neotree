@@ -27,7 +27,7 @@
 
 (ert-deftest neo-test-filter ()
   (let ((should-equal (lambda (condp lst y)
-                        (should (equal (neo-filter condp lst) y)))))
+                        (should (equal (neo-util--filter condp lst) y)))))
     (apply should-equal (list (lambda (x) (> x 10))
                               '(1 2 8 12 30)
                               '(12 30)))
@@ -54,7 +54,7 @@
 
 (ert-deftest neo-test-find ()
   (let ((should-equal (lambda (where which y)
-                        (should (equal (neo-find where which) y)))))
+                        (should (equal (neo-util--find where which) y)))))
     (apply should-equal (list '("hello" 1 "world") 'integerp 1))
     (apply should-equal (list '("hello" 1 "world") 'stringp "hello"))
     (apply should-equal (list '("hello" "world" 100000) 'integerp 100000))))

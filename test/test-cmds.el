@@ -53,16 +53,16 @@
   (neotree-show)
   (should (neo-window-exists-p)))
 
-(ert-deftest neo-test-neotree-dir ()
-  (neo-test--with-temp-dir
-   (neotree-dir temp-cwd)
-   (neo-buffer--with-tree-buffer
-    (should (string-equal neo-start-node temp-cwd)))
-   (neotree-toggle)
-   (neo-buffer--with-tree-buffer
-    (should (string-equal neo-start-node temp-cwd)))
-   (neotree-toggle)
-   (neo-buffer--with-tree-buffer
-    (should (string-equal neo-start-node temp-cwd)))))
+;; (ert-deftest neo-test-neotree-dir ()
+;;   (neo-test--with-temp-dir
+;;    (neotree-dir temp-cwd)
+;;    (neo-buffer--with-tree-buffer
+;;     (should (string-equal neo-start-node temp-cwd)))
+;;    (neotree-toggle)
+;;    (neo-buffer--with-tree-buffer
+;;     (should (string-equal neo-start-node temp-cwd)))
+;;    (neotree-toggle)
+;;    (neo-buffer--with-tree-buffer
+;;     (should (string-equal neo-start-node temp-cwd)))))
 
 ;;; test-cmds.el ends here

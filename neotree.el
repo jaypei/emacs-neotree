@@ -170,6 +170,33 @@ including . and ..")
 ;; util methods
 ;;
 
+(defun neo-util--filter (condp lst)
+    (delq nil
+          (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
+
+(defun neo-util--find (where which)
+  "find element of the list `where` matching predicate `which`"
+  (catch 'found
+    (dolist (elt where)
+      (when (funcall which elt)
+        (throw 'found elt)))
+    nil))
+
+(defun neo-util--make-printable-string (string)
+  "Strip newline character from file names, like 'Icon\n'"
+  (replace-regexp-in-string "\n" "" string))
+
+(defun neo-util--walk-dir (path)
+  (let* ((full-path (neo-file-truename path)))
+    (directory-files path 'full
+                     directory-files-no-dot-files-regexp)))
+
+(defun neo-util--hidden-path-filter (node)
+  (if (not neo-buffer--show-hidden-p)
+      (not (string-match neo-hidden-files-regexp
+                         (neo-file-short-name node)))
+    node))
+
 
 ;;
 ;; buffer methods
@@ -183,18 +210,6 @@ including . and ..")
 ;;
 ;; internal utility functions
 ;;
-
-(defun neo-filter (condp lst)
-    (delq nil
-          (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
-
-(defun neo-find (where which)
-  "find element of the list `where` matching predicate `which`"
-  (catch 'found
-    (dolist (elt where)
-      (when (funcall which elt)
-        (throw 'found elt)))
-    nil))
 
 (defun neo-newline-and-begin ()
   (newline)
@@ -210,11 +225,7 @@ including . and ..")
   "Base file/directory name. Taken from
  http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
   (or (if (string= file "/") "/")
-      (neo-printable-string (file-name-nondirectory (directory-file-name file)))))
-
-(defun neo-printable-string (string)
-  "Strip newline character from file names, like 'Icon\n'"
-  (replace-regexp-in-string "\n" "" string))
+      (neo-util--make-printable-string (file-name-nondirectory (directory-file-name file)))))
 
 (defun neo-insert-with-face (content face)
   (let ((pos-start (point)))
@@ -265,16 +276,11 @@ including . and ..")
     (directory-file-name
      (file-name-directory r-path))))
 
-(defun neo-walk-dir (path)
-  (let* ((full-path (neo-file-truename path)))
-    (directory-files path 'full
-                     directory-files-no-dot-files-regexp)))
-
 (defun neo-directory-has-file (dir)
   "To determine whether a directory(DIR) contains files"
   (and (file-exists-p dir)
        (file-directory-p dir)
-       (neo-walk-dir dir)
+       (neo-util--walk-dir dir)
        t))
 
 (defun neo-match-path-directory (path)
@@ -406,22 +412,16 @@ including . and ..")
                    'neo-full-path node)
     (neo-newline-and-begin)))
 
-(defun neo-node-hidden-filter (node)
-  (if (not neo-buffer--start-line)
-      (not (string-match neo-hidden-files-regexp
-                         (neo-file-short-name node)))
-    node))
-
 (defun neo-get-contents (path)
-  (let* ((nodes (neo-walk-dir path))
+  (let* ((nodes (neo-util--walk-dir path))
          (comp  #'(lambda (x y)
                     (string< x y)))
-         (nodes (neo-filter 'neo-node-hidden-filter nodes)))
-    (cons (sort (neo-filter 'file-directory-p nodes) comp)
-          (sort (neo-filter #'(lambda (f) (not (file-directory-p f))) nodes) comp))))
+         (nodes (neo-util--filter 'neo-util--hidden-path-filter nodes)))
+    (cons (sort (neo-util--filter 'file-directory-p nodes) comp)
+          (sort (neo-util--filter #'(lambda (f) (not (file-directory-p f))) nodes) comp))))
 
 (defun neo-is-expanded-node (node)
-  (if (neo-find neo-buffer--expanded-node-list
+  (if (neo-util--find neo-buffer--expanded-node-list
                 #'(lambda (x) (equal x node)))
       t nil))
 
@@ -429,7 +429,7 @@ including . and ..")
   "Set the expanded state of the node to do-expand"
   (if (not do-expand)
       (setq neo-buffer--expanded-node-list
-            (neo-filter
+            (neo-util--filter
              #'(lambda (x) (not (equal node x)))
              neo-buffer--expanded-node-list))
     (push node neo-buffer--expanded-node-list)))
