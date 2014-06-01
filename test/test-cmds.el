@@ -1,9 +1,8 @@
-;;; command-test.el --- summary
+;;; test-cmds.el --- summary
 
 ;; Copyright (C) 2014 jaypei
 
 ;; Author: jaypei <jaypei97159@gmail.com>
-;; Version: 0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,6 +22,15 @@
 ;;; Code:
 
 (require 'neotree)
+(require 'neotree-test)
+
+(defmacro neo-tests--with-temp-dir (&rest body)
+  (declare (indent 0) (debug t))
+  (let ((dir (gensym)))
+    `(let ((,dir (file-name-as-directory (make-temp-file "dir" t))))
+       (unwind-protect
+           (let ((default-directory ,dir)) ,@body)
+         (delete-directory ,dir t)))))
 
 (defadvice window-at (around neo-test-neotree-startup activate)
   ad-do-it
@@ -30,13 +38,19 @@
   ad-return-value)
 
 (ert-deftest neo-test-neotree-startup ()
-  (with-temp-buffer
-    (neotree)
-    (should (neo-window-exists-p))))
+  (neotree)
+  (should (neo-window-exists-p)))
 
 (ert-deftest neo-test-neotree-toggle ()
-  (with-temp-buffer
-    (neotree-toggle)
-    (should (neo-window-exists-p))))
+  (neotree-toggle)
+  (should (neo-window-exists-p))
+  (neotree-show)
+  (should (neo-window-exists-p))
+  (neotree-toggle)
+  (should (not (neo-window-exists-p)))
+  (neotree-hide)
+  (should (not (neo-window-exists-p)))
+  (neotree-show)
+  (should (neo-window-exists-p)))
 
-;;; command-test.el ends here
+;;; test-cmds.el ends here

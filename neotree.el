@@ -608,7 +608,8 @@ including . and ..")
 ;;;###autoload
 (defun neotree-hide ()
   (interactive)
-  (delete-window neo-window))
+  (if (neo-window-exists-p)
+      (delete-window neo-window)))
 
 ;;;###autoload
 (defun neotree-dir (path)

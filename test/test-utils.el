@@ -1,4 +1,4 @@
-;;; util-test.el --- summary
+;;; test-utils.el --- summary
 
 ;; Copyright (C) 2014 jaypei
 
@@ -22,6 +22,7 @@
 ;;; Code:
 
 (require 'neotree)
+(require 'neotree-test)
 
 
 (ert-deftest neo-test-filter ()
@@ -88,4 +89,4 @@
     (should (string= (buffer-string) "fooButtonContentbar"))))
 
 
-;;; util-test.el ends here
+;;; test-utils.el ends here
