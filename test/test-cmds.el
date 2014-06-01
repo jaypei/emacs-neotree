@@ -39,30 +39,30 @@
 
 (ert-deftest neo-test-neotree-startup ()
   (neotree)
-  (should (neo-window-exists-p)))
+  (should (neo-global--window-exists-p)))
 
 (ert-deftest neo-test-neotree-toggle ()
   (neotree-toggle)
-  (should (neo-window-exists-p))
+  (should (neo-global--window-exists-p))
   (neotree-show)
-  (should (neo-window-exists-p))
+  (should (neo-global--window-exists-p))
   (neotree-toggle)
-  (should (not (neo-window-exists-p)))
+  (should (not (neo-global--window-exists-p)))
   (neotree-hide)
-  (should (not (neo-window-exists-p)))
+  (should (not (neo-global--window-exists-p)))
   (neotree-show)
-  (should (neo-window-exists-p)))
+  (should (neo-global--window-exists-p)))
 
 ;; (ert-deftest neo-test-neotree-dir ()
 ;;   (neo-test--with-temp-dir
 ;;    (neotree-dir temp-cwd)
-;;    (neo-buffer--with-tree-buffer
+;;    (neo-global--with-buffer
 ;;     (should (string-equal neo-start-node temp-cwd)))
 ;;    (neotree-toggle)
-;;    (neo-buffer--with-tree-buffer
+;;    (neo-global--with-buffer
 ;;     (should (string-equal neo-start-node temp-cwd)))
 ;;    (neotree-toggle)
-;;    (neo-buffer--with-tree-buffer
+;;    (neo-global--with-buffer
 ;;     (should (string-equal neo-start-node temp-cwd)))))
 
 ;;; test-cmds.el ends here
