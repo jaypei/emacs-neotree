@@ -311,7 +311,8 @@ including . and ..")
   neo-window)
 
 (defun neo-window-exists-p ()
-  (eql (window-buffer neo-window) (neo-get-buffer)))
+  (and (not (null (window-buffer neo-window)))
+       (eql (window-buffer neo-window) (neo-get-buffer))))
 
 (defun neo-get-window (&optional auto-create-p)
   (if (not (neo-window-exists-p))
@@ -438,6 +439,12 @@ including . and ..")
 ;;
 ;; Public functions
 ;;
+
+(defmacro neo-buffer--with-tree-buffer (&rest body)
+  (declare (indent 0) (debug t))
+  `(save-current-buffer
+     (switch-to-buffer (neo-get-buffer))
+     ,@body))
 
 (defun neo-refresh-buffer (&optional line)
   (interactive)
