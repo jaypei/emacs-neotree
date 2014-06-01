@@ -147,7 +147,6 @@ including . and ..")
     map)
   "Keymap for `neotree-mode'.")
 
-
 (define-derived-mode neotree-mode special-mode "NeoTree"
   "A major mode for displaying the directory tree in text mode."
   ;; only spaces
@@ -180,7 +179,7 @@ including . and ..")
       (setf neo-global--window nil))
   (if (and (null neo-global--window)
            auto-create-p)
-      (neo--init-window))
+      (neo-window--init))
   neo-global--window)
 
 (defun neo-global--get-buffer ()
@@ -423,11 +422,11 @@ including . and ..")
 
 (defun neo-buffer--refresh (&optional line)
   (interactive)
-  (neo-select-window)
+  (neo-window--select)
   (let ((start-node neo-buffer--start-node)
         (ws-wind (selected-window))
         (ws-pos (window-start)))
-    (neo-save-window-excursion
+    (neo-window--save-excursion
      (setq neo-buffer--start-line (line-number-at-pos (point)))
      (erase-buffer)
      (neo-buffer--insert-header)
@@ -459,7 +458,6 @@ including . and ..")
             (setf current-button (button-at btn-position)))))
     current-button))
 
-
 (defun neo-buffer--get-filename-current-line (&optional default)
   (let ((btn (neo-buffer--get-button-current-line)))
     (if (not (null btn))
@@ -471,12 +469,7 @@ including . and ..")
 ;; window methods
 ;;
 
-
-;;
-;; Privates functions
-;;
-
-(defmacro neo-save-window-excursion (&rest body)
+(defmacro neo-window--save-excursion (&rest body)
   `(save-window-excursion
      (let ((rlt nil))
        (switch-to-buffer (neo-global--get-buffer))
@@ -485,7 +478,7 @@ including . and ..")
        (setq buffer-read-only t)
        rlt)))
 
-(defun neo--init-window ()
+(defun neo-window--init ()
   (select-window (window-at 0 0))
   (split-window-horizontally)
   (switch-to-buffer (neo-global--get-buffer))
@@ -494,16 +487,11 @@ including . and ..")
       (linum-mode -1))
   (setf neo-global--window (get-buffer-window))
   (select-window (window-right (get-buffer-window)))
-  (neo-set-window-width neo-width)
+  (neo-window--set-width neo-width)
   (set-window-dedicated-p neo-global--window t)
   neo-global--window)
 
-
-;;
-;; Public functions
-;;
-
-(defun neo-set-window-width (n)
+(defun neo-window--set-width (n)
   (let ((w (max n window-min-width))
         (window (neo-global--get-window)))
     (when (not (null window))
@@ -514,6 +502,10 @@ including . and ..")
           (if (< (window-width) w)
               (enlarge-window-horizontally (- w (window-width)))))))))
 
+(defun neo-window--select ()
+  (interactive)
+  (let ((window (neo-global--get-window t)))
+    (select-window window)))
 
 
 ;;
@@ -528,16 +520,9 @@ including . and ..")
   (interactive)
   (forward-button 1 nil))
 
-
-(defun neo-select-window ()
-  (interactive)
-  (let ((window (neo-global--get-window t)))
-    (select-window window)))
-
-
 (defun neo-node-do-enter ()
   (interactive)
-  (neo-select-window)
+  (neo-window--select)
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (when (not (null btn-full-path))
       (if (file-directory-p btn-full-path)
@@ -547,15 +532,13 @@ including . and ..")
         (find-file-other-window btn-full-path)))
     btn-full-path))
 
-
 (defun neo-node-do-change-root ()
   (interactive)
-  (neo-select-window)
+  (neo-window--select)
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (if (null btn-full-path)
         (call-interactively 'neotree-dir)
       (neotree-dir btn-full-path))))
-
 
 (defun neo-create-node (filename)
   (interactive
@@ -586,7 +569,6 @@ including . and ..")
         (mkdir filename)
         (neo-buffer--refresh)))))
 
-
 (defun neo-delete-current-node ()
   (interactive)
   (catch 'end
@@ -608,7 +590,6 @@ including . and ..")
       (message "Delete successed!")
       (neo-buffer--refresh)
       filename)))
-
 
 (defun neotree-refresh ()
   (interactive)
@@ -640,7 +621,7 @@ including . and ..")
   (when (and (file-exists-p path)
              (file-directory-p path))
     (neo-global--get-window t)
-    (neo-save-window-excursion
+    (neo-window--save-excursion
      (let ((start-path-name (expand-file-name (substitute-in-file-name path))))
        (setq neo-buffer--start-node start-path-name)
        (cd start-path-name))
