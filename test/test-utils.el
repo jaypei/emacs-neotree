@@ -1,8 +1,9 @@
-;;; test-utils.el --- summary
+;;; test-utils.el --- test cases
 
 ;; Copyright (C) 2014 jaypei
 
 ;; Author: jaypei <jaypei97159@gmail.com>
+;; URL: https://github.com/jaypei/emacs-neotree
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

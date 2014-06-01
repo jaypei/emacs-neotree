@@ -1,8 +1,9 @@
-;;; neotree-autoloads.el --- summary
+;;; neotree-autoloads.el --- A emacs tree plugin like NerdTree for Vim
 
 ;; Copyright (C) 2014 jaypei
 
 ;; Author: jaypei <jaypei97159@gmail.com>
+;; URL: https://github.com/jaypei/emacs-neotree
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

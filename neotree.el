@@ -3,8 +3,8 @@
 ;; Copyright (C) 2014 jaypei
 
 ;; Author: jaypei <jaypei97159@gmail.com>
-;; Version: 0.1.4
 ;; URL: https://github.com/jaypei/emacs-neotree
+;; Version: 0.1.4
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
