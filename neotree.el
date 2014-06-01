@@ -136,7 +136,7 @@ including . and ..")
     (define-key map (kbd "SPC") 'neo-node-do-enter)
     (define-key map (kbd "TAB") 'neo-node-do-enter)
     (define-key map (kbd "RET") 'neo-node-do-enter)
-    (define-key map (kbd "g") 'neo-refresh)
+    (define-key map (kbd "g") 'neotree-refresh)
     (define-key map (kbd "p") 'previous-line)
     (define-key map (kbd "n") 'next-line)
     (define-key map (kbd "C-x C-f") 'find-file-other-window)
@@ -609,6 +609,10 @@ including . and ..")
       (neo-buffer--refresh)
       filename)))
 
+
+(defun neotree-refresh ()
+  (interactive)
+  (neo-buffer--refresh))
 
 ;;;###autoload
 (defun neotree-toggle ()
