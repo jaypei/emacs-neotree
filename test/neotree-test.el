@@ -25,7 +25,7 @@
 (defmacro neo-test--with-temp-dir (&rest body)
   (declare (indent 0) (debug t))
   `(let* ((temp-cwd (file-name-as-directory (make-temp-file "dir" t)))
-          (temp-pd (neo-path-join temp-cwd "neo-test" "./")))
+          (temp-pd (neo-path--join temp-cwd "neo-test" "./")))
      (mkdir temp-pd)
      (unwind-protect
          (let ((default-directory temp-cwd)) ,@body)

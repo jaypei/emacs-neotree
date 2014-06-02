@@ -175,11 +175,11 @@ including . and ..")
        (eql (window-buffer neo-global--window) (neo-global--get-buffer))))
 
 (defun neo-global--get-window (&optional auto-create-p)
-  (if (not (neo-global--window-exists-p))
-      (setf neo-global--window nil))
-  (if (and (null neo-global--window)
-           auto-create-p)
-      (neo-window--init))
+  (unless (neo-global--window-exists-p)
+    (setf neo-global--window nil))
+  (when (and (null neo-global--window)
+             auto-create-p)
+    (neo-window--init))
   neo-global--window)
 
 (defun neo-global--get-buffer ()
@@ -187,7 +187,8 @@ including . and ..")
                   neo-buffer-name))
       (setf neo-global--buffer nil))
   (if (null neo-global--buffer)
-      (neo-buffer--create-buffer))
+      (save-window-excursion
+        (neo-buffer--create)))
   neo-global--buffer)
 
 
@@ -300,6 +301,15 @@ including . and ..")
 ;; buffer methods
 ;;
 
+(defmacro neo-buffer--save-excursion (&rest body)
+  `(save-window-excursion
+     (let ((rlt nil))
+       (switch-to-buffer (neo-global--get-buffer))
+       (setq buffer-read-only nil)
+       (setf rlt (progn ,@body))
+       (setq buffer-read-only t)
+       rlt)))
+
 (defun neo-buffer--newline-and-begin ()
   (newline)
   (beginning-of-line))
@@ -321,15 +331,12 @@ including . and ..")
   (and (not (null neo-buffer--start-node))
        (file-accessible-directory-p neo-buffer--start-node)))
 
-(defun neo-buffer--create-buffer ()
-  (save-excursion
-    (split-window-horizontally)
-    (setq neo-global--buffer
-          (switch-to-buffer
-           (generate-new-buffer-name neo-buffer-name)))
-    (neotree-mode)
-    (setq buffer-read-only t)
-    (delete-window))
+(defun neo-buffer--create ()
+  (setq neo-global--buffer
+        (switch-to-buffer
+         (generate-new-buffer-name neo-buffer-name)))
+  (neotree-mode)
+  (setq buffer-read-only t)
   neo-global--buffer)
 
 (defun neo-buffer--insert-header ()
@@ -426,7 +433,7 @@ including . and ..")
   (let ((start-node neo-buffer--start-node)
         (ws-wind (selected-window))
         (ws-pos (window-start)))
-    (neo-window--save-excursion
+    (neo-buffer--save-excursion
      (setq neo-buffer--start-line (line-number-at-pos (point)))
      (erase-buffer)
      (neo-buffer--insert-header)
@@ -469,15 +476,6 @@ including . and ..")
 ;; window methods
 ;;
 
-(defmacro neo-window--save-excursion (&rest body)
-  `(save-window-excursion
-     (let ((rlt nil))
-       (switch-to-buffer (neo-global--get-buffer))
-       (setq buffer-read-only nil)
-       (setf rlt (progn ,@body))
-       (setq buffer-read-only t)
-       rlt)))
-
 (defun neo-window--init ()
   (select-window (window-at 0 0))
   (split-window-horizontally)
@@ -494,7 +492,7 @@ including . and ..")
 (defun neo-window--set-width (n)
   (let ((w (max n window-min-width))
         (window (neo-global--get-window)))
-    (when (not (null window))
+    (unless (null window)
       (save-selected-window
         (select-window window)
         (if (> (window-width) w)
@@ -524,7 +522,7 @@ including . and ..")
   (interactive)
   (neo-window--select)
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
-    (when (not (null btn-full-path))
+    (unless (null btn-full-path)
       (if (file-directory-p btn-full-path)
           (progn
             (neo-buffer--toggle-expand btn-full-path)
@@ -605,9 +603,12 @@ including . and ..")
 ;;;###autoload
 (defun neotree-show ()
   (interactive)
-  (if (not (neo-buffer--valid-start-node-p))
-      (neotree-dir (neo-path--get-working-dir))
-    (neo-global--get-window t)))
+  (let ((valid-start-node-p nil))
+    (neo-buffer--save-excursion
+     (setf valid-start-node-p (neo-buffer--valid-start-node-p)))
+    (if (not valid-start-node-p)
+        (neotree-dir (neo-path--get-working-dir))
+      (neo-global--get-window t))))
 
 ;;;###autoload
 (defun neotree-hide ()
@@ -621,7 +622,7 @@ including . and ..")
   (when (and (file-exists-p path)
              (file-directory-p path))
     (neo-global--get-window t)
-    (neo-window--save-excursion
+    (neo-buffer--save-excursion
      (let ((start-path-name (expand-file-name (substitute-in-file-name path))))
        (setq neo-buffer--start-node start-path-name)
        (cd start-path-name))
