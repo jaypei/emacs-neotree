@@ -39,7 +39,7 @@
 ;; Constants
 ;;
 
-(defconst neo-buffer-name "*NeoTree*"
+(defconst neo-buffer-name " *NeoTree*"
   "Name of the buffer where neotree shows directory contents.")
 
 (defconst neo-hidden-files-regexp "^\\."
