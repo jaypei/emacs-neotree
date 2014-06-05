@@ -1,4 +1,4 @@
-;;; neotree-autoloads.el --- A emacs tree plugin like NerdTree for Vim
+;;; neotree-test.el --- test utilities
 
 ;; Copyright (C) 2014 jaypei
 
@@ -21,32 +21,16 @@
 ;;; Commentary:
 
 ;;; Code:
-
-;;;### (autoloads (neotree neotree-dir neotree-toggle neotree-mode)
-;;;;;;  "neotree" "neotree.el" (21385 31699 0 0))
-;;; Generated autoloads from neotree.el
 
-(autoload 'neotree-mode "neotree" "\
-A major mode for displaying the directory tree in text mode.
-
-\(fn)" t nil)
-
-(autoload 'neotree-toggle "neotree" "\
+(defmacro neo-test--with-temp-dir (&rest body)
+  (declare (indent 0) (debug t))
+  `(let* ((temp-cwd (file-name-as-directory (make-temp-file "dir" t)))
+          (temp-pd (neo-path--join temp-cwd "neo-test" "./")))
+     (mkdir temp-pd)
+     (unwind-protect
+         (let ((default-directory temp-cwd)) ,@body)
+       (delete-directory temp-cwd t))))
 
 
-\(fn)" t nil)
-
-(autoload 'neotree-dir "neotree" "\
-
-
-\(fn PATH)" t nil)
-
-(autoload 'neotree "neotree" "\
-
-
-\(fn)" t nil)
-
-;;;***
-
-(provide 'neotree-autoloads)
-;;; neotree-autoloads.el ends here
+(provide 'neotree-test)
+;;; neotree-test.el ends here

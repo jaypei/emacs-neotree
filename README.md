@@ -20,21 +20,25 @@ $ cd /some/path
 $ git clone https://github.com/jaypei/emacs-neotree.git neotree
 ```
 
-Add emacs config:
+Add config to emacs:
 
 ```elisp
 (add-to-list 'load-path "/some/path/neotree")
 (require 'neotree)
+(global-set-key [f8] 'neotree-toggle)
 ```
 
-Open NeoTree:
+Open (toggle) NeoTree:
 
 ```
-M-x neotree RET
+<F8>
 ```
+
 
 Usage
 -----
+
+Buffer shortcuts
 
 * `n` - next line
 * `p` - previous line
@@ -43,6 +47,13 @@ Usage
 * `C-c C-n` - create file or directory
 * `C-c C-d` - delete file or directory
 * `C-c C-c` - change root directory
+
+Commands
+
+* `M-x neotree-dir RET`
+* `M-x neotree-show RET` or `M-x neotree RET`
+* `M-x neotree-hide RET`
+* `M-x neotree-toggle`
 
 
 ChangeLog
@@ -65,3 +76,9 @@ ChangeLog
 * Fix issue #1 #2
 * Add some unit tests
 * Remove neotree-util.el
+
+### 0.1.5 (2014-06-05)
+
+* 重构关于window和buffer的代码
+* buffer选择的地方隐藏 *NeoTree*
+* 解决toggle后根目录变为当前目录的问题

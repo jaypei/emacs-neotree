@@ -1,8 +1,9 @@
-;;; util-test.el --- summary
+;;; test-utils.el --- test cases
 
 ;; Copyright (C) 2014 jaypei
 
 ;; Author: jaypei <jaypei97159@gmail.com>
+;; URL: https://github.com/jaypei/emacs-neotree
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -22,11 +23,12 @@
 ;;; Code:
 
 (require 'neotree)
+(require 'neotree-test)
 
 
 (ert-deftest neo-test-filter ()
   (let ((should-equal (lambda (condp lst y)
-                        (should (equal (neo-filter condp lst) y)))))
+                        (should (equal (neo-util--filter condp lst) y)))))
     (apply should-equal (list (lambda (x) (> x 10))
                               '(1 2 8 12 30)
                               '(12 30)))
@@ -53,7 +55,7 @@
 
 (ert-deftest neo-test-find ()
   (let ((should-equal (lambda (where which y)
-                        (should (equal (neo-find where which) y)))))
+                        (should (equal (neo-util--find where which) y)))))
     (apply should-equal (list '("hello" 1 "world") 'integerp 1))
     (apply should-equal (list '("hello" 1 "world") 'stringp "hello"))
     (apply should-equal (list '("hello" "world" 100000) 'integerp 100000))))
@@ -61,12 +63,12 @@
 
 (ert-deftest neo-test-newline-and-begin ()
   (with-temp-buffer
-    (neo-newline-and-begin)))
+    (neo-buffer--newline-and-begin)))
 
 
 (ert-deftest neo-test-file-short-name ()
   (let ((should-equal (lambda (x y)
-                        (should (string= (neo-file-short-name x) y)))))
+                        (should (string= (neo-path--file-short-name x) y)))))
     (apply should-equal '("~/" "~"))
     (apply should-equal '("/" "/"))
     (apply should-equal '("~/." "."))
@@ -81,11 +83,11 @@
 (ert-deftest neo-test-insert-with-face ()
   (with-temp-buffer
     (insert "foo")
-    (neo-insert-with-face "ButtonContent" 'default)
+    (neo-buffer--insert-with-face "ButtonContent" 'default)
     (insert "bar")
     (goto-char 4)
     (should (eq (face-at-point) 'default))
     (should (string= (buffer-string) "fooButtonContentbar"))))
 
 
-;;; util-test.el ends here
+;;; test-utils.el ends here
