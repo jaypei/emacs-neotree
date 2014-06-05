@@ -76,3 +76,9 @@ ChangeLog
 * Fix issue #1 #2
 * Add some unit tests
 * Remove neotree-util.el
+
+### 0.1.5 (2014-06-05)
+
+* 重构关于window和buffer的代码
+* buffer选择的地方隐藏 *NeoTree*
+* 解决toggle后根目录变为当前目录的问题
