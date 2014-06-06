@@ -421,7 +421,7 @@ including . and ..")
          (leafs (cdr contents)))
     (dolist (node nodes)
       (let ((expanded (neo-buffer--expanded-node-p node)))
-        (neo-buffer--insert-dir-entry 
+        (neo-buffer--insert-dir-entry
          node depth expanded)
         (if expanded (neo-buffer--insert-tree (concat node "/") (+ depth 1)))))
     (dolist (leaf leafs)
@@ -527,7 +527,7 @@ including . and ..")
           (progn
             (neo-buffer--toggle-expand btn-full-path)
             (neo-buffer--refresh))
-        (find-file-other-window btn-full-path)))
+	(find-file-other-window btn-full-path)))
     btn-full-path))
 
 (defun neo-node-do-change-root ()
@@ -633,6 +633,14 @@ including . and ..")
   (interactive)
   (neotree-show))
 
+(defadvice delete-other-windows
+  (around neotree-delete-other-windows activate)
+  "Delete all windows except neotree."
+  (interactive)
+  (mapcar (lambda (window)
+	    (if (not (string-equal (buffer-name (window-buffer window)) neo-buffer-name))
+		(delete-window window)))
+	  (cdr (window-list))))
 
 (provide 'neotree)
 ;;; neotree.el ends here
