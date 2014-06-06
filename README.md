@@ -59,17 +59,11 @@ Commands
 ChangeLog
 ---------
 
-### 0.1.1 (2014-04-06)
+### 0.1.5 (2014-06-05)
 
-基本功能完成
-
-### 0.1.2 (2014-04-08)
-
-增加基本文件操作，支持鼠标选中
-
-### 0.1.3 (2014-04-13)
-
-支持改变根节点目录，增加目录和文件根据末尾/判断，删除空目录时去掉递归提醒
+* Refactory on code of window and buffer
+* Remove \*NeoTree\* from buffer selection list
+* Fix: Directory changed to root after toggle
 
 ### 0.1.4 (2014-05-27)
 
@@ -77,8 +71,17 @@ ChangeLog
 * Add some unit tests
 * Remove neotree-util.el
 
-### 0.1.5 (2014-06-05)
+### 0.1.3 (2014-04-13)
 
-* 重构关于window和buffer的代码
-* buffer选择的地方隐藏 *NeoTree*
-* 解决toggle后根目录变为当前目录的问题
+* Support for changing the directory of tree root
+* Adding files or directories depends on if the last character is a '/'
+* Remove 'Recursive Notification' when deleting an empty directory
+
+### 0.1.2 (2014-04-08)
+
+* Add File Operations
+* Support For Mouse Operations
+
+### 0.1.1 (2014-04-06)
+
+Basic Functionalities.
