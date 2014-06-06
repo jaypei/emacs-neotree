@@ -495,10 +495,24 @@ including . and ..")
     (unless (null window)
       (save-selected-window
         (select-window window)
+	(neo-window--unlock)
         (if (> (window-width) w)
             (shrink-window-horizontally (- (window-width) w))
           (if (< (window-width) w)
-              (enlarge-window-horizontally (- w (window-width)))))))))
+              (enlarge-window-horizontally (- w (window-width)))))
+	(neo-window--lock)))))
+
+(defun neo-window--lock ()
+  (save-excursion
+    (switch-to-buffer (neo-global--get-buffer))
+    (setq window-size-fixed t)))
+
+(defun neo-window--unlock ()
+  (save-excursion
+    (switch-to-buffer (neo-global--get-buffer))
+    (setq window-size-fixed nil)))
+
+(defun neo-window--shrink ())
 
 (defun neo-window--select ()
   (interactive)
