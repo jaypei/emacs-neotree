@@ -43,8 +43,8 @@
   "Name of the buffer where neotree shows directory contents.")
 
 (defconst neo-hidden-files-regexp "^\\."
-  "Hidden files regexp. By default all filest starting with dot '.',
-including . and ..")
+  "Hidden files regexp.
+By default all filest starting with dot '.' including . and ..")
 
 
 ;;
@@ -115,7 +115,7 @@ including . and ..")
 (make-variable-buffer-local 'neo-buffer--start-node)
 
 (defvar neo-buffer--start-line nil
-  "Index of the start line - the root")
+  "Index of the start line of the root.")
 (make-variable-buffer-local 'neo-buffer--start-line)
 
 (defvar neo-buffer--show-hidden-p nil
@@ -165,16 +165,21 @@ including . and ..")
 ;;
 
 (defmacro neo-global--with-buffer (&rest body)
+  "Execute the forms in BODY with global neotree buffer."
   (declare (indent 0) (debug t))
   `(save-current-buffer
      (switch-to-buffer (neo-global--get-buffer))
      ,@body))
 
 (defun neo-global--window-exists-p ()
+  "Return non-nil if neotree window exists."
   (and (not (null (window-buffer neo-global--window)))
        (eql (window-buffer neo-global--window) (neo-global--get-buffer))))
 
 (defun neo-global--get-window (&optional auto-create-p)
+  "Return the neotree window if it exists, else return nil.
+But when the neotree window is not exists and AUTO-CREATE-P is non-nil,
+it will be auto create neotree window and return it."
   (unless (neo-global--window-exists-p)
     (setf neo-global--window nil))
   (when (and (null neo-global--window)
@@ -183,6 +188,7 @@ including . and ..")
   neo-global--window)
 
 (defun neo-global--get-buffer ()
+  "Return the global neotree buffer if it exists."
   (if (not (equal (buffer-name neo-global--buffer)
                   neo-buffer-name))
       (setf neo-global--buffer nil))
@@ -197,11 +203,11 @@ including . and ..")
 ;;
 
 (defun neo-util--filter (condp lst)
-    (delq nil
-          (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
+  (delq nil
+        (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
 
 (defun neo-util--find (where which)
-  "find element of the list `where` matching predicate `which`"
+  "Find element of the list WHERE matching predicate WHICH."
   (catch 'found
     (dolist (elt where)
       (when (funcall which elt)
@@ -209,7 +215,7 @@ including . and ..")
     nil))
 
 (defun neo-util--make-printable-string (string)
-  "Strip newline character from file names, like 'Icon\n'"
+  "Strip newline character from STRING, like 'Icon\n'."
   (replace-regexp-in-string "\n" "" string))
 
 (defun neo-util--walk-dir (path)
@@ -241,8 +247,9 @@ including . and ..")
      (file-name-directory r-path))))
 
 (defun neo-path--join (root &rest dirs)
-  "Joins a series of directories together, like Python's os.path.join,
-  (neo-path--join \"/tmp\" \"a\" \"b\" \"c\") => /tmp/a/b/c"
+  "Joins a series of directories together with ROOT and DIRS.
+Like Python's os.path.join,
+  (neo-path--join \"/tmp\" \"a\" \"b\" \"c\") => /tmp/a/b/c ."
   (or (if (not dirs) root)
       (let ((tdir (car dirs))
             (epath nil))
@@ -255,8 +262,8 @@ including . and ..")
                (cdr dirs)))))
 
 (defun neo-path--file-short-name (file)
-  "Base file/directory name. Taken from
- http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
+  "Base file/directory name by FILE.
+Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
   (or (if (string= file "/") "/")
       (neo-util--make-printable-string (file-name-nondirectory (directory-file-name file)))))
 
@@ -315,7 +322,7 @@ including . and ..")
   (beginning-of-line))
 
 (defun neo-buffer--scroll-to-line (line &optional wind start-pos)
-  "Recommended way to set the cursor to specified line"
+  "Recommended way to set the cursor to LINE."
   (goto-char (point-min))
   (forward-line (1- line))
   (if start-pos (set-window-start wind start-pos)))
