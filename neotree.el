@@ -365,7 +365,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
 
 (defun neo-buffer--insert-header ()
   (let ((start (point)))
-    (insert "press ? for neotree help")
+    (insert "Press ? for help.")
     (set-text-properties start (point) '(face neo-header-face)))
   (neo-buffer--newline-and-begin))
 
@@ -598,7 +598,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
         (neo-buffer--refresh)
         (find-file-other-window filename))
       (when (and (not is-file)
-                 (yes-or-no-p (format "Do you want to create directory %S ?"
+                 (yes-or-no-p (format "Do you want to create directory %S?"
                                       filename)))
         (mkdir filename)
         (neo-buffer--refresh)))))
@@ -609,19 +609,19 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
     (let ((filename (neo-buffer--get-filename-current-line)))
       (if (null filename) (throw 'end nil))
       (if (not (file-exists-p filename)) (throw 'end nil))
-      (if (not (yes-or-no-p (format "Do you really want to delete %S ?"
+      (if (not (yes-or-no-p (format "Do you really want to delete %S?"
                                     filename)))
           (throw 'end nil))
       (if (file-directory-p filename)
           (progn
             (if (neo-path--has-subfile-p filename)
                 (if (yes-or-no-p (format
-                                  "%S is directory, delete it by recursive ?"
+                                  "%S is a directory, delete it recursively?"
                                   filename))
                     (delete-directory filename t))
               (delete-directory filename)))
         (delete-file filename))
-      (message "Delete successed!")
+      (message (message "%S deleted." filename))
       (neo-buffer--refresh)
       filename)))
 
