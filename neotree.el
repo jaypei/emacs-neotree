@@ -534,14 +534,16 @@ including . and ..")
 
 (defun neo-node-do-enter ()
   (interactive)
-  (neo-window--select)
+  ;(neo-window--select)
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (unless (null btn-full-path)
       (if (file-directory-p btn-full-path)
           (progn
             (neo-buffer--toggle-expand btn-full-path)
             (neo-buffer--refresh))
-	(find-file-other-window btn-full-path)))
+	(progn
+	  (switch-to-buffer (other-buffer (current-buffer) 1))
+	 (find-file btn-full-path))))
     btn-full-path))
 
 (defun neo-node-do-change-root ()
