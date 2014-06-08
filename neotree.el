@@ -510,6 +510,8 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
   "Create neotree window."
   (select-window (window-at 0 0))
   (split-window-horizontally)
+  (neo-global--with-buffer
+   (neo-buffer--unlock-width))
   (switch-to-buffer (neo-global--get-buffer))
   (if (and (boundp 'linum-mode)         ; disable line number
            (not (null linum-mode)))
