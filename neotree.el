@@ -516,6 +516,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
   (if (and (boundp 'linum-mode)         ; disable line number
            (not (null linum-mode)))
       (linum-mode -1))
+  (setq truncate-lines -1)
   (setf neo-global--window (get-buffer-window))
   (neo-window--set-width neo-width)
   (set-window-dedicated-p neo-global--window t)
