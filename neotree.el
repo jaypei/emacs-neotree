@@ -621,7 +621,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
                     (delete-directory filename t))
               (delete-directory filename)))
         (delete-file filename))
-      (message (message "%S deleted." filename))
+      (message "%S deleted." filename)
       (neo-buffer--refresh)
       filename)))
 
