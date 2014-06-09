@@ -496,7 +496,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
       default)))
 
 (defun neo-buffer--lock-width ()
-  (setq window-size-fixed t))
+  (setq window-size-fixed 'width))
 
 (defun neo-buffer--unlock-width ()
   (setq window-size-fixed nil))
@@ -533,7 +533,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
           (shrink-window-horizontally (- (window-width) w))
         (if (< (window-width) w)
             (enlarge-window-horizontally (- w (window-width))))))))
-  
+
 (defun neo-window--select ()
   (interactive)
   (let ((window (neo-global--get-window t)))
