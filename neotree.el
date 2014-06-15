@@ -58,10 +58,14 @@ By default all filest starting with dot '.' including . and ..")
   :link '(info-link "(neotree)Configuration"))
 
 (defcustom neo-width 25
-  "*If non-nil, neo will change its width to this when it show."
+  "*Specifies the width of the NeoTree window."
   :type 'integer
   :group 'neotree)
 
+(defcustom neo-show-header t
+  "*If non-nil, a help message will be displayed on the top of the window."
+  :type 'boolean
+  :group 'neotree)
 
 ;;
 ;; Faces
@@ -468,7 +472,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
     (neo-buffer--save-excursion
      (setq neo-buffer--start-line (line-number-at-pos (point)))
      (erase-buffer)
-     (neo-buffer--insert-header)
+     (if neo-show-header (neo-buffer--insert-header))
      (neo-buffer--insert-tree start-node 1))
     (neo-buffer--scroll-to-line
      (if line line neo-buffer--start-line)
