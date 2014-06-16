@@ -561,6 +561,19 @@ NeoTree buffer is BUFFER."
         (if (< (window-width) w)
             (enlarge-window-horizontally (- w (window-width))))))))
 
+(defun neo-window--zoom (method)
+  (neo-buffer--unlock-width)
+  (cond
+   ((eq method 'maximize)
+    (maximize-window))
+   ((eq method 'minimize)
+    (neo-window--set-width (selected-window) neo-width))
+   ((eq method 'zoom-in)
+    (shrink-window-horizontally 2))
+   ((eq method 'zoom-out)
+    (enlarge-window-horizontally 2)))
+  (neo-buffer--lock-width))
+
 
 ;;
 ;; Interactive functions
