@@ -187,8 +187,21 @@ it will be auto create neotree window and return it."
     (setf neo-global--window nil))
   (when (and (null neo-global--window)
              auto-create-p)
-    (neo-window--init))
+    (setq neo-global--window
+          (neo-global--create-window)))
   neo-global--window)
+
+(defun neo-global--create-window ()
+  "Create global neotree window."
+  (let ((window nil)
+        (buffer (neo-global--get-buffer)))
+    (select-window (window-at 0 0))
+    (split-window-horizontally)
+    (setq window (selected-window))
+    (neo-window--init window buffer)
+    (setq neo-global--window window)
+    (select-window (window-right (get-buffer-window)))
+    window))
 
 (defun neo-global--get-buffer ()
   "Return the global neotree buffer if it exists."
@@ -373,6 +386,10 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
          (generate-new-buffer-name neo-buffer-name)))
   (neotree-mode)
   (setq buffer-read-only t)
+  (if (and (boundp 'linum-mode)         ; disable line number
+           (not (null linum-mode)))
+      (linum-mode -1))
+  (setq truncate-lines -1)
   neo-global--buffer)
 
 (defun neo-buffer--insert-header ()
@@ -518,29 +535,21 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
 ;; window methods
 ;;
 
-(defun neo-window--init ()
-  "Create neotree window."
-  (select-window (window-at 0 0))
-  (split-window-horizontally)
+(defun neo-window--init (window buffer)
+  "Make WINDOW a NeoTree window.
+NeoTree buffer is BUFFER."
   (neo-global--with-buffer
-   (neo-buffer--unlock-width))
-  (switch-to-buffer (neo-global--get-buffer))
-  (if (and (boundp 'linum-mode)         ; disable line number
-           (not (null linum-mode)))
-      (linum-mode -1))
-  (setq truncate-lines -1)
-  (setf neo-global--window (get-buffer-window))
-  (neo-window--set-width neo-width)
-  (set-window-dedicated-p neo-global--window t)
+    (neo-buffer--unlock-width))
+  (switch-to-buffer buffer)
+  (neo-window--set-width window neo-width)
+  (set-window-dedicated-p window t)
   (neo-global--with-buffer
-   (neo-buffer--lock-width))
-  (select-window (window-right (get-buffer-window)))
-  neo-global--window)
+    (neo-buffer--lock-width))
+  window)
 
-(defun neo-window--set-width (n)
-  "Make neotree widnow N columns width."
-  (let ((w (max n window-min-width))
-        (window (neo-global--get-window)))
+(defun neo-window--set-width (window n)
+  "Make neotree widnow(WINDOW) N columns width."
+  (let ((w (max n window-min-width)))
     (unless (null window)
       (if (> (window-width) w)
           (shrink-window-horizontally (- (window-width) w))
