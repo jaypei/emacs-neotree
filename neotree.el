@@ -179,6 +179,11 @@ By default all filest starting with dot '.' including . and ..")
   (and (not (null (window-buffer neo-global--window)))
        (eql (window-buffer neo-global--window) (neo-global--get-buffer))))
 
+(defun neo-global--select-window ()
+  (interactive)
+  (let ((window (neo-global--get-window t)))
+    (select-window window)))
+
 (defun neo-global--get-window (&optional auto-create-p)
   "Return the neotree window if it exists, else return nil.
 But when the neotree window is not exists and AUTO-CREATE-P is non-nil,
@@ -482,7 +487,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
 
 (defun neo-buffer--refresh (&optional line)
   (interactive)
-  (neo-window--select)
+  (neo-global--select-window)
   (let ((start-node neo-buffer--start-node)
         (ws-wind (selected-window))
         (ws-pos (window-start)))
@@ -556,11 +561,6 @@ NeoTree buffer is BUFFER."
         (if (< (window-width) w)
             (enlarge-window-horizontally (- w (window-width))))))))
 
-(defun neo-window--select ()
-  (interactive)
-  (let ((window (neo-global--get-window t)))
-    (select-window window)))
-
 
 ;;
 ;; Interactive functions
@@ -576,7 +576,7 @@ NeoTree buffer is BUFFER."
 
 (defun neo-node-do-enter ()
   (interactive)
-  ;(neo-window--select)
+  ;(neo-global--select-window)
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (unless (null btn-full-path)
       (if (file-directory-p btn-full-path)
@@ -590,7 +590,7 @@ NeoTree buffer is BUFFER."
 
 (defun neo-node-do-change-root ()
   (interactive)
-  (neo-window--select)
+  (neo-global--select-window)
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (if (null btn-full-path)
         (call-interactively 'neotree-dir)
