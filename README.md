@@ -44,6 +44,7 @@ Buffer shortcuts
 * `p` - previous line
 * `SPC` or `RET` or `TAB` - open file / toggle expand folder
 * `g` - refresh tree
+* `A` - stretch neotree window
 * `C-c C-n` - create file or directory
 * `C-c C-d` - delete file or directory
 * `C-c C-c` - change root directory

@@ -143,7 +143,7 @@ By default all filest starting with dot '.' including . and ..")
     (define-key map (kbd "g")       'neotree-refresh)
     (define-key map (kbd "p")       'previous-line)
     (define-key map (kbd "n")       'next-line)
-    (define-key map (kbd "A")       'neotree-maximize-toggle)
+    (define-key map (kbd "A")       'neotree-stretch-toggle)
     (define-key map (kbd "C-x C-f") 'find-file-other-window)
     (define-key map (kbd "C-c C-c") 'neo-node-do-change-root)
     (define-key map (kbd "C-c C-f") 'find-file-other-window)
@@ -674,7 +674,7 @@ NeoTree buffer is BUFFER."
   (interactive)
   (neo-buffer--refresh))
 
-(defun neotree-maximize-toggle ()
+(defun neotree-stretch-toggle ()
   (interactive)
   (neo-global--with-window
    (if (neo-window--minimize-p)
