@@ -57,7 +57,7 @@ By default all filest starting with dot '.' including . and ..")
   :group 'neotree
   :link '(info-link "(neotree)Configuration"))
 
-(defcustom neo-width 25
+(defcustom neo-window-width 25
   "*Specifies the width of the NeoTree window."
   :type 'integer
   :group 'neotree)
@@ -546,7 +546,7 @@ NeoTree buffer is BUFFER."
   (neo-global--with-buffer
     (neo-buffer--unlock-width))
   (switch-to-buffer buffer)
-  (neo-window--set-width window neo-width)
+  (neo-window--set-width window neo-window-width)
   (set-window-dedicated-p window t)
   (neo-global--with-buffer
     (neo-buffer--lock-width))
@@ -567,7 +567,7 @@ NeoTree buffer is BUFFER."
    ((eq method 'maximize)
     (maximize-window))
    ((eq method 'minimize)
-    (neo-window--set-width (selected-window) neo-width))
+    (neo-window--set-width (selected-window) neo-window-width))
    ((eq method 'zoom-in)
     (shrink-window-horizontally 2))
    ((eq method 'zoom-out)
