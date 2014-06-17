@@ -143,6 +143,7 @@ By default all filest starting with dot '.' including . and ..")
     (define-key map (kbd "g")       'neotree-refresh)
     (define-key map (kbd "p")       'previous-line)
     (define-key map (kbd "n")       'next-line)
+    (define-key map (kbd "A")       'neotree-maximize-toggle)
     (define-key map (kbd "C-x C-f") 'find-file-other-window)
     (define-key map (kbd "C-c C-c") 'neo-node-do-change-root)
     (define-key map (kbd "C-c C-f") 'find-file-other-window)
@@ -172,6 +173,13 @@ By default all filest starting with dot '.' including . and ..")
   "Execute the forms in BODY with global neotree buffer."
   (declare (indent 0) (debug t))
   `(with-current-buffer (neo-global--get-buffer)
+     ,@body))
+
+(defmacro neo-global--with-window (&rest body)
+  "Execute the forms in BODY with global neotree window."
+  (declare (indent 0) (debug t))
+  `(save-selected-window
+     (neo-global--select-window)
      ,@body))
 
 (defun neo-global--window-exists-p ()
@@ -574,6 +582,8 @@ NeoTree buffer is BUFFER."
     (enlarge-window-horizontally 2)))
   (neo-buffer--lock-width))
 
+(defun neo-window--minimize-p ()
+  (<= (window-width) neo-window-width))
 
 ;;
 ;; Interactive functions
@@ -663,6 +673,13 @@ NeoTree buffer is BUFFER."
 (defun neotree-refresh ()
   (interactive)
   (neo-buffer--refresh))
+
+(defun neotree-maximize-toggle ()
+  (interactive)
+  (neo-global--with-window
+   (if (neo-window--minimize-p)
+       (neo-window--zoom 'maximize)
+     (neo-window--zoom 'minimize))))
 
 ;;;###autoload
 (defun neotree-toggle ()
