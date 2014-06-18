@@ -67,6 +67,11 @@ By default all filest starting with dot '.' including . and ..")
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-persist-show t
+  "*If non-nil, NeoTree window will not be turned off while press C-x 1"
+  :type 'boolean
+  :group 'neotree)
+
 ;;
 ;; Faces
 ;;
@@ -230,10 +235,12 @@ it will be auto create neotree window and return it."
   (around neotree-delete-other-windows activate)
   "Delete all windows except neotree."
   (interactive)
-  (mapcar (lambda (window)
-	    (if (not (string-equal (buffer-name (window-buffer window)) neo-buffer-name))
-		(delete-window window)))
-	  (cdr (window-list))))
+  (if neo-persist-show
+      (mapcar (lambda (window)
+                (if (not (string-equal (buffer-name (window-buffer window)) neo-buffer-name))
+                    (delete-window window)))
+              (cdr (window-list)))
+    ad-do-it))
 
 (defadvice mouse-drag-vertical-line
   (around neotree-drag-vertical-line (start-event) activate)
