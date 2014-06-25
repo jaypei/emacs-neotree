@@ -127,9 +127,9 @@ By default all filest starting with dot '.' including . and ..")
   "Index of the start line of the root.")
 (make-variable-buffer-local 'neo-buffer--start-line)
 
-(defvar neo-buffer--show-hidden-p nil
+(defvar neo-buffer--show-hidden-file-p nil
   "Show hidden nodes in tree.")
-(make-variable-buffer-local 'neo-buffer--show-hidden-p)
+(make-variable-buffer-local 'neo-buffer--show-hidden-file-p)
 
 (defvar neo-buffer--expanded-node-list nil
   "A list of expanded dir nodes.")
@@ -149,10 +149,11 @@ By default all filest starting with dot '.' including . and ..")
     (define-key map (kbd "p")       'previous-line)
     (define-key map (kbd "n")       'next-line)
     (define-key map (kbd "A")       'neotree-stretch-toggle)
+    (define-key map (kbd "H")       'neotree-hidden-file-toggle)
     (define-key map (kbd "C-x C-f") 'find-file-other-window)
-    (define-key map (kbd "C-x 1")   'neotree-empty)
-    (define-key map (kbd "C-x 2")   'neotree-empty)
-    (define-key map (kbd "C-x 3")   'neotree-empty)
+    (define-key map (kbd "C-x 1")   'neotree-empty-fn)
+    (define-key map (kbd "C-x 2")   'neotree-empty-fn)
+    (define-key map (kbd "C-x 3")   'neotree-empty-fn)
     (define-key map (kbd "C-c C-c") 'neo-node-do-change-root)
     (define-key map (kbd "C-c C-f") 'find-file-other-window)
     (define-key map (kbd "C-c C-n") 'neo-create-node)
@@ -281,7 +282,7 @@ it will be auto create neotree window and return it."
                      directory-files-no-dot-files-regexp)))
 
 (defun neo-util--hidden-path-filter (node)
-  (if (not neo-buffer--show-hidden-p)
+  (if (not neo-buffer--show-hidden-file-p)
       (not (string-match neo-hidden-files-regexp
                          (neo-path--file-short-name node)))
     node))
@@ -595,6 +596,10 @@ NeoTree buffer is BUFFER."
 (defun neo-window--minimize-p ()
   (<= (window-width) neo-window-width))
 
+(defun neo-set-show-hidden-files (show-hidden-file-p)
+  (setq neo-buffer--show-hidden-file-p show-hidden-file-p)
+  (neo-buffer--refresh))
+
 ;;
 ;; Interactive functions
 ;;
@@ -680,7 +685,11 @@ NeoTree buffer is BUFFER."
       (neo-buffer--refresh)
       filename)))
 
-(defun neotree-empty ()
+(defun neotree-hidden-file-toggle ()
+  (interactive)
+  (neo-set-show-hidden-files (not neo-buffer--show-hidden-file-p))) 
+
+(defun neotree-empty-fn ()
   (interactive))
 
 (defun neotree-refresh ()
