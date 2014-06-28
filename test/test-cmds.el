@@ -66,4 +66,21 @@
    (neo-global--with-buffer
     (should (string-equal neo-buffer--start-node temp-cwd)))))
 
+(ert-deftest neo-test-save-current-pos ()
+  (neotree)
+  (neo-global--select-window)
+  (beginning-of-line)
+  (condition-case err
+      (while t
+        (next-line)
+        (neo-buffer--save-cursor-pos)
+        (let ((current-file-path (neo-buffer--get-filename-current-line))
+              (current-line-number (line-number-at-pos)))
+          (should (eq (car neo-buffer--cursor-pos) current-file-path))
+          (should (eq (cdr neo-buffer--cursor-pos) current-line-number))))
+    (error
+     (should (equal err '(end-of-buffer)))))
+  (neo-buffer--save-cursor-pos "/tmp/nbs" 192)
+  (should (equal neo-buffer--cursor-pos (cons "/tmp/nbs" 192))))
+
 ;;; test-cmds.el ends here

@@ -127,6 +127,10 @@ By default all filest starting with dot '.' including . and ..")
   "Index of the start line of the root.")
 (make-variable-buffer-local 'neo-buffer--start-line)
 
+(defvar neo-buffer--cursor-pos (cons nil 1)
+  "To save the cursor position.
+The car of the pair will store fullpath, and cdr will store line number.")
+
 (defvar neo-buffer--show-hidden-file-p nil
   "Show hidden nodes in tree.")
 (make-variable-buffer-local 'neo-buffer--show-hidden-file-p)
@@ -386,6 +390,18 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
 (defun neo-buffer--newline-and-begin ()
   (newline)
   (beginning-of-line))
+
+(defun neo-buffer--save-cursor-pos (&optional node-path line-pos)
+  "Save cursor position."
+  (let ((cur-node-path nil)
+        (cur-line-pos nil))
+    (setq cur-node-path (if node-path
+                            node-path
+                          (neo-buffer--get-filename-current-line)))
+    (setq cur-line-pos (if line-pos
+                           line-pos
+                         (line-number-at-pos)))
+    (setq neo-buffer--cursor-pos (cons cur-node-path cur-line-pos))))
 
 (defun neo-buffer--scroll-to-line (line &optional wind start-pos)
   "Recommended way to set the cursor to LINE."
@@ -684,6 +700,10 @@ NeoTree buffer is BUFFER."
       (message "%S deleted." filename)
       (neo-buffer--refresh)
       filename)))
+
+;; TODO
+(defun neo-rename-current-node ()
+  (interactive))
 
 (defun neotree-hidden-file-toggle ()
   (interactive)
