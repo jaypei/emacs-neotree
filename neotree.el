@@ -217,11 +217,19 @@ it will be auto create neotree window and return it."
           (neo-global--create-window)))
   neo-global--window)
 
+(defun neo-global--get-first-window ()
+  (let (w)
+    (if (null w)
+        (setq w (window-at 0 0)))
+    (if (null w)
+        (setq w (selected-window)))
+    w))
+
 (defun neo-global--create-window ()
   "Create global neotree window."
   (let ((window nil)
         (buffer (neo-global--get-buffer)))
-    (select-window (window-at 0 0))
+    (select-window (neo-global--get-first-window))
     (split-window-horizontally)
     (setq window (selected-window))
     (neo-window--init window buffer)
