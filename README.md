@@ -48,6 +48,7 @@ Buffer shortcuts
 * `H` - toggle show hidden files
 * `C-c C-n` - create file or directory
 * `C-c C-d` - delete file or directory
+* `C-c C-r` - rename file or directory
 * `C-c C-c` - change root directory
 
 Commands

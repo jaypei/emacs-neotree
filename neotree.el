@@ -162,6 +162,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "C-c C-f") 'find-file-other-window)
     (define-key map (kbd "C-c C-n") 'neo-create-node)
     (define-key map (kbd "C-c C-d") 'neo-delete-current-node)
+    (define-key map (kbd "C-c C-r") 'neotree-rename-node)
     map)
   "Keymap for `neotree-mode'.")
 
@@ -578,6 +579,18 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
 (defun neo-buffer--unlock-width ()
   (setq window-size-fixed nil))
 
+(defun neo-buffer--rename-node ()
+  "Rename current node as another path."
+  (interactive)
+  (let* ((current-path (neo-buffer--get-filename-current-line))
+         to-path
+         msg)
+    (when (not (null current-path))
+      (setq msg (format "Rename %s ->:" current-path))
+      (setq to-path (read-file-name msg current-path))
+      (rename-file current-path to-path)
+      (neo-buffer--refresh)
+      (message "Rename successed."))))
 
 ;;
 ;; window methods
@@ -709,9 +722,9 @@ NeoTree buffer is BUFFER."
       (neo-buffer--refresh)
       filename)))
 
-;; TODO
-(defun neo-rename-current-node ()
-  (interactive))
+(defun neotree-rename-node ()
+  (interactive)
+  (neo-buffer--rename-node))
 
 (defun neotree-hidden-file-toggle ()
   (interactive)
