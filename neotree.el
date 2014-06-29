@@ -253,7 +253,7 @@ it will be auto create neotree window and return it."
   "Delete all windows except neotree."
   (interactive)
   (if neo-persist-show
-      (mapcar (lambda (window)
+      (mapc (lambda (window)
                 (if (not (string-equal (buffer-name (window-buffer window)) neo-buffer-name))
                     (delete-window window)))
               (cdr (window-list)))
