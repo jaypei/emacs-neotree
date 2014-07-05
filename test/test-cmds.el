@@ -25,18 +25,6 @@
 (require 'neotree)
 (require 'neotree-test)
 
-(defmacro neo-tests--with-temp-dir (&rest body)
-  (declare (indent 0) (debug t))
-  (let ((dir (gensym)))
-    `(let ((,dir (file-name-as-directory (make-temp-file "dir" t))))
-       (unwind-protect
-           (let ((default-directory ,dir)) ,@body)
-         (delete-directory ,dir t)))))
-
-(defadvice window-at (around neo-test-neotree-startup activate)
-  ad-do-it
-  (setq ad-return-value (selected-window))
-  ad-return-value)
 
 (ert-deftest neo-test-neotree-startup ()
   (neotree)
@@ -65,22 +53,5 @@
    (neotree-toggle)
    (neo-global--with-buffer
     (should (string-equal neo-buffer--start-node temp-cwd)))))
-
-(ert-deftest neo-test-save-current-pos ()
-  (neotree)
-  (neo-global--select-window)
-  (beginning-of-line)
-  (condition-case err
-      (while t
-        (next-line)
-        (neo-buffer--save-cursor-pos)
-        (let ((current-file-path (neo-buffer--get-filename-current-line))
-              (current-line-number (line-number-at-pos)))
-          (should (eq (car neo-buffer--cursor-pos) current-file-path))
-          (should (eq (cdr neo-buffer--cursor-pos) current-line-number))))
-    (error
-     (should (equal err '(end-of-buffer)))))
-  (neo-buffer--save-cursor-pos "/tmp/nbs" 192)
-  (should (equal neo-buffer--cursor-pos (cons "/tmp/nbs" 192))))
 
 ;;; test-cmds.el ends here
