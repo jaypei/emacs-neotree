@@ -89,5 +89,14 @@
     (should (eq (face-at-point) 'default))
     (should (string= (buffer-string) "fooButtonContentbar"))))
 
+(ert-deftest neo-test-strip-path ()
+  (setq cases '((" /" . "/")
+                ("\n/" . "/")
+                ("\n \t/" . "/")
+                ("\n \t~/abc.org " . "~/abc.org")))
+  (mapc
+   (lambda (x) (should (equal (neo-path--strip (car x))
+                              (cdr x))))
+   cases))
 
 ;;; test-utils.el ends here

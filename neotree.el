@@ -130,6 +130,11 @@ By default all filest starting with dot '.' including . and ..")
 (defvar neo-buffer--cursor-pos (cons nil 1)
   "To save the cursor position.
 The car of the pair will store fullpath, and cdr will store line number.")
+(make-variable-buffer-local 'neo-buffer--cursor-pos)
+
+(defvar neo-buffer--last-window-pos (cons nil 1)
+  "To save the scroll position for NeoTree window.")
+(make-variable-buffer-local 'neo-buffer--last-window-pos)
 
 (defvar neo-buffer--show-hidden-file-p nil
   "Show hidden nodes in tree.")
@@ -304,6 +309,22 @@ it will be auto create neotree window and return it."
                          (neo-path--file-short-name node)))
     node))
 
+(defun neo-str--trim-left (s)
+  "Remove whitespace at the beginning of S."
+  (if (string-match "\\`[ \t\n\r]+" s)
+      (replace-match "" t t s)
+    s))
+
+(defun neo-str--trim-right (s)
+  "Remove whitespace at the end of S."
+  (if (string-match "[ \t\n\r]+\\'" s)
+      (replace-match "" t t s)
+    s))
+
+(defun neo-str--trim (s)
+  "Remove whitespace at the beginning and end of S."
+  (neo-str--trim-left (neo-str--trim-right s)))
+
 (defun neo-path--expand-name (path &optional current-dir)
   (or (if (file-name-absolute-p path) path)
       (let ((r-path path))
@@ -386,6 +407,15 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
 (defun neo-path--get-working-dir ()
   (file-name-as-directory (file-truename default-directory)))
 
+(defun neo-path--strip (path)
+  "Remove whitespace at the end of PATH."
+  (let* ((rlt (neo-str--trim path))
+         (pos (string-match "[\\\\/]+\\'" rlt)))
+    (when pos
+      (setq rlt (replace-match "" t t rlt))
+      (when (eq (length rlt) 0)
+        (setq rlt "/")))
+    rlt))
 
 ;;
 ;; buffer methods
@@ -407,32 +437,44 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
 (defun neo-buffer--save-cursor-pos (&optional node-path line-pos)
   "Save cursor position."
   (let ((cur-node-path nil)
-        (cur-line-pos nil))
+        (cur-line-pos nil)
+        (ws-wind (selected-window))
+        (ws-pos (window-start)))
     (setq cur-node-path (if node-path
                             node-path
                           (neo-buffer--get-filename-current-line)))
     (setq cur-line-pos (if line-pos
                            line-pos
                          (line-number-at-pos)))
-    (setq neo-buffer--cursor-pos (cons cur-node-path cur-line-pos))))
+    (setq neo-buffer--cursor-pos (cons cur-node-path cur-line-pos))
+    (setq neo-buffer--last-window-pos (cons ws-wind ws-pos))))
 
 (defun neo-buffer--goto-cursor-pos ()
   "Jump to saved cursor position."
   (let ((line-pos nil)
         (node (car neo-buffer--cursor-pos))
-        (line-pos (cdr neo-buffer--cursor-pos)))
+        (line-pos (cdr neo-buffer--cursor-pos))
+        (ws-wind (car neo-buffer--last-window-pos))
+        (ws-pos (cdr neo-buffer--last-window-pos)))
     (catch 'line-pos-founded
       (unless (null node)
         (setq line-pos 0)
         (mapc
          (lambda (x)
            (setq line-pos (1+ line-pos))
-           (when (equal x node)
+           (when (and (not (null x))
+                      (not (null node))
+                      (file-equal-p x node))
              (throw 'line-pos-founded line-pos)))
          neo-buffer--node-list))
       (setq line-pos (cdr neo-buffer--cursor-pos))
       (throw 'line-pos-founded line-pos))
-    (neo-buffer--scroll-to-line line-pos)))
+    ;; goto line
+    (goto-char (point-min))
+    (forward-line (1- line-pos))
+    ;; scroll window
+    (when (equal (selected-window) ws-wind)
+      (set-window-start ws-wind ws-pos))))
 
 (defun neo-buffer--node-list-clear ()
   "Clear node list."
@@ -452,12 +494,6 @@ PATH is value."
                      (make-vector (- node-index node-list-length) nil))))
     (aset neo-buffer--node-list (1- node-index) path))
   neo-buffer--node-list)
-
-(defun neo-buffer--scroll-to-line (line &optional wind start-pos)
-  "Recommended way to set the cursor to LINE."
-  (goto-char (point-min))
-  (forward-line (1- line))
-  (if start-pos (set-window-start wind start-pos)))
 
 (defun neo-buffer--insert-with-face (content face)
   (let ((pos-start (point)))
@@ -575,9 +611,7 @@ PATH is value."
 (defun neo-buffer--refresh (save-pos)
   (interactive)
   (neo-global--select-window)
-  (let ((start-node neo-buffer--start-node)
-        (ws-wind (selected-window))
-        (ws-pos (window-start)))
+  (let ((start-node neo-buffer--start-node))
     (neo-buffer--save-excursion
      ;; save context
      (when save-pos
@@ -738,13 +772,15 @@ NeoTree buffer is BUFFER."
                                       filename)))
         ;; NOTE: create a empty file
         (write-region "" nil filename)
-        (neo-buffer--refresh t)
+        (neo-buffer--save-cursor-pos filename)
+        (neo-buffer--refresh nil)
         (find-file-other-window filename))
       (when (and (not is-file)
                  (yes-or-no-p (format "Do you want to create directory %S?"
                                       filename)))
         (mkdir filename)
-        (neo-buffer--refresh t)))))
+        (neo-buffer--save-cursor-pos filename)
+        (neo-buffer--refresh nil)))))
 
 (defun neo-delete-current-node ()
   (interactive)
