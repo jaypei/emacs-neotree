@@ -139,6 +139,10 @@ The car of the pair will store fullpath, and cdr will store line number.")
   "A list of expanded dir nodes.")
 (make-variable-buffer-local 'neo-enlarge-window-horizontally)
 
+(defvar neo-buffer--node-list nil
+  "The model of current NeoTree buffer.")
+(make-variable-buffer-local 'neo-buffer--node-list)
+
 
 ;;
 ;; Major mode definitions
@@ -412,6 +416,43 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
                          (line-number-at-pos)))
     (setq neo-buffer--cursor-pos (cons cur-node-path cur-line-pos))))
 
+(defun neo-buffer--goto-cursor-pos ()
+  "Jump to saved cursor position."
+  (let ((line-pos nil)
+        (node (car neo-buffer--cursor-pos))
+        (line-pos (cdr neo-buffer--cursor-pos)))
+    (catch 'line-pos-founded
+      (unless (null node)
+        (setq line-pos 0)
+        (mapc
+         (lambda (x)
+           (setq line-pos (1+ line-pos))
+           (when (equal x node)
+             (throw 'line-pos-founded line-pos)))
+         neo-buffer--node-list))
+      (setq line-pos (cdr neo-buffer--cursor-pos))
+      (throw 'line-pos-founded line-pos))
+    (neo-buffer--scroll-to-line line-pos)))
+
+(defun neo-buffer--node-list-clear ()
+  "Clear node list."
+  (setq neo-buffer--node-list nil))
+
+(defun neo-buffer--node-list-set (line-num path)
+  "Set value in node list.
+LINE-NUM is the index of node list.
+PATH is value."
+  (let ((node-list-length (length neo-buffer--node-list))
+        (node-index line-num))
+    (when (null node-index)
+      (setq node-index (line-number-at-pos)))
+    (when (< node-list-length node-index)
+      (setq neo-buffer--node-list
+            (vconcat neo-buffer--node-list
+                     (make-vector (- node-index node-list-length) nil))))
+    (aset neo-buffer--node-list (1- node-index) path))
+  neo-buffer--node-list)
+
 (defun neo-buffer--scroll-to-line (line &optional wind start-pos)
   "Recommended way to set the cursor to LINE."
   (goto-char (point-min))
@@ -477,6 +518,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
                  'follow-link t
                  'face neo-button-face
                  'neo-full-path node)
+    (neo-buffer--node-list-set nil node)
     (neo-buffer--newline-and-begin)))
 
 (defun neo-buffer--insert-file-entry (node depth)
@@ -488,6 +530,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
                    'follow-link t
                    'face neo-file-link-face
                    'neo-full-path node)
+    (neo-buffer--node-list-set nil node)
     (neo-buffer--newline-and-begin)))
 
 (defun neo-buffer--get-nodes (path)
@@ -529,20 +572,23 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
     (dolist (leaf leafs)
       (neo-buffer--insert-file-entry leaf depth))))
 
-(defun neo-buffer--refresh (&optional line)
+(defun neo-buffer--refresh (save-pos)
   (interactive)
   (neo-global--select-window)
   (let ((start-node neo-buffer--start-node)
         (ws-wind (selected-window))
         (ws-pos (window-start)))
     (neo-buffer--save-excursion
-     (setq neo-buffer--start-line (line-number-at-pos (point)))
+     ;; save context
+     (when save-pos
+       (neo-buffer--save-cursor-pos))
+     ;; starting refresh
      (erase-buffer)
+     (neo-buffer--node-list-clear)
      (if neo-show-header (neo-buffer--insert-header))
      (neo-buffer--insert-tree start-node 1))
-    (neo-buffer--scroll-to-line
-     (if line line neo-buffer--start-line)
-     ws-wind ws-pos)))
+    ;; restore context
+    (neo-buffer--goto-cursor-pos)))
 
 (defun neo-buffer--get-button-current-line ()
   (let* ((btn-position nil)
@@ -589,7 +635,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
       (setq msg (format "Rename %s ->:" current-path))
       (setq to-path (read-file-name msg current-path))
       (rename-file current-path to-path)
-      (neo-buffer--refresh)
+      (neo-buffer--refresh t)
       (message "Rename successed."))))
 
 ;;
@@ -635,7 +681,7 @@ NeoTree buffer is BUFFER."
 
 (defun neo-set-show-hidden-files (show-hidden-file-p)
   (setq neo-buffer--show-hidden-file-p show-hidden-file-p)
-  (neo-buffer--refresh))
+  (neo-buffer--refresh t))
 
 ;;
 ;; Interactive functions
@@ -657,7 +703,7 @@ NeoTree buffer is BUFFER."
       (if (file-directory-p btn-full-path)
           (progn
             (neo-buffer--toggle-expand btn-full-path)
-            (neo-buffer--refresh))
+            (neo-buffer--refresh t))
 	(progn
 	  (switch-to-buffer (other-buffer (current-buffer) 1))
 	 (find-file btn-full-path))))
@@ -692,13 +738,13 @@ NeoTree buffer is BUFFER."
                                       filename)))
         ;; NOTE: create a empty file
         (write-region "" nil filename)
-        (neo-buffer--refresh)
+        (neo-buffer--refresh t)
         (find-file-other-window filename))
       (when (and (not is-file)
                  (yes-or-no-p (format "Do you want to create directory %S?"
                                       filename)))
         (mkdir filename)
-        (neo-buffer--refresh)))))
+        (neo-buffer--refresh t)))))
 
 (defun neo-delete-current-node ()
   (interactive)
@@ -719,7 +765,7 @@ NeoTree buffer is BUFFER."
               (delete-directory filename)))
         (delete-file filename))
       (message "%S deleted." filename)
-      (neo-buffer--refresh)
+      (neo-buffer--refresh t)
       filename)))
 
 (defun neotree-rename-node ()
@@ -735,7 +781,7 @@ NeoTree buffer is BUFFER."
 
 (defun neotree-refresh ()
   (interactive)
-  (neo-buffer--refresh))
+  (neo-buffer--refresh t))
 
 (defun neotree-stretch-toggle ()
   (interactive)
@@ -777,7 +823,7 @@ NeoTree buffer is BUFFER."
      (let ((start-path-name (expand-file-name (substitute-in-file-name path))))
        (setq neo-buffer--start-node start-path-name)
        (cd start-path-name))
-     (neo-buffer--refresh))))
+     (neo-buffer--refresh t))))
 
 ;;;###autoload
 (defun neotree ()

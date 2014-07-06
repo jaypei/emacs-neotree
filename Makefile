@@ -15,6 +15,7 @@ test:
 	${EMACS} -Q -nw -L . -L ./test \
 		-l test/test-utils.el \
 		-l test/test-cmds.el \
+		-l test/test-buffer.el \
 		--eval "(let (pop-up-windows) (ert t))"
 
 test-batch:
