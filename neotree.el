@@ -72,6 +72,11 @@ By default all filest starting with dot '.' including . and ..")
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-create-file-auto-open nil
+  "*If non-nil, the file will auto open when created."
+  :type 'boolean
+  :group 'neotree)
+
 ;;
 ;; Faces
 ;;
@@ -774,7 +779,8 @@ NeoTree buffer is BUFFER."
         (write-region "" nil filename)
         (neo-buffer--save-cursor-pos filename)
         (neo-buffer--refresh nil)
-        (find-file-other-window filename))
+        (if neo-create-file-auto-open
+            (find-file-other-window filename)))
       (when (and (not is-file)
                  (yes-or-no-p (format "Do you want to create directory %S?"
                                       filename)))
