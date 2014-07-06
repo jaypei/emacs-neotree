@@ -538,6 +538,7 @@ PATH is value."
                  'neo-full-path (neo-path--updir neo-buffer--start-node))
   (insert " (up a dir)")
   (neo-buffer--newline-and-begin)
+  (neo-buffer--node-list-set nil node)
   (neo-buffer--insert-with-face (neo-path--shorten node (window-body-width))
                         'neo-header-face)
   (neo-buffer--newline-and-begin))
@@ -865,7 +866,8 @@ NeoTree buffer is BUFFER."
      (let ((start-path-name (expand-file-name (substitute-in-file-name path))))
        (setq neo-buffer--start-node start-path-name)
        (cd start-path-name))
-     (neo-buffer--refresh t))))
+     (neo-buffer--save-cursor-pos path nil)
+     (neo-buffer--refresh nil))))
 
 ;;;###autoload
 (defun neotree ()
