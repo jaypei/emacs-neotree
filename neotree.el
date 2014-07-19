@@ -147,7 +147,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
 
 (defvar neo-buffer--expanded-node-list nil
   "A list of expanded dir nodes.")
-(make-variable-buffer-local 'neo-enlarge-window-horizontally)
+(make-variable-buffer-local 'neo-buffer--expanded-node-list)
 
 (defvar neo-buffer--node-list nil
   "The model of current NeoTree buffer.")
@@ -535,12 +535,12 @@ PATH is value."
                  'action '(lambda (x) (neo-node-do-change-root))
                  'follow-link t
                  'face neo-file-link-face
-                 'neo-full-path (neo-path--updir neo-buffer--start-node))
+                 'neo-full-path (neo-path--updir node))
   (insert " (up a dir)")
   (neo-buffer--newline-and-begin)
   (neo-buffer--node-list-set nil node)
   (neo-buffer--insert-with-face (neo-path--shorten node (window-body-width))
-                        'neo-header-face)
+                                'neo-header-face)
   (neo-buffer--newline-and-begin))
 
 (defun neo-buffer--insert-dir-entry (node depth expanded)
@@ -589,7 +589,7 @@ PATH is value."
       t nil))
 
 (defun neo-buffer--set-expand (node do-expand)
-  "Set the expanded state of the node to do-expand"
+  "Set the expanded state of the NODE to DO-EXPAND."
   (if (not do-expand)
       (setq neo-buffer--expanded-node-list
             (neo-util--filter
@@ -602,7 +602,7 @@ PATH is value."
 
 (defun neo-buffer--insert-tree (path depth)
   (if (eq depth 1)
-      (neo-buffer--insert-root-entry start-node))
+      (neo-buffer--insert-root-entry path))
   (let* ((contents (neo-buffer--get-nodes path))
          (nodes (car contents))
          (leafs (cdr contents)))
@@ -615,8 +615,6 @@ PATH is value."
       (neo-buffer--insert-file-entry leaf depth))))
 
 (defun neo-buffer--refresh (save-pos)
-  (interactive)
-  (neo-global--select-window)
   (let ((start-node neo-buffer--start-node))
     (neo-buffer--save-excursion
      ;; save context
