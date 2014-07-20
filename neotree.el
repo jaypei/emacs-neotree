@@ -810,21 +810,26 @@ NeoTree buffer is BUFFER."
       filename)))
 
 (defun neotree-rename-node ()
+  "Rename current node."
   (interactive)
   (neo-buffer--rename-node))
 
 (defun neotree-hidden-file-toggle ()
+  "Toggle show hidden files."
   (interactive)
   (neo-set-show-hidden-files (not neo-buffer--show-hidden-file-p))) 
 
 (defun neotree-empty-fn ()
+  "Used to bind the empty function to the shortcut."
   (interactive))
 
 (defun neotree-refresh ()
+  "Refresh the NeoTree buffer."
   (interactive)
   (neo-buffer--refresh t))
 
 (defun neotree-stretch-toggle ()
+  "Make the NeoTree window toggle maximize/minimize."
   (interactive)
   (neo-global--with-window
    (if (neo-window--minimize-p)
@@ -833,6 +838,7 @@ NeoTree buffer is BUFFER."
 
 ;;;###autoload
 (defun neotree-toggle ()
+  "Toggle show the NeoTree window."
   (interactive)
   (if (neo-global--window-exists-p)
       (neotree-hide)
@@ -840,6 +846,7 @@ NeoTree buffer is BUFFER."
 
 ;;;###autoload
 (defun neotree-show ()
+  "Show the NeoTree widnow."
   (interactive)
   (let ((valid-start-node-p nil))
     (neo-buffer--save-excursion
@@ -850,12 +857,14 @@ NeoTree buffer is BUFFER."
 
 ;;;###autoload
 (defun neotree-hide ()
+  "Close the NeoTree window."
   (interactive)
   (if (neo-global--window-exists-p)
       (delete-window neo-global--window)))
 
 ;;;###autoload
 (defun neotree-dir (path)
+  "Show the NeoTree window, and change root to PATH."
   (interactive "DDirectory: ")
   (when (and (file-exists-p path)
              (file-directory-p path))
@@ -869,6 +878,7 @@ NeoTree buffer is BUFFER."
 
 ;;;###autoload
 (defun neotree ()
+  "Show the NeoTree window."
   (interactive)
   (neotree-show))
 
