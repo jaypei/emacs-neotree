@@ -675,7 +675,7 @@ PATH is value."
          to-path
          msg)
     (when (not (null current-path))
-      (setq msg (format "Rename %s ->:" current-path))
+      (setq msg (format "Rename [%s] to: " (neo-path--file-short-name current-path)))
       (setq to-path (read-file-name msg current-path))
       (rename-file current-path to-path)
       (neo-buffer--refresh t)
