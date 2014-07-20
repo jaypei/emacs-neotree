@@ -262,6 +262,11 @@ it will be auto create neotree window and return it."
         (neo-buffer--create)))
   neo-global--buffer)
 
+(defun neo-global--file-in-root-p (path)
+  "Return non-nil if PATH in root dir."
+  (neo-global--with-buffer
+    (file-in-directory-p path neo-buffer--start-node)))
+
 (defadvice delete-other-windows
   (around neotree-delete-other-windows activate)
   "Delete all windows except neotree."
@@ -479,7 +484,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
     (forward-line (1- line-pos))
     ;; scroll window
     (when (equal (selected-window) ws-wind)
-      (set-window-start ws-wind ws-pos))))
+      (set-window-start ws-wind ws-pos t))))
 
 (defun neo-buffer--node-list-clear ()
   "Clear node list."
@@ -676,6 +681,32 @@ PATH is value."
       (neo-buffer--refresh t)
       (message "Rename successed."))))
 
+(defun neo-buffer--select-file-node (file &optional recursive-p)
+  "Select the node that corresponds to the FILE.
+If RECURSIVE-P is non nil, find files will recursively."
+  (let ((efile file)
+        (iter-curr-dir nil)
+        (file-node-find-p nil)
+        (file-node-list nil))
+    (unless (file-name-absolute-p efile)
+      (setq efile (expand-file-name efile)))
+    (setq iter-curr-dir efile)
+    (catch 'return
+      (while t
+        (setq iter-curr-dir (neo-path--updir iter-curr-dir))
+        (push iter-curr-dir file-node-list)
+        (when (file-equal-p iter-curr-dir neo-buffer--start-node)
+          (setq file-node-find-p t)
+          (throw 'return nil))
+        (when (file-equal-p iter-curr-dir "/")
+          (setq file-node-find-p nil)
+          (throw 'return nil))))
+    (when file-node-find-p
+      (dolist (p file-node-list)
+        (neo-buffer--set-expand p t))
+      (neo-buffer--save-cursor-pos file)
+      (neo-buffer--refresh nil))))
+
 ;;
 ;; window methods
 ;;
@@ -724,6 +755,25 @@ NeoTree buffer is BUFFER."
 ;;
 ;; Interactive functions
 ;;
+
+(defun neotree-find (&optional path)
+  "Quick select node which spicified PATH in NeoTree."
+  (interactive)
+  (let ((npath path))
+    (catch 'return
+      (when (null npath)
+        (setq npath (buffer-file-name)))
+      (when (null npath)
+        (message "Invalid file name of current buffer.")
+        (throw 'return nil))
+      (when (and (not (neo-global--file-in-root-p npath))
+                 (yes-or-no-p "File not found in root path, do you want to change root?"))
+        (let ((root-dir (neo-path--updir npath)))
+          (neotree-dir root-dir)))
+      (when (neo-global--file-in-root-p npath)
+        (neo-global--with-window
+          (neo-buffer--select-file-node npath t))
+        (neo-global--select-window)))))
 
 (defun neo-previous-node ()
   (interactive)
