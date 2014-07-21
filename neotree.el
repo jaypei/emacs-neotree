@@ -265,7 +265,7 @@ it will be auto create neotree window and return it."
 (defun neo-global--file-in-root-p (path)
   "Return non-nil if PATH in root dir."
   (neo-global--with-buffer
-    (file-in-directory-p path neo-buffer--start-node)))
+    (neo-path--file-in-directory-p path neo-buffer--start-node)))
 
 (defadvice delete-other-windows
   (around neotree-delete-other-windows activate)
@@ -427,6 +427,22 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
         (setq rlt "/")))
     rlt))
 
+(defun neo-path--file-equal-p (file1 file2)
+  "Return non-nil if files FILE1 and FILE2 name the same file.
+If FILE1 or FILE2 does not exist, the return value is unspecified."
+  (let ((nfile1 (neo-path--strip file1))
+        (nfile2 (neo-path--strip file2)))
+    (file-equal-p nfile1 nfile2)))
+
+(defun neo-path--file-in-directory-p (file dir)
+  "Return non-nil if FILE is in DIR or a subdirectory of DIR.
+A directory is considered to be \"in\" itself.
+Return nil if DIR is not an existing directory."
+  (let ((nfile (neo-path--strip file))
+        (ndir (neo-path--strip dir)))
+    (setq ndir (concat ndir "/"))
+    (file-in-directory-p nfile ndir)))
+
 ;;
 ;; buffer methods
 ;;
@@ -474,7 +490,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
            (setq line-pos (1+ line-pos))
            (when (and (not (null x))
                       (not (null node))
-                      (file-equal-p x node))
+                      (neo-path--file-equal-p x node))
              (throw 'line-pos-founded line-pos)))
          neo-buffer--node-list))
       (setq line-pos (cdr neo-buffer--cursor-pos))
@@ -695,10 +711,10 @@ If RECURSIVE-P is non nil, find files will recursively."
       (while t
         (setq iter-curr-dir (neo-path--updir iter-curr-dir))
         (push iter-curr-dir file-node-list)
-        (when (file-equal-p iter-curr-dir neo-buffer--start-node)
+        (when (neo-path--file-equal-p iter-curr-dir neo-buffer--start-node)
           (setq file-node-find-p t)
           (throw 'return nil))
-        (when (file-equal-p iter-curr-dir "/")
+        (when (neo-path--file-equal-p iter-curr-dir "/")
           (setq file-node-find-p nil)
           (throw 'return nil))))
     (when file-node-find-p
