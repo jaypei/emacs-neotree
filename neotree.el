@@ -198,16 +198,22 @@ The car of the pair will store fullpath, and cdr will store line number.")
 ;;
 
 (defmacro neo-global--with-buffer (&rest body)
-  "Execute the forms in BODY with global neotree buffer."
+  "Execute the forms in BODY with global NeoTree buffer."
   (declare (indent 0) (debug t))
   `(with-current-buffer (neo-global--get-buffer)
      ,@body))
 
 (defmacro neo-global--with-window (&rest body)
-  "Execute the forms in BODY with global neotree window."
+  "Execute the forms in BODY with global NeoTree window."
   (declare (indent 0) (debug t))
   `(save-selected-window
      (neo-global--select-window)
+     ,@body))
+
+(defmacro neo-global--when-window (&rest body)
+  "Execute the forms in BODY when selected window is NeoTree window."
+  (declare (indent 0) (debug t))
+  `(when (eq (selected-window) neo-global--window)
      ,@body))
 
 (defun neo-global--window-exists-p ()
@@ -808,7 +814,8 @@ NeoTree buffer is BUFFER."
             (neo-buffer--toggle-expand btn-full-path)
             (neo-buffer--refresh t))
         (progn
-          (neo-window--zoom 'minimize)
+          (neo-global--when-window
+           (neo-window--zoom 'minimize))
           (switch-to-buffer (other-buffer (current-buffer) 1))
           (find-file btn-full-path))))
     btn-full-path))
