@@ -956,20 +956,5 @@ NeoTree buffer is BUFFER."
   (neotree-show))
 
 
-;;
-;; Downward compatibility (TODO)
-;;
-
-(defun neo-node-do-enter ()
-  (interactive)
-  (neotree-enter))
-
-(defun neo-node-do-change-root ()
-  (interactive)
-  (neotree-change-root))
-
-;; create, delete
-
-
 (provide 'neotree)
 ;;; neotree.el ends here
