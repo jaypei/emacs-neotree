@@ -781,16 +781,19 @@ NeoTree buffer is BUFFER."
 (defun neotree-find (&optional path)
   "Quick select node which spicified PATH in NeoTree."
   (interactive)
-  (let ((npath path))
+  (let ((npath path)
+        root-dir)
     (catch 'return
       (when (null npath)
         (setq npath (buffer-file-name)))
       (when (null npath)
         (message "Invalid file name of current buffer.")
         (throw 'return nil))
-      (when (and (not (neo-global--file-in-root-p npath))
-                 (yes-or-no-p "File not found in root path, do you want to change root?"))
-        (let ((root-dir (neo-path--updir npath)))
+      (setq root-dir  (neo-path--updir npath))
+      (when (not (neo-global--file-in-root-p npath))
+        (if (neo-global--window-exists-p)
+            (if (yes-or-no-p "File not found in root path, do you want to change root?")
+                (neotree-dir root-dir))
           (neotree-dir root-dir)))
       (when (neo-global--file-in-root-p npath)
         (neo-global--with-window
