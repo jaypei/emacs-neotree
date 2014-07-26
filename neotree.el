@@ -797,15 +797,15 @@ NeoTree buffer is BUFFER."
           (neo-buffer--select-file-node npath t))
         (neo-global--select-window)))))
 
-(defun neo-previous-node ()
+(defun neotree-previous-node ()
   (interactive)
   (backward-button 1 nil))
 
-(defun neo-next-node ()
+(defun neotree-next-node ()
   (interactive)
   (forward-button 1 nil))
 
-(defun neo-node-do-enter ()
+(defun neotree-enter ()
   (interactive)
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (unless (null btn-full-path)
@@ -820,7 +820,7 @@ NeoTree buffer is BUFFER."
           (find-file btn-full-path))))
     btn-full-path))
 
-(defun neo-node-do-change-root ()
+(defun neotree-change-root ()
   (interactive)
   (neo-global--select-window)
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
@@ -828,7 +828,7 @@ NeoTree buffer is BUFFER."
         (call-interactively 'neotree-dir)
       (neotree-dir btn-full-path))))
 
-(defun neo-create-node (filename)
+(defun neotree-create-node (filename)
   (interactive
    (let* ((current-dir (neo-buffer--get-filename-current-line neo-buffer--start-node))
           (current-dir (neo-path--match-path-directory current-dir))
@@ -860,7 +860,7 @@ NeoTree buffer is BUFFER."
         (neo-buffer--save-cursor-pos filename)
         (neo-buffer--refresh nil)))))
 
-(defun neo-delete-current-node ()
+(defun neotree-delete-node ()
   (interactive)
   (catch 'end
     (let ((filename (neo-buffer--get-filename-current-line)))
@@ -954,6 +954,21 @@ NeoTree buffer is BUFFER."
   "Show the NeoTree window."
   (interactive)
   (neotree-show))
+
+
+;;
+;; Downward compatibility (TODO)
+;;
+
+(defun neo-node-do-enter ()
+  (interactive)
+  (neotree-enter))
+
+(defun neo-node-do-change-root ()
+  (interactive)
+  (neotree-change-root))
+
+;; create, delete
 
 
 (provide 'neotree)
