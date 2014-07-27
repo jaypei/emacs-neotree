@@ -271,7 +271,8 @@ it will be auto create neotree window and return it."
 (defun neo-global--file-in-root-p (path)
   "Return non-nil if PATH in root dir."
   (neo-global--with-buffer
-    (neo-path--file-in-directory-p path neo-buffer--start-node)))
+   (and (not (null neo-buffer--start-node))
+        (neo-path--file-in-directory-p path neo-buffer--start-node))))
 
 (defadvice delete-other-windows
   (around neotree-delete-other-windows activate)
