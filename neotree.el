@@ -583,7 +583,7 @@ PATH is value."
     (setq btn-end-pos (point))
     (make-button btn-start-pos
                  btn-end-pos
-                 'action '(lambda (x) (neo-node-do-enter))
+                 'action '(lambda (x) (neotree-enter))
                  'follow-link t
                  'face neo-button-face
                  'neo-full-path node)
@@ -595,7 +595,7 @@ PATH is value."
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (insert-char ?\s 2)
     (insert-button node-short-name
-                   'action '(lambda (x) (neo-node-do-enter))
+                   'action '(lambda (x) (neotree-enter))
                    'follow-link t
                    'face neo-file-link-face
                    'neo-full-path node)
