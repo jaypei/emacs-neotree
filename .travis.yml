@@ -5,7 +5,7 @@ language: emacs-lisp
 env:
   matrix:
     - EMACS=emacs24
-    - EMACS=emacs-snapshot
+#    - EMACS=emacs-snapshot
 
 install:
   - if [ "$EMACS" = "emacs24" ]; then
