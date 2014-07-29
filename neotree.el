@@ -560,7 +560,7 @@ PATH is value."
 (defun neo-buffer--insert-root-entry (node)
   (neo-buffer--newline-and-begin)
   (insert-button ".."
-                 'action '(lambda (x) (neo-node-do-change-root))
+                 'action '(lambda (x) (neotree-change-root))
                  'follow-link t
                  'face neo-file-link-face
                  'neo-full-path (neo-path--updir node))
