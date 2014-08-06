@@ -779,6 +779,7 @@ NeoTree buffer is BUFFER."
 ;; Interactive functions
 ;;
 
+;;;###autoload
 (defun neotree-find (&optional path)
   "Quick select node which spicified PATH in NeoTree."
   (interactive)
