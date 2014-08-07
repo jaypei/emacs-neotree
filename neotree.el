@@ -782,7 +782,7 @@ NeoTree buffer is BUFFER."
 
 ;;;###autoload
 (defun neotree-find (&optional path)
-  "Quick select node which spicified PATH in NeoTree."
+  "Quick select node which specified PATH in NeoTree."
   (interactive)
   (let ((npath path)
         root-dir)
