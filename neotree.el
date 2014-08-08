@@ -820,6 +820,11 @@ NeoTree buffer is BUFFER."
             (neo-buffer--toggle-expand btn-full-path)
             (neo-buffer--refresh t))
         (progn
+          (if (eq (safe-length (window-list)) 1)
+              (neo-global--with-buffer
+                (neo-buffer--unlock-width)
+                (split-window-horizontally)
+                (neo-buffer--lock-width)))
           (neo-global--when-window
            (neo-window--zoom 'minimize))
           (switch-to-buffer (other-buffer (current-buffer) 1))
@@ -896,7 +901,7 @@ NeoTree buffer is BUFFER."
 (defun neotree-hidden-file-toggle ()
   "Toggle show hidden files."
   (interactive)
-  (neo-set-show-hidden-files (not neo-buffer--show-hidden-file-p))) 
+  (neo-set-show-hidden-files (not neo-buffer--show-hidden-file-p)))
 
 (defun neotree-empty-fn ()
   "Used to bind the empty function to the shortcut."
