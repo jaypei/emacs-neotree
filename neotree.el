@@ -77,6 +77,11 @@ By default all filest starting with dot '.' including . and ..")
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-dont-be-alone nil
+  "*If non-nil, you cannot left neotree window alone."
+  :type 'boolean
+  :group 'neotree)
+
 ;;
 ;; Faces
 ;;
@@ -284,6 +289,14 @@ it will be auto create neotree window and return it."
                 (if (not (string-equal (buffer-name (window-buffer window)) neo-buffer-name))
                     (delete-window window)))
               (cdr (window-list)))
+    ad-do-it))
+
+(defadvice delete-window
+  (around neotree-delete-window activate)
+  (if (and neo-dont-be-alone
+           (eq (safe-length (window-list)) 2)
+           (string-equal (buffer-name (window-buffer (next-window))) neo-buffer-name))
+          (message "only one window other than neotree left. won't close")
     ad-do-it))
 
 (defadvice mouse-drag-vertical-line
