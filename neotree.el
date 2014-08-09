@@ -77,6 +77,11 @@ By default all filest starting with dot '.' including . and ..")
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-dont-be-alone nil
+  "*If non-nil, you cannot left neotree window alone."
+  :type 'boolean
+  :group 'neotree)
+
 ;;
 ;; Faces
 ;;
@@ -284,6 +289,14 @@ it will be auto create neotree window and return it."
                 (if (not (string-equal (buffer-name (window-buffer window)) neo-buffer-name))
                     (delete-window window)))
               (cdr (window-list)))
+    ad-do-it))
+
+(defadvice delete-window
+  (around neotree-delete-window activate)
+  (if (and neo-dont-be-alone
+           (eq (safe-length (window-list)) 2)
+           (string-equal (buffer-name (window-buffer (next-window))) neo-buffer-name))
+          (message "only one window other than neotree left. won't close")
     ad-do-it))
 
 (defadvice mouse-drag-vertical-line
@@ -820,6 +833,11 @@ NeoTree buffer is BUFFER."
             (neo-buffer--toggle-expand btn-full-path)
             (neo-buffer--refresh t))
         (progn
+          (if (eq (safe-length (window-list)) 1)
+              (neo-global--with-buffer
+                (neo-buffer--unlock-width)
+                (split-window-horizontally)
+                (neo-buffer--lock-width)))
           (neo-global--when-window
            (neo-window--zoom 'minimize))
           (switch-to-buffer (other-buffer (current-buffer) 1))
@@ -896,7 +914,7 @@ NeoTree buffer is BUFFER."
 (defun neotree-hidden-file-toggle ()
   "Toggle show hidden files."
   (interactive)
-  (neo-set-show-hidden-files (not neo-buffer--show-hidden-file-p))) 
+  (neo-set-show-hidden-files (not neo-buffer--show-hidden-file-p)))
 
 (defun neotree-empty-fn ()
   "Used to bind the empty function to the shortcut."
