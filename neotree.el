@@ -1,4 +1,4 @@
-;;; neotree.el --- A emacs tree plugin like NerdTree for Vim
+;;; neotree.el --- A tree plugin like NerdTree for Vim
 
 ;; Copyright (C) 2014 jaypei
 
