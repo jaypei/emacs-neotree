@@ -35,6 +35,8 @@
 
 ;;; Code:
 
+(require 'find-file-in-project)
+
 ;;
 ;; Constants
 ;;
@@ -183,6 +185,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "C-c C-n") 'neotree-create-node)
     (define-key map (kbd "C-c C-d") 'neotree-delete-node)
     (define-key map (kbd "C-c C-r") 'neotree-rename-node)
+    (define-key map (kbd "C-c C-p") 'neotree-project-dir)
     map)
   "Keymap for `neotree-mode'.")
 
@@ -972,6 +975,18 @@ NeoTree buffer is BUFFER."
        (cd start-path-name))
      (neo-buffer--save-cursor-pos path nil)
      (neo-buffer--refresh nil))))
+
+;;;###autoload
+(defun neotree-project-dir ()
+  "Open dirtree using the git root."
+  (interactive)
+  (let ((project-dir (ffip-project-root))
+        (file-name (buffer-file-name)))
+    (if project-dir
+        (progn
+          (neotree-dir project-dir)
+          (neotree-find file-name))
+      (message "Could not find git project root."))))
 
 ;;;###autoload
 (defun neotree ()
