@@ -261,7 +261,6 @@ it will be auto create neotree window and return it."
     (setq window (selected-window))
     (neo-window--init window buffer)
     (setq neo-global--window window)
-    (select-window (window-right (get-buffer-window)))
     window))
 
 (defun neo-global--get-buffer ()
