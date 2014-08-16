@@ -463,6 +463,20 @@ Return nil if DIR is not an existing directory."
     (setq ndir (concat ndir "/"))
     (file-in-directory-p nfile ndir)))
 
+(defun neo-util--kill-buffers-for-path (path)
+  "Kill all buffers for files in PATH."
+  (let ((buffer (find-buffer-visiting path)))
+    (when buffer
+      (kill-buffer buffer)))
+  (dolist (filename (directory-files path t "^\\([^.]\\|\\.[^.]\\)"))
+    (let ((buffer (find-buffer-visiting filename)))
+      (when buffer
+        (kill-buffer buffer))
+      (when (and
+             (file-directory-p filename)
+             (neo-path--has-subfile-p filename))
+        (neo-util--kill-buffers-for-path filename)))))
+
 ;;
 ;; buffer methods
 ;;
@@ -888,6 +902,7 @@ NeoTree buffer is BUFFER."
         (neo-buffer--refresh nil)))))
 
 (defun neotree-delete-node ()
+  "Delete current node."
   (interactive)
   (catch 'end
     (let* ((filename (neo-buffer--get-filename-current-line))
@@ -898,17 +913,22 @@ NeoTree buffer is BUFFER."
                                     filename)))
           (throw 'end nil))
       (if (file-directory-p filename)
-          (progn
-            (if (neo-path--has-subfile-p filename)
-                (if (yes-or-no-p (format
+          (if (neo-path--has-subfile-p filename)
+              (when (yes-or-no-p (format
                                   "%S is a directory, delete it recursively?"
-                                  filename)))
-              (delete-directory filename)))
+                                  filename))
+                (when (yes-or-no-p (format
+                                    "kill buffers for files in directory %S?"
+                                    filename))
+                  (neo-util--kill-buffers-for-path filename))
+                (delete-directory filename t))
+            (delete-directory filename t)
+            (message "%S deleted." filename))
         (progn
           (delete-file filename)
           (when buffer
-            (kill-buffer-ask buffer))))
-      (message "%S deleted." filename)
+            (kill-buffer-ask buffer)
+            (message "%S deleted." filename))))
       (neo-buffer--refresh t)
       filename)))
 
