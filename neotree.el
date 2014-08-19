@@ -4,7 +4,7 @@
 
 ;; Author: jaypei <jaypei97159@gmail.com>
 ;; URL: https://github.com/jaypei/emacs-neotree
-;; Version: 0.1.5
+;; Version: 0.1.6
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@
 ;; Constants
 ;;
 
-(defconst neo-buffer-name " *NeoTree*"
+(defconst neo-buffer-name "*NeoTree*"
   "Name of the buffer where neotree shows directory contents.")
 
 (defconst neo-hidden-files-regexp "^\\."
@@ -57,21 +57,6 @@ By default all filest starting with dot '.' including . and ..")
   :group 'neotree
   :link '(info-link "(neotree)Configuration"))
 
-(defcustom neo-window-width 25
-  "*Specifies the width of the NeoTree window."
-  :type 'integer
-  :group 'neotree)
-
-(defcustom neo-show-header t
-  "*If non-nil, a help message will be displayed on the top of the window."
-  :type 'boolean
-  :group 'neotree)
-
-(defcustom neo-persist-show t
-  "*If non-nil, NeoTree window will not be turned off while press C-x 1"
-  :type 'boolean
-  :group 'neotree)
-
 (defcustom neo-create-file-auto-open nil
   "*If non-nil, the file will auto open when created."
   :type 'boolean
@@ -82,30 +67,52 @@ By default all filest starting with dot '.' including . and ..")
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-persist-show t
+  "*If non-nil, NeoTree window will not be turned off while press C-x 1"
+  :type 'boolean
+  :group 'neotree)
+
+(defcustom neo-show-header t
+  "*If non-nil, a help message will be displayed on the top of the window."
+  :type 'boolean
+  :group 'neotree)
+
+(defcustom neo-window-width 25
+  "*Specifies the width of the NeoTree window."
+  :type 'integer
+  :group 'neotree)
+
+
 ;;
 ;; Faces
 ;;
 
 (defface neo-header-face
   '((((background dark)) (:foreground "lightblue" :weight bold))
-    (t (:foreground "DarkMagenta")))
+    (t                   (:foreground "DarkMagenta")))
   "*Face used for the header in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-header-face 'neo-header-face)
 
 (defface neo-dir-link-face
   '((((background dark)) (:foreground "DeepSkyBlue"))
-    (t (:foreground "MediumBlue")))
+    (t                   (:foreground "MediumBlue")))
   "*Face used for expand sign [+] in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-dir-link-face 'neo-dir-link-face)
 
 (defface neo-file-link-face
   '((((background dark)) (:foreground "White"))
-    (t (:foreground "Black")))
+    (t                   (:foreground "Black")))
   "*Face used for open file/dir in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-file-link-face 'neo-file-link-face)
+
+(defface neo-button-face
+  '((t (:underline nil)))
+  "*Face used for open file/dir in neotree buffer."
+  :group 'neotree :group 'font-lock-highlighting-faces)
+(defvar neo-button-face 'neo-button-face)
 
 (defface neo-expand-btn-face
   '((((background dark)) (:foreground "SkyBlue"))
@@ -113,12 +120,6 @@ By default all filest starting with dot '.' including . and ..")
   "*Face used for open file/dir in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-expand-btn-face 'neo-expand-btn-face)
-
-(defface neo-button-face
-  '((t (:underline nil)))
-  "*Face used for open file/dir in neotree buffer."
-  :group 'neotree :group 'font-lock-highlighting-faces)
-(defvar neo-button-face 'neo-button-face)
 
 
 ;;
@@ -200,7 +201,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
 
 
 ;;
-;; global methods
+;; Global methods
 ;;
 
 (defmacro neo-global--with-buffer (&rest body)
@@ -234,8 +235,8 @@ The car of the pair will store fullpath, and cdr will store line number.")
 
 (defun neo-global--get-window (&optional auto-create-p)
   "Return the neotree window if it exists, else return nil.
-But when the neotree window is not exists and AUTO-CREATE-P is non-nil,
-it will be auto create neotree window and return it."
+But when the neotree window does not exist and AUTO-CREATE-P is non-nil,
+it will create the neotree window and return it."
   (unless (neo-global--window-exists-p)
     (setf neo-global--window nil))
   (when (and (null neo-global--window)
@@ -280,6 +281,18 @@ it will be auto create neotree window and return it."
    (and (not (null neo-buffer--start-node))
         (neo-path--file-in-directory-p path neo-buffer--start-node))))
 
+(defun neo-global--alone-p ()
+  "Checks whether the global neotree window is alone with some other window."
+  (let ((windows (window-list)))
+    (and (= (length windows)
+            2)
+         (member neo-global--window windows))))
+
+
+;;
+;; Advices
+;;
+
 (defadvice delete-other-windows
   (around neotree-delete-other-windows activate)
   "Delete all windows except neotree."
@@ -294,9 +307,10 @@ it will be auto create neotree window and return it."
 (defadvice delete-window
   (around neotree-delete-window activate)
   (if (and neo-dont-be-alone
-           (eq (safe-length (window-list)) 2)
-           (string-equal (buffer-name (window-buffer (next-window))) neo-buffer-name))
-          (message "only one window other than neotree left. won't close")
+           (not (eq window
+                    neo-global--window))
+           (neo-global--alone-p))
+      (message "only one window other than neotree left. won't close")
     ad-do-it))
 
 (defadvice mouse-drag-vertical-line
@@ -310,7 +324,7 @@ it will be auto create neotree window and return it."
 
 
 ;;
-;; util methods
+;; Util methods
 ;;
 
 (defun neo-util--filter (condp lst)
@@ -464,8 +478,9 @@ Return nil if DIR is not an existing directory."
     (setq ndir (concat ndir "/"))
     (file-in-directory-p nfile ndir)))
 
+
 ;;
-;; buffer methods
+;; Buffer methods
 ;;
 
 (defmacro neo-buffer--save-excursion (&rest body)
@@ -744,8 +759,9 @@ If RECURSIVE-P is non nil, find files will recursively."
       (neo-buffer--save-cursor-pos file)
       (neo-buffer--refresh nil))))
 
+
 ;;
-;; window methods
+;; Window methods
 ;;
 
 (defun neo-window--init (window buffer)
@@ -788,6 +804,7 @@ NeoTree buffer is BUFFER."
 (defun neo-set-show-hidden-files (show-hidden-file-p)
   (setq neo-buffer--show-hidden-file-p show-hidden-file-p)
   (neo-buffer--refresh t))
+
 
 ;;
 ;; Interactive functions
