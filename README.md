@@ -29,25 +29,6 @@ Then use `M-x package-list-packages`, select `neotree` from
 the list by pressing `i`, then press `x` to execute the changes. At
 that point, the package will be installed.
 
-### Useful tips
-
-If you use the `find-file-in-project` (ffip) library, you can open `neotree` at your directory root by
-adding this code to your `.emacs.d`:
-
-```elisp
-(defun neotree-project-dir ()
-  "Open dirtree using the git root."
-  (interactive)
-  (let ((project-dir (ffip-project-root))
-        (file-name (buffer-file-name)))
-    (if project-dir
-        (progn
-          (neotree-dir project-dir)
-          (neotree-find file-name))
-      (message "Could not find git project root."))))
-
-(define-key map (kbd "C-c C-p") 'neotree-project-dir)
-```
 
 ### Source
 
@@ -71,6 +52,28 @@ Open (toggle) NeoTree:
 
 ```
 <F8>
+```
+
+## Useful tips
+
+### find-file-in-project
+
+If you use the `find-file-in-project` (ffip) library, you can open `neotree` at your directory root by
+adding this code to your `.emacs.d`:
+
+```elisp
+(defun neotree-project-dir ()
+  "Open dirtree using the git root."
+  (interactive)
+  (let ((project-dir (ffip-project-root))
+        (file-name (buffer-file-name)))
+    (if project-dir
+        (progn
+          (neotree-dir project-dir)
+          (neotree-find file-name))
+      (message "Could not find git project root."))))
+
+(define-key map (kbd "C-c C-p") 'neotree-project-dir)
 ```
 
 
