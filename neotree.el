@@ -467,7 +467,7 @@ Return nil if DIR is not an existing directory."
   (let ((buffer (find-buffer-visiting path)))
     (when buffer
       (kill-buffer buffer)))
-  (dolist (filename (directory-files path t "^\\([^.]\\|\\.[^.]\\)"))
+  (dolist (filename (directory-files path t directory-files-no-dot-files-regexp))
     (let ((buffer (find-buffer-visiting filename)))
       (when buffer
         (kill-buffer buffer))
