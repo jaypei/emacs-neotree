@@ -77,6 +77,20 @@ adding this code to your `.emacs.d`:
 ```
 
 
+### use with evil mode
+
+If you use `evil-mode`, by default some of evil key bindings conflict with `neotree-mode` keys. For example, you cannot use `q` to hide neotree. To make neotree key bindings in effect, you can bind those keys in `evil-normal-state-local-map` in `neotree-mode-hook`, as shown in below code:
+
+```elisp
+(add-hook 'neotree-mode-hook
+          (lambda ()
+            (define-key evil-normal-state-local-map (kbd "TAB") 'neotree-enter)
+            (define-key evil-normal-state-local-map (kbd "SPC") 'neotree-enter)
+            (define-key evil-normal-state-local-map (kbd "q") 'neotree-hide)
+            (define-key evil-normal-state-local-map (kbd "RET") 'neotree-enter)))
+```
+
+
 ## More documentation ##
 
 * [EmacsWiki](http://www.emacswiki.org/emacs/NeoTree)
