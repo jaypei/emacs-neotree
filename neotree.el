@@ -76,6 +76,11 @@ By default all filest starting with dot '.' including . and ..")
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-smart-open nil
+  "*If non-nil, every time when the neotree window is opened, it will try to find current file and jump to node."
+  :type 'boolean
+  :group 'neotree)
+
 (defcustom neo-window-width 25
   "*Specifies the width of the NeoTree window."
   :type 'integer
@@ -298,6 +303,34 @@ it will create the neotree window and return it."
             2)
          (member neo-global--window windows))))
 
+(defun neo-global--open ()
+  "Show the NeoTree widnow."
+  (let ((valid-start-node-p nil))
+    (neo-buffer--save-excursion
+     (setf valid-start-node-p (neo-buffer--valid-start-node-p)))
+    (if (not valid-start-node-p)
+        (neo-global--open-dir (neo-path--get-working-dir))
+      (neo-global--get-window t))))
+
+(defun neo-global--open-dir (path)
+  "Show the NeoTree window, and change root to PATH."
+  (neo-global--get-window t)
+  (neo-buffer--save-excursion
+   (neo-buffer--change-root path)))
+
+(defun neo-global--open-and-find (path)
+  "Quick select node which specified PATH in NeoTree."
+  (let ((npath path)
+        root-dir)
+    (when (null npath)
+      (throw 'invalid-path "Invalid path to select."))
+    (setq root-dir (if (file-directory-p npath)
+                       npath (neo-path--updir npath)))
+    (when (or (not (neo-global--window-exists-p))
+              (not (neo-global--file-in-root-p npath)))
+      (neo-global--open-dir root-dir))
+    (neo-global--select-window)
+    (neo-buffer--select-file-node npath t)))
 
 ;;
 ;; Advices
@@ -460,6 +493,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
     rlt-path))
 
 (defun neo-path--get-working-dir ()
+  "Return a directory name of the current buffer."
   (file-name-as-directory (file-truename default-directory)))
 
 (defun neo-path--strip (path)
@@ -786,6 +820,18 @@ If RECURSIVE-P is non nil, find files will recursively."
       (neo-buffer--save-cursor-pos file)
       (neo-buffer--refresh nil))))
 
+(defun neo-buffer--change-root (root-dir)
+  "Change the tree root to ROOT-DIR."
+  (let ((path root-dir)
+        start-path)
+    (unless (and (file-exists-p path)
+                 (file-directory-p path))
+      (throw 'error "The path is not a valid directory."))
+    (setq start-path (expand-file-name (substitute-in-file-name path)))
+    (setq neo-buffer--start-node start-path)
+    (cd start-path)
+    (neo-buffer--save-cursor-pos path nil)
+    (neo-buffer--refresh nil)))
 
 ;;
 ;; Window methods
@@ -838,27 +884,21 @@ NeoTree buffer is BUFFER."
 ;;
 
 ;;;###autoload
-(defun neotree-find (&optional path)
-  "Quick select node which specified PATH in NeoTree."
+(defun neotree-find (&optional path default-path)
+  "Quick select node which specified PATH in NeoTree.
+If path is nil and no buffer file name, then use DEFAULT-PATH,"
   (interactive)
   (let ((npath path)
-        root-dir)
-    (catch 'return
-      (when (null npath)
-        (setq npath (buffer-file-name)))
-      (when (null npath)
-        (message "Invalid file name of current buffer.")
-        (throw 'return nil))
-      (setq root-dir  (neo-path--updir npath))
-      (when (not (neo-global--file-in-root-p npath))
-        (if (neo-global--window-exists-p)
-            (if (yes-or-no-p "File not found in root path, do you want to change root?")
-                (neotree-dir root-dir))
-          (neotree-dir root-dir)))
-      (when (neo-global--file-in-root-p npath)
-        (neo-global--with-window
-          (neo-buffer--select-file-node npath t))
-        (neo-global--select-window)))))
+        (do-open-p nil)
+        (default-path (neo-path--get-working-dir)))
+    (setq npath (or (buffer-file-name)
+                    default-path))
+    (if (and (not (neo-global--file-in-root-p npath))
+             (neo-global--window-exists-p))
+        (setq do-open-p (yes-or-no-p "File not found in root path, do you want to change root?"))
+      (setq do-open-p t))
+    (if do-open-p
+        (neo-global--open-and-find npath))))
 
 (defun neotree-previous-node ()
   (interactive)
@@ -894,7 +934,7 @@ NeoTree buffer is BUFFER."
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (if (null btn-full-path)
         (call-interactively 'neotree-dir)
-      (neotree-dir btn-full-path))))
+      (neo-global--open-dir btn-full-path))))
 
 (defun neotree-create-node (filename)
   (interactive
@@ -998,12 +1038,9 @@ NeoTree buffer is BUFFER."
 (defun neotree-show ()
   "Show the NeoTree widnow."
   (interactive)
-  (let ((valid-start-node-p nil))
-    (neo-buffer--save-excursion
-     (setf valid-start-node-p (neo-buffer--valid-start-node-p)))
-    (if (not valid-start-node-p)
-        (neotree-dir (neo-path--get-working-dir))
-      (neo-global--get-window t))))
+  (if neo-smart-open
+      (neotree-find)
+    (neo-global--open)))
 
 ;;;###autoload
 (defun neotree-hide ()
@@ -1016,15 +1053,9 @@ NeoTree buffer is BUFFER."
 (defun neotree-dir (path)
   "Show the NeoTree window, and change root to PATH."
   (interactive "DDirectory: ")
-  (when (and (file-exists-p path)
-             (file-directory-p path))
-    (neo-global--get-window t)
-    (neo-buffer--save-excursion
-     (let ((start-path-name (expand-file-name (substitute-in-file-name path))))
-       (setq neo-buffer--start-node start-path-name)
-       (cd start-path-name))
-     (neo-buffer--save-cursor-pos path nil)
-     (neo-buffer--refresh nil))))
+  (neo-global--get-window t)
+  (neo-buffer--save-excursion
+   (neo-buffer--change-root path)))
 
 ;;;###autoload
 (defun neotree ()
