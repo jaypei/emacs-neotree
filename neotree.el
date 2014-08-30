@@ -67,7 +67,7 @@ By default all filest starting with dot '.' including . and ..")
   :group 'neotree)
 
 (defcustom neo-persist-show t
-  "*If non-nil, NeoTree window will not be turned off while press C-x 1"
+  "*If non-nil, NeoTree window will not be turned off while press C\-x 1."
   :type 'boolean
   :group 'neotree)
 
@@ -245,6 +245,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
        (eql (window-buffer neo-global--window) (neo-global--get-buffer))))
 
 (defun neo-global--select-window ()
+  "Select the NeoTree window."
   (interactive)
   (let ((window (neo-global--get-window t)))
     (select-window window)))
@@ -262,6 +263,7 @@ it will create the neotree window and return it."
   neo-global--window)
 
 (defun neo-global--get-first-window ()
+  "Return the top-left window."
   (let (w)
     (if (null w)
         (setq w (window-at 0 0)))
@@ -297,7 +299,7 @@ it will create the neotree window and return it."
         (neo-path--file-in-directory-p path neo-buffer--start-node))))
 
 (defun neo-global--alone-p ()
-  "Checks whether the global neotree window is alone with some other window."
+  "Check whether the global neotree window is alone with some other window."
   (let ((windows (window-list)))
     (and (= (length windows)
             2)
@@ -349,6 +351,7 @@ it will create the neotree window and return it."
 
 (defadvice delete-window
   (around neotree-delete-window activate)
+  "Stop to delete window which it is the last window except NeoTree."
   (if (and neo-dont-be-alone
            (not (eq window
                     neo-global--window))
@@ -358,6 +361,7 @@ it will create the neotree window and return it."
 
 (defadvice mouse-drag-vertical-line
   (around neotree-drag-vertical-line (start-event) activate)
+  "Drag and drop is not affected by the lock."
   (neo-global--with-buffer
    (neo-buffer--unlock-width))
   ad-do-it
@@ -371,6 +375,13 @@ it will create the neotree window and return it."
 ;;
 
 (defun neo-util--filter (condp lst)
+"Apply CONDP to elements of LST keeping those that return non-nil.
+
+Example:
+    (neo-util--filter 'symbolp '(a \"b\" 3 d4))
+         => (a d4)
+
+This procedure does not work when CONDP is the `null' function."
   (delq nil
         (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
 
@@ -421,9 +432,10 @@ it will create the neotree window and return it."
         r-path)))
 
 (defun neo-path--shorten (path length)
-  "Shorten a given path to a specified length. This is needed for paths, which
-are to long for the window to display completely. The function cuts of the
-first part of the path to remain the last folder (the current one)."
+  "Shorten a given PATH to a specified LENGTH.
+This is needed for paths, which are to long for the window to display
+completely.  The function cuts of the first part of the path to remain
+the last folder (the current one)."
     (if (> (string-width path) length)
 	(concat "<" (substring path (- (- length 1))))
       path))
@@ -471,7 +483,7 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
       nil)))
 
 (defun neo-path--has-subfile-p (dir)
-  "To determine whether a directory(DIR) contains files"
+  "To determine whether a directory(DIR) contain files."
   (and (file-exists-p dir)
        (file-directory-p dir)
        (neo-util--walk-dir dir)
