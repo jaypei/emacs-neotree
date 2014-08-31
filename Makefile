@@ -11,14 +11,14 @@ package: *.el
 clean:
 	@rm -rf neotree-*/ neotree-*.tar neotree-*.tar.bz2 *.elc ert.el
 
-test:
+test: compile
 	${EMACS} -Q -nw -L . -L ./test \
 		-l test/test-utils.el \
 		-l test/test-cmds.el \
 		-l test/test-buffer.el \
 		--eval "(let (pop-up-windows) (ert t))"
 
-test-batch:
+test-batch: compile
 	${EMACS} -Q --batch -L .  -L ./test \
 		-l test/test-utils.el \
 		--eval "(ert-run-tests-batch-and-exit '(not (tag interactive)))"
@@ -28,4 +28,4 @@ downloads:
 	${CURL} ${ERT_URL} > ert.el
 
 compile:
-	${EMACS} -Q --batch -L . -f batch-byte-compile neotree.el neotree-*.el
+	${EMACS} -Q --batch -L . -f batch-byte-compile neotree.el
