@@ -217,7 +217,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
 
 
 ;;
-;; Global methods
+;; Macros
 ;;
 
 (defmacro neo-global--with-buffer (&rest body)
@@ -238,6 +238,20 @@ The car of the pair will store fullpath, and cdr will store line number.")
   (declare (indent 0) (debug t))
   `(when (eq (selected-window) neo-global--window)
      ,@body))
+
+(defmacro neo-buffer--save-excursion (&rest body)
+  `(save-window-excursion
+     (let ((rlt nil))
+       (switch-to-buffer (neo-global--get-buffer))
+       (setq buffer-read-only nil)
+       (setf rlt (progn ,@body))
+       (setq buffer-read-only t)
+       rlt)))
+
+
+;;
+;; Global methods
+;;
 
 (defun neo-global--window-exists-p ()
   "Return non-nil if neotree window exists."
@@ -551,15 +565,6 @@ Return nil if DIR is not an existing directory."
 ;;
 ;; Buffer methods
 ;;
-
-(defmacro neo-buffer--save-excursion (&rest body)
-  `(save-window-excursion
-     (let ((rlt nil))
-       (switch-to-buffer (neo-global--get-buffer))
-       (setq buffer-read-only nil)
-       (setf rlt (progn ,@body))
-       (setq buffer-read-only t)
-       rlt)))
 
 (defun neo-buffer--newline-and-begin ()
   (newline)
