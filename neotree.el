@@ -46,6 +46,29 @@
   "Hidden files regexp.
 By default all filest starting with dot '.' including . and ..")
 
+(eval-and-compile
+
+  ;; Added in Emacs 24.3
+  (unless (fboundp 'user-error)
+    (defalias 'user-error 'error))
+
+  ;; Added in Emacs 24.3 (mirrors/emacs@b335efc3).
+  (unless (fboundp 'setq-local)
+    (defmacro setq-local (var val)
+      "Set variable VAR to value VAL in current buffer."
+      (list 'set (list 'make-local-variable (list 'quote var)) val)))
+
+  ;; Added in Emacs 24.3 (mirrors/emacs@b335efc3).
+  (unless (fboundp 'defvar-local)
+    (defmacro defvar-local (var val &optional docstring)
+      "Define VAR as a buffer-local variable with default value VAL.
+Like `defvar' but additionally marks the variable as being automatically
+buffer-local wherever it is set."
+      (declare (debug defvar) (doc-string 3))
+      (list 'progn (list 'defvar var val docstring)
+            (list 'make-variable-buffer-local (list 'quote var))))))
+
+
 ;;
 ;; Customization
 ;;
@@ -138,34 +161,30 @@ By default all filest starting with dot '.' including . and ..")
 
 (defvar neo-global--window nil)
 
-(defvar neo-buffer--start-node nil
+(defvar-local neo-buffer--start-node nil
   "Start node(i.e. directory) for the window.")
-(make-variable-buffer-local 'neo-buffer--start-node)
 
-(defvar neo-buffer--start-line nil
+(defvar-local neo-buffer--start-line nil
   "Index of the start line of the root.")
-(make-variable-buffer-local 'neo-buffer--start-line)
 
-(defvar neo-buffer--cursor-pos (cons nil 1)
+(defvar-local neo-buffer--cursor-pos (cons nil 1)
   "To save the cursor position.
 The car of the pair will store fullpath, and cdr will store line number.")
-(make-variable-buffer-local 'neo-buffer--cursor-pos)
 
-(defvar neo-buffer--last-window-pos (cons nil 1)
+(defvar-local neo-buffer--last-window-pos (cons nil 1)
   "To save the scroll position for NeoTree window.")
-(make-variable-buffer-local 'neo-buffer--last-window-pos)
 
-(defvar neo-buffer--show-hidden-file-p nil
+(defvar-local neo-buffer--show-hidden-file-p nil
   "Show hidden nodes in tree.")
-(make-variable-buffer-local 'neo-buffer--show-hidden-file-p)
 
-(defvar neo-buffer--expanded-node-list nil
+(defvar-local neo-buffer--expanded-node-list nil
   "A list of expanded dir nodes.")
-(make-variable-buffer-local 'neo-buffer--expanded-node-list)
 
-(defvar neo-buffer--node-list nil
+(defvar-local neo-buffer--node-list nil
   "The model of current NeoTree buffer.")
-(make-variable-buffer-local 'neo-buffer--node-list)
+
+(defvar-local neo-buffer--node-list-1 nil
+  "The model of current NeoTree buffer (temp).")
 
 
 ;;
