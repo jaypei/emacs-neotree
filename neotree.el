@@ -113,7 +113,7 @@ buffer-local wherever it is set."
   "The default keybindings for neotree-mode-map."
   :group 'neotree
   :type '(choice (const default)
-                 (const consise)))
+                 (const concise)))
 
 
 ;;
@@ -215,7 +215,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
       (define-key map (kbd "C-c C-n") 'neotree-create-node)
       (define-key map (kbd "C-c C-d") 'neotree-delete-node)
       (define-key map (kbd "C-c C-r") 'neotree-rename-node))
-     ((eq neo-keymap-style 'consise)
+     ((eq neo-keymap-style 'concise)
       (define-key map (kbd "c") 'neotree-create-node)
       (define-key map (kbd "+") 'neotree-create-node)
       (define-key map (kbd "d") 'neotree-delete-node)
@@ -261,6 +261,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
      ,@body))
 
 (defmacro neo-buffer--save-excursion (&rest body)
+  "Execute BODY in neotree window, then restore previous window configuration."
   `(save-window-excursion
      (let ((rlt nil))
        (switch-to-buffer (neo-global--get-buffer))
