@@ -109,10 +109,12 @@ buffer-local wherever it is set."
   :type 'integer
   :group 'neotree)
 
-(defcustom neo-keymap-style-consise nil
-  "*If non-nil, set concise keybindings for neotree-mode-map."
-  :type 'boolean
-  :group 'neotree)
+(defcustom neo-keymap-style 'default
+  "The default keybindings for neotree-mode-map."
+  :group 'neotree
+  :type '(choice (const default)
+                 (const consise)))
+
 
 ;;
 ;; Faces
@@ -208,17 +210,17 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "C-x 3")   'neotree-empty-fn)
     (define-key map (kbd "C-c C-f") 'find-file-other-window)
     (define-key map (kbd "C-c C-c") 'neotree-change-root)
-    (if neo-keymap-style-consise
-        (progn
-          (define-key map (kbd "c") 'neotree-create-node)
-          (define-key map (kbd "+") 'neotree-create-node)
-          (define-key map (kbd "d") 'neotree-delete-node)
-          (define-key map (kbd "r") 'neotree-rename-node)
-          (define-key map (kbd "e") 'neotree-enter))
-      (progn
-        (define-key map (kbd "C-c C-n") 'neotree-create-node)
-        (define-key map (kbd "C-c C-d") 'neotree-delete-node)
-        (define-key map (kbd "C-c C-r") 'neotree-rename-node)))
+    (cond
+     ((eq neo-keymap-style 'default)
+      (define-key map (kbd "C-c C-n") 'neotree-create-node)
+      (define-key map (kbd "C-c C-d") 'neotree-delete-node)
+      (define-key map (kbd "C-c C-r") 'neotree-rename-node))
+     ((eq neo-keymap-style 'consise)
+      (define-key map (kbd "c") 'neotree-create-node)
+      (define-key map (kbd "+") 'neotree-create-node)
+      (define-key map (kbd "d") 'neotree-delete-node)
+      (define-key map (kbd "r") 'neotree-rename-node)
+      (define-key map (kbd "e") 'neotree-enter)))
     map)
   "Keymap for `neotree-mode'.")
 
