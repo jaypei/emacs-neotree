@@ -226,8 +226,9 @@ The car of the pair will store fullpath, and cdr will store line number.")
 
 (define-derived-mode neotree-mode special-mode "NeoTree"
   "A major mode for displaying the directory tree in text mode."
-  ;; only spaces
-  (setq indent-tabs-mode nil)
+  (setq indent-tabs-mode nil            ; only spaces
+        buffer-read-only t              ; read only
+        truncate-lines -1)
   ;; fix for electric-indent-mode
   ;; for emacs 24.4
   (if (fboundp 'electric-indent-local-mode)
@@ -665,15 +666,15 @@ PATH is value."
        (file-accessible-directory-p neo-buffer--start-node)))
 
 (defun neo-buffer--create ()
+  "Create and switch a NeoTree buffer."
   (setq neo-global--buffer
         (switch-to-buffer
          (generate-new-buffer-name neo-buffer-name)))
   (neotree-mode)
-  (setq buffer-read-only t)
-  (if (and (boundp 'linum-mode)         ; disable line number
+  ;; disable linum-mode
+  (if (and (boundp 'linum-mode)
            (not (null linum-mode)))
       (linum-mode -1))
-  (setq truncate-lines -1)
   neo-global--buffer)
 
 (defun neo-buffer--insert-header ()
