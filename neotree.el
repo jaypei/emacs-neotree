@@ -1022,33 +1022,41 @@ If cannot find any node in current line, it equivalent to using `neotree-dir'."
 (defun neotree-delete-node ()
   "Delete current node."
   (interactive)
-  (catch 'end
-    (let* ((filename (neo-buffer--get-filename-current-line))
-           (buffer (find-buffer-visiting filename)))
+  (let* ((filename (neo-buffer--get-filename-current-line))
+         (buffer (find-buffer-visiting filename))
+         (deleted-p nil))
+    (catch 'end
       (if (null filename) (throw 'end nil))
       (if (not (file-exists-p filename)) (throw 'end nil))
       (if (not (yes-or-no-p (format "Do you really want to delete %S?"
                                     filename)))
           (throw 'end nil))
       (if (file-directory-p filename)
-          (if (neo-path--has-subfile-p filename)
-              (when (yes-or-no-p (format
-                                  "%S is a directory, delete it recursively?"
-                                  filename))
-                (when (yes-or-no-p (format
-                                    "kill buffers for files in directory %S?"
-                                    filename))
-                  (neo-util--kill-buffers-for-path filename))
-                (delete-directory filename t))
-            (delete-directory filename t)
-            (message "%S deleted." filename))
+          ;; delete directory
+          (progn
+            (unless (neo-path--has-subfile-p filename)
+              (delete-directory filename)
+              (setq deleted-p t)
+              (throw 'end nil))
+            (when (yes-or-no-p
+                   (format "%S is a directory, delete it recursively?"
+                           filename))
+              (when (yes-or-no-p
+                     (format "kill buffers for files in directory %S?"
+                             filename))
+                (neo-util--kill-buffers-for-path filename))
+              (delete-directory filename t)
+              (setq deleted-p t)))
+        ;; delete file
         (progn
           (delete-file filename)
           (when buffer
             (kill-buffer-ask buffer)
-            (message "%S deleted." filename))))
-      (neo-buffer--refresh t)
-      filename)))
+            (setq deleted-p t)))))
+    (when deleted-p
+      (message "%S deleted." filename)
+      (neo-buffer--refresh t))
+    filename))
 
 (defun neotree-rename-node ()
   "Rename current node."
