@@ -899,6 +899,8 @@ NeoTree buffer is BUFFER."
             (enlarge-window-horizontally (- w (window-width))))))))
 
 (defun neo-window--zoom (method)
+  "Zoom the NeoTree window, the METHOD should one of these options:
+'maximize 'minimize 'zoom-in 'zoom-out."
   (neo-buffer--unlock-width)
   (cond
    ((eq method 'maximize)
@@ -912,10 +914,12 @@ NeoTree buffer is BUFFER."
   (neo-buffer--lock-width))
 
 (defun neo-window--minimize-p ()
+  "Return non-nil when the NeoTree window is minimize."
   (<= (window-width) neo-window-width))
 
-(defun neo-set-show-hidden-files (show-hidden-file-p)
-  (setq neo-buffer--show-hidden-file-p show-hidden-file-p)
+(defun neo-buffer--set-show-hidden-file-p (show-p)
+  "If SHOW-P is non-nil, show hidden nodes in tree."
+  (setq neo-buffer--show-hidden-file-p show-p)
   (neo-buffer--refresh t))
 
 
@@ -941,14 +945,17 @@ If path is nil and no buffer file name, then use DEFAULT-PATH,"
         (neo-global--open-and-find npath))))
 
 (defun neotree-previous-node ()
+  "Jump to the previous node."
   (interactive)
   (backward-button 1 nil))
 
 (defun neotree-next-node ()
+  "Jump to the next node."
   (interactive)
   (forward-button 1 nil))
 
 (defun neotree-enter ()
+  "Open a node, like 'o' in NERDTree."
   (interactive)
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (unless (null btn-full-path)
@@ -969,6 +976,9 @@ If path is nil and no buffer file name, then use DEFAULT-PATH,"
     btn-full-path))
 
 (defun neotree-change-root ()
+  "Change root to current node dir.
+If current node is a file, then it will do nothing.
+If cannot find any node in current line, it equivalent to using `neotree-dir'."
   (interactive)
   (neo-global--select-window)
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
@@ -977,6 +987,7 @@ If path is nil and no buffer file name, then use DEFAULT-PATH,"
       (neo-global--open-dir btn-full-path))))
 
 (defun neotree-create-node (filename)
+  "Create a file or directory use specified FILENAME in current node."
   (interactive
    (let* ((current-dir (neo-buffer--get-filename-current-line neo-buffer--start-node))
           (current-dir (neo-path--match-path-directory current-dir))
@@ -1047,7 +1058,7 @@ If path is nil and no buffer file name, then use DEFAULT-PATH,"
 (defun neotree-hidden-file-toggle ()
   "Toggle show hidden files."
   (interactive)
-  (neo-set-show-hidden-files (not neo-buffer--show-hidden-file-p)))
+  (neo-buffer--set-show-hidden-file-p (not neo-buffer--show-hidden-file-p)))
 
 (defun neotree-empty-fn ()
   "Used to bind the empty function to the shortcut."
@@ -1093,9 +1104,7 @@ If path is nil and no buffer file name, then use DEFAULT-PATH,"
 (defun neotree-dir (path)
   "Show the NeoTree window, and change root to PATH."
   (interactive "DDirectory: ")
-  (neo-global--get-window t)
-  (neo-buffer--save-excursion
-   (neo-buffer--change-root path)))
+  (neo-global--open-dir path))
 
 ;;;###autoload
 (defun neotree ()
