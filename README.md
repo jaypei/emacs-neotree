@@ -57,5 +57,6 @@ Open (toggle) NeoTree:
 
 ## More documentation ##
 
-* [EmacsWiki](http://www.emacswiki.org/emacs/NeoTree)
-* [中文版 NeoTree](http://www.emacswiki.org/emacs-zh/NeoTree_%E4%B8%AD%E6%96%87wiki)
+EmacsWiki:
+[En](http://www.emacswiki.org/emacs/NeoTree)
+[中文版](http://www.emacswiki.org/emacs-zh/NeoTree_%E4%B8%AD%E6%96%87wiki)
