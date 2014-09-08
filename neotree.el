@@ -46,6 +46,8 @@
   "Hidden files regexp.
 By default all filest starting with dot '.' including . and ..")
 
+(defconst neo-header-height 5)
+
 (eval-and-compile
 
   ;; Added in Emacs 24.3
@@ -769,6 +771,8 @@ PATH is value."
       (neo-buffer--insert-file-entry leaf depth))))
 
 (defun neo-buffer--refresh (save-pos)
+  "Refresh the NeoTree buffer.
+If SAVE-POS is non-nil, it will be auto save current line number."
   (let ((start-node neo-buffer--start-node))
     (neo-buffer--save-excursion
      ;; save context
@@ -778,11 +782,13 @@ PATH is value."
      (erase-buffer)
      (neo-buffer--node-list-clear)
      (if neo-show-header (neo-buffer--insert-header))
+     (setq neo-buffer--start-line neo-header-height)
      (neo-buffer--insert-tree start-node 1))
     ;; restore context
     (neo-buffer--goto-cursor-pos)))
 
 (defun neo-buffer--get-button-current-line ()
+  "Return the first button in current line."
   (let* ((btn-position nil)
          (pos-line-start (line-beginning-position))
          (pos-line-end (line-end-position))
@@ -806,15 +812,19 @@ PATH is value."
     current-button))
 
 (defun neo-buffer--get-filename-current-line (&optional default)
+  "Return filename for first button in current line.
+If there is no button in current line, then return DEFAULT."
   (let ((btn (neo-buffer--get-button-current-line)))
     (if (not (null btn))
         (button-get btn 'neo-full-path)
       default)))
 
 (defun neo-buffer--lock-width ()
+  "Lock the width size for NeoTree window."
   (setq window-size-fixed 'width))
 
 (defun neo-buffer--unlock-width ()
+  "Unlock the width size for NeoTree window."
   (setq window-size-fixed nil))
 
 (defun neo-buffer--rename-node ()
