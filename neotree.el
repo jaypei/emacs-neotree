@@ -4,7 +4,7 @@
 
 ;; Author: jaypei <jaypei97159@gmail.com>
 ;; URL: https://github.com/jaypei/emacs-neotree
-;; Version: 0.2
+;; Version: 0.2.1
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1125,10 +1125,7 @@ If cannot find any node in current line, it equivalent to using `neotree-dir'."
   (neo-global--open-dir path))
 
 ;;;###autoload
-(defun neotree ()
-  "Show the NeoTree window."
-  (interactive)
-  (neotree-show))
+(defalias 'neotree 'neotree-show "Show the NeoTree window.")
 
 
 (provide 'neotree)
