@@ -1061,8 +1061,8 @@ If cannot find any node in current line, it equivalent to using `neotree-dir'."
         (progn
           (delete-file filename)
           (when buffer
-            (kill-buffer-ask buffer)
-            (setq deleted-p t)))))
+            (kill-buffer-ask buffer))
+          (setq deleted-p t))))
     (when deleted-p
       (message "%S deleted." filename)
       (neo-buffer--refresh t))
