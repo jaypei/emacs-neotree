@@ -2,4 +2,6 @@
 ert.el
 *.tar.bz2
 *.tar
+*~
+\#*
 neotree-autoloads.el
