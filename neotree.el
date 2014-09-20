@@ -479,6 +479,44 @@ the last folder (the current one)."
 	(concat "<" (substring path (- (- length 1))))
       path))
 
+(defun neo-path--insert-chroot-button (label path face)
+  (insert-button
+   label
+   'action '(lambda (x) (neo-node-do-change-root))
+   'follow-link t
+   'face face
+   'neo-full-path path))
+
+(defun neo-path--insert-header-buttonized (path)
+  "Shortens the path to (window-body-width) and displays any
+visible remains as buttons that, when clicked, navigate to that
+parent directory."
+  (let* ((short-label (neo-path--shorten path (window-body-width)))
+         (short-path  (substring short-label (if (string-match "</" short-label) 2 1)))
+         (visible-start (string-match (regexp-quote short-path) path))
+         (parent "")
+         (insert-at 1)
+         (dirs (split-string path "/" :omitnulls))
+         (lastdir (when dirs (car (last dirs)))))
+    (dolist (dir dirs)
+      (when insert-at (setq insert-at (+ insert-at (length dir) 1)))
+      (when (or (null insert-at) (>= insert-at visible-start))
+        (let ((label dir))
+          (when insert-at ;;insert the first visible entry's parent
+            (if (string= short-label path)
+              (neo-path--insert-chroot-button "/" "/" 'neo-header-face)
+              ;;else, display only the visible part of the shortened first dir 
+              (neo-path--insert-chroot-button "<" (concat parent "/") 'neo-header-face)
+              (setq label (substring path visible-start 
+                                     (string-match "/" path visible-start)))))
+          (if (string= lastdir dir)
+            (insert lastdir)
+            (neo-path--insert-chroot-button
+             (concat label "/")
+             (concat parent "/" dir) 'neo-header-face)))
+      (setq insert-at nil))
+    (setq parent (concat parent "/" dir)))))
+
 (defun neo-path--updir (path)
   (let ((r-path (neo-path--expand-name path)))
     (if (and (> (length r-path) 0)
@@ -687,16 +725,8 @@ PATH is value."
 
 (defun neo-buffer--insert-root-entry (node)
   (neo-buffer--newline-and-begin)
-  (insert-button ".."
-                 'action '(lambda (x) (neotree-change-root))
-                 'follow-link t
-                 'face neo-file-link-face
-                 'neo-full-path (neo-path--updir node))
-  (insert " (up a dir)")
-  (neo-buffer--newline-and-begin)
   (neo-buffer--node-list-set nil node)
-  (neo-buffer--insert-with-face (neo-path--shorten node (window-body-width))
-                                'neo-header-face)
+  (neo-path--insert-header-buttonized node)
   (neo-buffer--newline-and-begin))
 
 (defun neo-buffer--insert-dir-entry (node depth expanded)
