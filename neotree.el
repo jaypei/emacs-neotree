@@ -117,6 +117,10 @@ buffer-local wherever it is set."
   :type '(choice (const default)
                  (const concise)))
 
+(defcustom neo-click-changes-root nil
+  "*If non-nil, clicking on a directory will change the current root to the directory."
+  :type 'boolean
+  :group 'neotree)
 
 ;;
 ;; Faces
@@ -204,6 +208,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "p")       'previous-line)
     (define-key map (kbd "n")       'next-line)
     (define-key map (kbd "A")       'neotree-stretch-toggle)
+    (define-key map (kbd "C")       'neotree-click-changes-root-toggle)
     (define-key map (kbd "H")       'neotree-hidden-file-toggle)
     (define-key map (kbd "q")       'neotree-hide)
     (define-key map (kbd "C-x C-f") 'find-file-other-window)
@@ -482,7 +487,7 @@ the last folder (the current one)."
 (defun neo-path--insert-chroot-button (label path face)
   (insert-button
    label
-   'action '(lambda (x) (neo-node-do-change-root))
+   'action '(lambda (x) (neotree-change-root))
    'follow-link t
    'face face
    'neo-full-path path))
@@ -994,15 +999,24 @@ If path is nil and no buffer file name, then use DEFAULT-PATH,"
   (interactive)
   (forward-button 1 nil))
 
+(defun neotree-click-changes-root-toggle ()
+  "Toggle the variable neo-click-changes-root.
+If true, clicking on a directory will change the current root to
+the directory instead of showing the directory contents."
+  (interactive)
+  (setq neo-click-changes-root (not neo-click-changes-root)))
+
 (defun neotree-enter ()
   "Open a node, like 'o' in NERDTree."
   (interactive)
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (unless (null btn-full-path)
       (if (file-directory-p btn-full-path)
+        (if neo-click-changes-root
+          (neotree-change-root)
           (progn
             (neo-buffer--toggle-expand btn-full-path)
-            (neo-buffer--refresh t))
+            (neo-buffer--refresh t)))
         (progn
           (if (eq (safe-length (window-list)) 1)
               (neo-global--with-buffer
