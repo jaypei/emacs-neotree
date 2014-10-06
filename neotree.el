@@ -117,6 +117,10 @@ buffer-local wherever it is set."
   :type '(choice (const default)
                  (const concise)))
 
+(defcustom neo-click-changes-root nil
+  "*If non-nil, clicking on a directory will change the current root to the directory."
+  :type 'boolean
+  :group 'neotree)
 
 ;;
 ;; Faces
@@ -204,6 +208,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "p")       'previous-line)
     (define-key map (kbd "n")       'next-line)
     (define-key map (kbd "A")       'neotree-stretch-toggle)
+    (define-key map (kbd "C")       'neotree-click-changes-root-toggle)
     (define-key map (kbd "H")       'neotree-hidden-file-toggle)
     (define-key map (kbd "q")       'neotree-hide)
     (define-key map (kbd "C-x C-f") 'find-file-other-window)
@@ -479,6 +484,37 @@ the last folder (the current one)."
 	(concat "<" (substring path (- (- length 1))))
       path))
 
+(defun neo-path--insert-chroot-button (label path face)
+  (insert-button
+   label
+   'action '(lambda (x) (neotree-change-root))
+   'follow-link t
+   'face face
+   'neo-full-path path))
+
+(defun neo-path--insert-header-buttonized (path)
+  "Shortens the path to (window-body-width) and displays any
+visible remains as buttons that, when clicked, navigate to that
+parent directory."
+  (let* ((dirs (reverse (maplist 'identity (reverse (split-string path "/" :omitnulls)))))
+         (last (car-safe (car-safe (last dirs)))))
+    (neo-path--insert-chroot-button "/" "/" 'neo-header-face)
+    (dolist (dir dirs)
+      (if (string= (car dir) last)
+        (neo-buffer--insert-with-face last 'neo-header-face)
+        (neo-path--insert-chroot-button
+         (concat (car dir) "/")
+         (apply 'neo-path--join (cons "/" (reverse dir)))
+         'neo-header-face))))
+  ;;shorten the line if need be
+  (when (> (current-column) (window-body-width))
+    (forward-char (- (window-body-width)))
+    (delete-region (point-at-bol) (point))
+    (let* ((button (button-at (point)))
+           (path (if button (overlay-get button 'neo-full-path) "/")))
+      (neo-path--insert-chroot-button "<" path 'neo-header-face))
+    (end-of-line)))
+
 (defun neo-path--updir (path)
   (let ((r-path (neo-path--expand-name path)))
     (if (and (> (length r-path) 0)
@@ -687,16 +723,8 @@ PATH is value."
 
 (defun neo-buffer--insert-root-entry (node)
   (neo-buffer--newline-and-begin)
-  (insert-button ".."
-                 'action '(lambda (x) (neotree-change-root))
-                 'follow-link t
-                 'face neo-file-link-face
-                 'neo-full-path (neo-path--updir node))
-  (insert " (up a dir)")
-  (neo-buffer--newline-and-begin)
   (neo-buffer--node-list-set nil node)
-  (neo-buffer--insert-with-face (neo-path--shorten node (window-body-width))
-                                'neo-header-face)
+  (neo-path--insert-header-buttonized node)
   (neo-buffer--newline-and-begin))
 
 (defun neo-buffer--insert-dir-entry (node depth expanded)
@@ -964,15 +992,24 @@ If path is nil and no buffer file name, then use DEFAULT-PATH,"
   (interactive)
   (forward-button 1 nil))
 
+(defun neotree-click-changes-root-toggle ()
+  "Toggle the variable neo-click-changes-root.
+If true, clicking on a directory will change the current root to
+the directory instead of showing the directory contents."
+  (interactive)
+  (setq neo-click-changes-root (not neo-click-changes-root)))
+
 (defun neotree-enter ()
   "Open a node, like 'o' in NERDTree."
   (interactive)
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (unless (null btn-full-path)
       (if (file-directory-p btn-full-path)
+        (if neo-click-changes-root
+          (neotree-change-root)
           (progn
             (neo-buffer--toggle-expand btn-full-path)
-            (neo-buffer--refresh t))
+            (neo-buffer--refresh t)))
         (progn
           (if (eq (safe-length (window-list)) 1)
               (neo-global--with-buffer
