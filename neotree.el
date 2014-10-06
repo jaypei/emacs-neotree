@@ -96,8 +96,13 @@ buffer-local wherever it is set."
   :type 'boolean
   :group 'neotree)
 
-(defcustom neo-show-header t
-  "*If non-nil, a help message will be displayed on the top of the window."
+(defcustom neo-banner-message "Press ? for help."
+  "*The banner message of neotree window."
+  :type 'string
+  :group 'neotree)
+
+(defcustom neo-show-updir-line t
+  "*If non-nil, hide the updir line (..)."
   :type 'boolean
   :group 'neotree)
 
@@ -116,6 +121,12 @@ buffer-local wherever it is set."
   :group 'neotree
   :type '(choice (const default)
                  (const concise)))
+
+(defcustom neo-cwd-line-style 'text
+  "The default header style."
+  :group 'neotree
+  :type '(choice (const text)
+                 (const button)))
 
 (defcustom neo-click-changes-root nil
   "*If non-nil, clicking on a directory will change the current root to the directory."
@@ -208,7 +219,6 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "p")       'previous-line)
     (define-key map (kbd "n")       'next-line)
     (define-key map (kbd "A")       'neotree-stretch-toggle)
-    (define-key map (kbd "C")       'neotree-click-changes-root-toggle)
     (define-key map (kbd "H")       'neotree-hidden-file-toggle)
     (define-key map (kbd "q")       'neotree-hide)
     (define-key map (kbd "C-x C-f") 'find-file-other-window)
@@ -223,6 +233,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
       (define-key map (kbd "C-c C-d") 'neotree-delete-node)
       (define-key map (kbd "C-c C-r") 'neotree-rename-node))
      ((eq neo-keymap-style 'concise)
+      (define-key map (kbd "C") 'neotree-change-root)
       (define-key map (kbd "c") 'neotree-create-node)
       (define-key map (kbd "+") 'neotree-create-node)
       (define-key map (kbd "d") 'neotree-delete-node)
@@ -493,7 +504,7 @@ the last folder (the current one)."
    'neo-full-path path))
 
 (defun neo-path--insert-header-buttonized (path)
-  "Shortens the path to (window-body-width) and displays any
+  "Shortens the PATH to (window-body-width) and displays any \
 visible remains as buttons that, when clicked, navigate to that
 parent directory."
   (let* ((dirs (reverse (maplist 'identity (reverse (split-string path "/" :omitnulls)))))
@@ -715,16 +726,30 @@ PATH is value."
       (linum-mode -1))
   neo-global--buffer)
 
-(defun neo-buffer--insert-header ()
-  (let ((start (point)))
-    (insert "Press ? for help.")
-    (set-text-properties start (point) '(face neo-header-face)))
-  (neo-buffer--newline-and-begin))
+(defun neo-buffer--insert-banner ()
+  (unless (null neo-banner-message)
+    (let ((start (point)))
+      (insert neo-banner-message)
+      (set-text-properties start (point) '(face neo-header-face)))
+    (neo-buffer--newline-and-begin)))
 
 (defun neo-buffer--insert-root-entry (node)
   (neo-buffer--newline-and-begin)
+  (when neo-show-updir-line
+    (insert-button ".."
+                   'action '(lambda (x) (neotree-change-root))
+                   'follow-link t
+                   'face neo-file-link-face
+                   'neo-full-path (neo-path--updir node))
+    (insert " (up a dir)")
+    (neo-buffer--newline-and-begin))
   (neo-buffer--node-list-set nil node)
-  (neo-path--insert-header-buttonized node)
+  (cond
+   ((eq neo-cwd-line-style 'button)
+    (neo-path--insert-header-buttonized node))
+   (t
+    (neo-buffer--insert-with-face (neo-path--shorten node (window-body-width))
+                                  'neo-header-face)))
   (neo-buffer--newline-and-begin))
 
 (defun neo-buffer--insert-dir-entry (node depth expanded)
@@ -809,7 +834,7 @@ If SAVE-POS is non-nil, it will be auto save current line number."
      ;; starting refresh
      (erase-buffer)
      (neo-buffer--node-list-clear)
-     (if neo-show-header (neo-buffer--insert-header))
+     (neo-buffer--insert-banner)
      (setq neo-buffer--start-line neo-header-height)
      (neo-buffer--insert-tree start-node 1))
     ;; restore context
@@ -1005,11 +1030,11 @@ the directory instead of showing the directory contents."
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (unless (null btn-full-path)
       (if (file-directory-p btn-full-path)
-        (if neo-click-changes-root
-          (neotree-change-root)
-          (progn
-            (neo-buffer--toggle-expand btn-full-path)
-            (neo-buffer--refresh t)))
+          (if neo-click-changes-root
+              (neotree-change-root)
+            (progn
+              (neo-buffer--toggle-expand btn-full-path)
+              (neo-buffer--refresh t)))
         (progn
           (if (eq (safe-length (window-list)) 1)
               (neo-global--with-buffer
@@ -1017,7 +1042,7 @@ the directory instead of showing the directory contents."
                 (split-window-horizontally)
                 (neo-buffer--lock-width)))
           (neo-global--when-window
-           (neo-window--zoom 'minimize))
+            (neo-window--zoom 'minimize))
           (switch-to-buffer (other-buffer (current-buffer) 1))
           (find-file btn-full-path))))
     btn-full-path))
