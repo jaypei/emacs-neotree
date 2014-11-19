@@ -1158,6 +1158,22 @@ If cannot find any node in current line, it equivalent to using `neotree-dir'."
      (neo-window--zoom 'minimize))))
 
 ;;;###autoload
+(defun neotree-projectile-action ()
+  "Integration with `Projectile'.
+
+Usage:
+    (setq projectile-switch-project-action 'neotree-projectile-action).
+
+When running `projectile-switch-project' (C-c p p), `neotree' will change root
+automatically."
+  (interactive)
+  (cond
+   ((fboundp 'projectile-project-root)
+    (neotree-dir (projectile-project-root)))
+   (t
+    (error "Projectile is not available"))))
+
+;;;###autoload
 (defun neotree-toggle ()
   "Toggle show the NeoTree window."
   (interactive)
