@@ -2,8 +2,9 @@
 
 A Emacs tree plugin like NerdTree for Vim.
 
-`Develop` [![Build Status](https://travis-ci.org/jaypei/emacs-neotree.svg?branch=dev)](https://travis-ci.org/jaypei/emacs-neotree)
-`Master` [![Build Status](https://travis-ci.org/jaypei/emacs-neotree.svg?branch=master)](https://travis-ci.org/jaypei/emacs-neotree)
+[![Build Status](https://travis-ci.org/jaypei/emacs-neotree.svg?branch=master)](https://travis-ci.org/jaypei/emacs-neotree)
+[![MELPA Stable](http://stable.melpa.org/packages/neotree-badge.svg)](http://stable.melpa.org/#/neotree)
+[![MELPA](http://melpa.org/packages/neotree-badge.svg)](http://melpa.org/#/neotree)
 
 
 ## Screenshots ##
