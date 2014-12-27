@@ -219,7 +219,9 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "p")       'previous-line)
     (define-key map (kbd "n")       'next-line)
     (define-key map (kbd "A")       'neotree-stretch-toggle)
+    (define-key map (kbd "D")       'neotree-down-dir)
     (define-key map (kbd "H")       'neotree-hidden-file-toggle)
+    (define-key map (kbd "U")       'neotree-parent-dir)
     (define-key map (kbd "q")       'neotree-hide)
     (define-key map (kbd "C-x C-f") 'find-file-other-window)
     (define-key map (kbd "C-x 1")   'neotree-empty-fn)
@@ -995,11 +997,11 @@ NeoTree buffer is BUFFER."
   "Quick select node which specified PATH in NeoTree.
 If path is nil and no buffer file name, then use DEFAULT-PATH,"
   (interactive)
-  (let ((npath path)
-        (do-open-p nil)
-        (default-path (neo-path--get-working-dir)))
-    (setq npath (or (buffer-file-name)
-                    default-path))
+  (let* ((ndefault-path (if default-path default-path
+                          (neo-path--get-working-dir)))
+         (npath (if path path
+                  (or (buffer-file-name) ndefault-path)))
+         (do-open-p nil))
     (if (and (not (neo-global--file-in-root-p npath))
              (neo-global--window-exists-p))
         (setq do-open-p (yes-or-no-p "File not found in root path, do you want to change root?"))
@@ -1057,6 +1059,45 @@ If cannot find any node in current line, it equivalent to using `neotree-dir'."
     (if (null btn-full-path)
         (call-interactively 'neotree-dir)
       (neo-global--open-dir btn-full-path))))
+
+(defun neotree-parent-dir ()
+  "Select the parent directory of the current node. Change the root if
+necessary. "
+  (interactive)
+  (neo-global--select-window)
+  (let* ((btn-full-path (neo-buffer--get-filename-current-line))
+         (btn-parent-dir (if btn-full-path (file-name-directory btn-full-path)))
+         (root-slash (file-name-as-directory neo-buffer--start-node)))
+    (cond
+     ((equal btn-parent-dir root-slash) (neo-global--open-dir root-slash))
+     (btn-parent-dir (neotree-find btn-parent-dir))
+     (t (neo-global--open-dir (file-name-directory
+                               (directory-file-name root-slash)))))))
+
+(defun neotree--get-nodes-for-down-dir (path)
+  "Return the node list for the down dir selection."
+  (if path
+      (when (file-name-directory path)
+        (if (neo-buffer--expanded-node-p path)
+            (neo-buffer--get-nodes path)
+          (neo-buffer--get-nodes (file-name-directory path))))
+    (neo-buffer--get-nodes (file-name-as-directory neo-buffer--start-node))))
+
+(defun neotree-down-dir ()
+  "Inverse of `neotree-parent-dir'."
+  (interactive)
+  (let* ((btn-full-path (neo-buffer--get-filename-current-line))
+         (nodes (neotree--get-nodes-for-down-dir btn-full-path)))
+    (when nodes
+      (let ((expanded-dir (catch 'break
+                        (dolist (node (car nodes))
+                          (if (neo-buffer--expanded-node-p node)
+                              (throw 'break node)))
+                        nil)))
+        (if expanded-dir
+            (neotree-find expanded-dir)
+          ;; no expanded directory, select the first file
+          (neotree-find (nth 0 (cdr nodes))))))))
 
 (defun neotree-create-node (filename)
   "Create a file or directory use specified FILENAME in current node."
