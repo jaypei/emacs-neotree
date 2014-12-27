@@ -221,8 +221,10 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "A")       'neotree-stretch-toggle)
     (define-key map (kbd "D")       'neotree-down-dir)
     (define-key map (kbd "H")       'neotree-hidden-file-toggle)
+    (define-key map (kbd "S")       'neotree-previous-sibling)
     (define-key map (kbd "U")       'neotree-parent-dir)
     (define-key map (kbd "q")       'neotree-hide)
+    (define-key map (kbd "s")       'neotree-next-sibling)
     (define-key map (kbd "C-x C-f") 'find-file-other-window)
     (define-key map (kbd "C-x 1")   'neotree-empty-fn)
     (define-key map (kbd "C-x 2")   'neotree-empty-fn)
@@ -794,6 +796,21 @@ PATH is value."
     (cons (sort (neo-util--filter 'file-directory-p nodes) comp)
           (sort (neo-util--filter #'(lambda (f) (not (file-directory-p f))) nodes) comp))))
 
+(defun neo-buffer--get-node-index (node nodes)
+  "Return the index of NODE in NODES.
+
+NODES can be a list of directory or files.
+Return nil if NODE has not been found in NODES."
+  (let ((i 0)
+        (l (length nodes))
+        (cur (car nodes))
+        (rest (cdr nodes)))
+    (while (and cur (not (equal cur node)))
+      (setq i (1+ i))
+      (setq cur (car rest))
+      (setq rest (cdr rest)))
+    (if (< i l) i)))
+
 (defun neo-buffer--expanded-node-p (node)
   (if (neo-util--find neo-buffer--expanded-node-list
                 #'(lambda (x) (equal x node)))
@@ -1098,6 +1115,45 @@ necessary. "
             (neotree-find expanded-dir)
           ;; no expanded directory, select the first file
           (neotree-find (nth 0 (cdr nodes))))))))
+
+(defun neotree--get-nodes-for-sibling (path)
+  "Return the node list for the sibling selection. Return nil of no nodes can
+be found.
+The returned list is a directory list if path is a directory, otherwise it is
+a file list."
+  (when path
+    (let ((nodes (neo-buffer--get-nodes (file-name-directory path))))
+      (if (file-directory-p path)
+          (car nodes)
+        (cdr nodes)))))
+
+(defun neotree--get-sibling-node (nodes path)
+  "Return the sibling node of PATH in the list of NODES."
+  (if path
+      (neo-buffer--get-nodes (file-name-directory path))
+    (neo-buffer--get-nodes (file-name-as-directory neo-buffer--start-node))))
+
+(defun neotree--sibling (&optional previous)
+  "Select the next sibling of current node.
+If PREVIOUS is non-nil the previous sibling is selected."
+  (let* ((btn-full-path (neo-buffer--get-filename-current-line))
+         (nodes (neotree--get-nodes-for-sibling btn-full-path)))
+    (when nodes
+      (let ((i (neo-buffer--get-node-index btn-full-path nodes))
+            (l (length nodes)))
+        (if i (neotree-find (nth (mod (+ i (if previous -1 1)) l) nodes)))))))
+
+(defun neotree-next-sibling ()
+  "Select the next sibling of current node.
+If the current node is the last node then the first node is selected."
+  (interactive)
+  (neotree--sibling))
+
+(defun neotree-previous-sibling ()
+  "Select the previous sibling of current node.
+If the current node is the first node then the last node is selected."
+  (interactive)
+  (neotree--sibling t))
 
 (defun neotree-create-node (filename)
   "Create a file or directory use specified FILENAME in current node."
