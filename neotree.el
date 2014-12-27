@@ -1043,7 +1043,7 @@ the directory instead of showing the directory contents."
                 (neo-buffer--lock-width)))
           (neo-global--when-window
             (neo-window--zoom 'minimize))
-          (switch-to-buffer (other-buffer (current-buffer) 1))
+          (select-window (get-mru-window))
           (find-file btn-full-path))))
     btn-full-path))
 
