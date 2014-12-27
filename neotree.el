@@ -219,6 +219,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "p")       'previous-line)
     (define-key map (kbd "n")       'next-line)
     (define-key map (kbd "A")       'neotree-stretch-toggle)
+    (define-key map (kbd "D")       'neotree-down-dir)
     (define-key map (kbd "H")       'neotree-hidden-file-toggle)
     (define-key map (kbd "U")       'neotree-parent-dir)
     (define-key map (kbd "q")       'neotree-hide)
@@ -1072,6 +1073,31 @@ necessary. "
      (btn-parent-dir (neotree-find btn-parent-dir))
      (t (neo-global--open-dir (file-name-directory
                                (directory-file-name root-slash)))))))
+
+(defun neotree--get-nodes-for-down-dir (path)
+  "Return the node list for the down dir selection."
+  (if path
+      (when (file-name-directory path)
+        (if (neo-buffer--expanded-node-p path)
+            (neo-buffer--get-nodes path)
+          (neo-buffer--get-nodes (file-name-directory path))))
+    (neo-buffer--get-nodes (file-name-as-directory neo-buffer--start-node))))
+
+(defun neotree-down-dir ()
+  "Inverse of `neotree-parent-dir'."
+  (interactive)
+  (let* ((btn-full-path (neo-buffer--get-filename-current-line))
+         (nodes (neotree--get-nodes-for-down-dir btn-full-path)))
+    (when nodes
+      (let ((expanded-dir (catch 'break
+                        (dolist (node (car nodes))
+                          (if (neo-buffer--expanded-node-p node)
+                              (throw 'break node)))
+                        nil)))
+        (if expanded-dir
+            (neotree-find expanded-dir)
+          ;; no expanded directory, select the first file
+          (neotree-find (nth 0 (cdr nodes))))))))
 
 (defun neotree-create-node (filename)
   "Create a file or directory use specified FILENAME in current node."
