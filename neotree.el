@@ -428,6 +428,45 @@ it will create the neotree window and return it."
    (neo-buffer--lock-width))
   ad-return-value)
 
+(eval-after-load 'popwin
+  '(progn
+     (defadvice popwin:popup-buffer
+         (around neotree/popwin-popup-buffer activate)
+       (let ((neobuffer (get-buffer neo-buffer-name))
+             (neopersist neo-persist-show))
+         (when neobuffer
+           (setq neo-persist-show nil)
+           (with-current-buffer (neo-global--get-buffer)
+             (neo-buffer--unlock-width)))
+         ad-do-it
+         (when neobuffer
+           (setq neo-persist-show neopersist)
+           (with-current-buffer (neo-global--get-buffer)
+             (neo-buffer--lock-width))
+           ;; set neotree global window and buffer to the new ones
+           ;; created by popwin
+           (setq neo-global--buffer (get-buffer neo-buffer-name))
+           (setq neo-global--window (get-buffer-window
+                                     neo-global--buffer)))))
+
+     (defadvice popwin:close-popup-window
+         (around neotree/popwin-close-popup-window activate)
+       (let ((neobuffer (get-buffer neo-buffer-name))
+             (neopersist neo-persist-show))
+         (when neobuffer
+           (setq neo-persist-show nil)
+           (with-current-buffer (neo-global--get-buffer)
+             (neo-buffer--unlock-width)))
+         ad-do-it
+         (when neobuffer
+           (setq neo-persist-show neopersist)
+           (with-current-buffer (neo-global--get-buffer)
+             (neo-buffer--lock-width))
+           ;; set neotree global window and buffer to the new ones
+           ;; created by popwin
+           (setq neo-global--buffer (get-buffer neo-buffer-name))
+           (setq neo-global--window (get-buffer-window
+                                     neo-global--buffer)))))))
 
 ;;
 ;; Util methods
