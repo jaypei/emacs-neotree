@@ -333,12 +333,15 @@ it will create the neotree window and return it."
 (defun neo-global--create-window ()
   "Create global neotree window."
   (let ((window nil)
-        (buffer (neo-global--get-buffer)))
+        (buffer (neo-global--get-buffer))
+        (curr-window-buffer (current-buffer)))
     (select-window (neo-global--get-first-window))
     (split-window-horizontally)
     (setq window (selected-window))
     (neo-window--init window buffer)
     (setq neo-global--window window)
+    (select-window (or (get-buffer-window curr-window-buffer)
+                       window))
     window))
 
 (defun neo-global--get-buffer ()
@@ -390,8 +393,8 @@ it will create the neotree window and return it."
     (when (or (not (neo-global--window-exists-p))
               (not (neo-global--file-in-root-p npath)))
       (neo-global--open-dir root-dir))
-    (neo-global--select-window)
-    (neo-buffer--select-file-node npath t)))
+    (neo-global--with-buffer
+      (neo-buffer--select-file-node npath t))))
 
 ;;
 ;; Advices
@@ -1348,7 +1351,8 @@ automatically."
   (interactive)
   (if neo-smart-open
       (neotree-find)
-    (neo-global--open)))
+    (neo-global--open))
+  (neo-global--select-window))
 
 ;;;###autoload
 (defun neotree-hide ()
@@ -1361,7 +1365,8 @@ automatically."
 (defun neotree-dir (path)
   "Show the NeoTree window, and change root to PATH."
   (interactive "DDirectory: ")
-  (neo-global--open-dir path))
+  (neo-global--open-dir path)
+  (neo-global--select-window))
 
 ;;;###autoload
 (defalias 'neotree 'neotree-show "Show the NeoTree window.")
