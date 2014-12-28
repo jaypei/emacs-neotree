@@ -1043,9 +1043,12 @@ the directory instead of showing the directory contents."
   (interactive)
   (setq neo-click-changes-root (not neo-click-changes-root)))
 
-(defun neotree-enter ()
-  "Open a node, like 'o' in NERDTree."
-  (interactive)
+(defun neotree-enter (&optional arg)
+  "Open a node, like 'o' in NERDTree.
+
+If arg is an integer then the node is opened in a window selected via
+`window-numbering' (if available) according to the passed number."
+  (interactive "P")
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (unless (null btn-full-path)
       (if (file-directory-p btn-full-path)
@@ -1062,7 +1065,12 @@ the directory instead of showing the directory contents."
                 (neo-buffer--lock-width)))
           (neo-global--when-window
             (neo-window--zoom 'minimize))
-          (select-window (get-mru-window))
+          (if (and arg (integerp arg)
+                   (boundp 'window-numbering-mode)
+                   (symbol-value window-numbering-mode)
+                   (fboundp 'select-window-by-number))
+              (select-window-by-number arg)
+            (select-window (get-mru-window)))
           (find-file btn-full-path))))
     btn-full-path))
 
