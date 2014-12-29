@@ -102,7 +102,7 @@ buffer-local wherever it is set."
   :group 'neotree)
 
 (defcustom neo-show-updir-line t
-  "*If non-nil, hide the updir line (..)."
+  "*If non-nil, show the updir line (..)."
   :type 'boolean
   :group 'neotree)
 
