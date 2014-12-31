@@ -106,6 +106,24 @@ buffer-local wherever it is set."
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-mode-line-type 'neotree
+  "*The mode-line type to display, `default' is a non-modified mode-line,
+`neotree' is a compact mode-line that shows useful information about the
+ current node like the parent directory and the number of nodes,
+`custom' uses the format stored in `neo-mode-line-custom-format',
+`none' hide the mode-line."
+  :group 'neotree
+  :type '(choice (const default)
+                 (const neotree)
+                 (const custom)
+                 (const none)))
+
+(defcustom neo-mode-line-custom-format nil
+  "*If `neo-mode-line-type' is set to `custom', this variable specifiy
+the mode-line format."
+  :type 'sexp
+  :group 'neotree)
+
 (defcustom neo-smart-open nil
   "*If non-nil, every time when the neotree window is opened, it will try to find current file and jump to node."
   :type 'boolean
@@ -180,6 +198,36 @@ buffer-local wherever it is set."
 
 (defvar neo-global--window nil)
 
+(defvar neo-mode-line-format
+  (list
+   '(:eval
+     (let* ((fname (neo-buffer--get-filename-current-line))
+            (current (if fname fname neo-buffer--start-node))
+            (parent (if fname (file-name-directory current) current))
+            (nodes (neo-buffer--get-nodes parent))
+            (dirs (car nodes))
+            (files (cdr nodes))
+            (ndirs (length dirs))
+            (nfiles (length files))
+            (nall (+ ndirs nfiles))
+            (has-dirs (> ndirs 0))
+            (has-files (> nfiles 0))
+            (index
+             (when fname
+               (1+ (if (file-directory-p current)
+                       (neo-buffer--get-node-index current dirs)
+                     (+ ndirs (neo-buffer--get-node-index current files)))))))
+       (concat
+        (propertize
+         (concat
+          (when index (format "[%s/%s] " index nall))
+          (file-name-nondirectory (directory-file-name parent))
+          (when has-dirs (format (if has-files " (D:%s" " (D:%s)") ndirs))
+          (when has-files (format (if has-dirs " F:%s)" " (F:%s)") nfiles)))
+         'help-echo parent)))))
+  "Neotree mode-line displaying information on the current node.
+This mode-line format is used if `neo-mode-line-type' is set to `neotree'")
+
 (defvar-local neo-buffer--start-node nil
   "Start node(i.e. directory) for the window.")
 
@@ -251,6 +299,15 @@ The car of the pair will store fullpath, and cdr will store line number.")
   (setq indent-tabs-mode nil            ; only spaces
         buffer-read-only t              ; read only
         truncate-lines -1)
+  (pcase neo-mode-line-type
+    (`neotree
+     (setq-local mode-line-format neo-mode-line-format)
+     (add-hook 'post-command-hook 'force-mode-line-update nil t))
+    (`none (setq-local mode-line-format nil))
+    (`custom
+     (setq-local mode-line-format neo-mode-line-custom-format)
+     (add-hook 'post-command-hook 'force-mode-line-update nil t))
+    (_ nil))
   ;; fix for electric-indent-mode
   ;; for emacs 24.4
   (if (fboundp 'electric-indent-local-mode)
