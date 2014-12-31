@@ -457,7 +457,7 @@ it will create the neotree window and return it."
     (when (or (not (neo-global--window-exists-p))
               (not (neo-global--file-in-root-p npath)))
       (neo-global--open-dir root-dir))
-    (neo-global--with-buffer
+    (neo-global--with-window
       (neo-buffer--select-file-node npath t))))
 
 ;;
@@ -1178,7 +1178,8 @@ If path is nil and no buffer file name, then use DEFAULT-PATH,"
     (when do-open-p
         (neo-global--open-and-find npath))
     (when neo-auto-indent-point
-      (neo-point-auto-indent))))
+      (neo-point-auto-indent)))
+  (neo-global--select-window))
 
 (defun neotree-previous-node ()
   "Jump to the previous node."
