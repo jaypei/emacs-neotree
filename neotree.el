@@ -133,6 +133,11 @@ buffer-local wherever it is set."
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-auto-indent-point nil
+  "*If non-nil the point is autmotically put on the first letter of a node."
+  :type 'boolean
+  :group 'neotree)
+
 ;;
 ;; Faces
 ;;
@@ -257,7 +262,9 @@ The car of the pair will store fullpath, and cdr will store line number.")
       (electric-indent-local-mode -1)
     ;; for emacs 24.3 or less
     (add-hook 'electric-indent-functions
-              (lambda (arg) 'no-indent) nil 'local)))
+              (lambda (arg) 'no-indent) nil 'local))
+  (when neo-auto-indent-point
+    (add-hook 'post-command-hook 'neo-hook--node-first-letter nil t)))
 
 
 ;;
@@ -472,6 +479,16 @@ it will create the neotree window and return it."
                                      neo-global--buffer)))))))
 
 ;;
+;; Hooks
+;;
+
+(defun neo-hook--node-first-letter ()
+  "Move point to the first letter of the current node."
+  (when (or (eq this-command 'next-line)
+            (eq this-command 'previous-line))
+    (neo-point-auto-indent)))
+
+;;
 ;; Util methods
 ;;
 
@@ -680,6 +697,13 @@ Return nil if DIR is not an existing directory."
              (neo-path--has-subfile-p filename))
         (neo-util--kill-buffers-for-path filename)))))
 
+(defun neo-point-auto-indent ()
+  "Put the point on the first letter of the current node."
+  (when (neo-buffer--get-filename-current-line)
+    (beginning-of-line 1)
+    (re-search-forward "[^-\s+]" (line-end-position 1) t)
+    (backward-char 1)))
+
 ;;
 ;; Buffer methods
 ;;
@@ -811,7 +835,7 @@ PATH is value."
     (setq btn-end-pos (point))
     (make-button btn-start-pos
                  btn-end-pos
-                 'action '(lambda (x) (neotree-enter))
+                 'action '(lambda (_) (neotree-enter current-prefix-arg))
                  'follow-link t
                  'face neo-button-face
                  'neo-full-path node)
@@ -823,7 +847,7 @@ PATH is value."
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (insert-char ?\s 2)
     (insert-button node-short-name
-                   'action '(lambda (x) (neotree-enter))
+                   'action '(lambda (_) (neotree-enter current-prefix-arg))
                    'follow-link t
                    'face neo-file-link-face
                    'neo-full-path node)
@@ -1094,8 +1118,10 @@ If path is nil and no buffer file name, then use DEFAULT-PATH,"
              (neo-global--window-exists-p))
         (setq do-open-p (yes-or-no-p "File not found in root path, do you want to change root?"))
       (setq do-open-p t))
-    (if do-open-p
-        (neo-global--open-and-find npath))))
+    (when do-open-p
+        (neo-global--open-and-find npath))
+    (when neo-auto-indent-point
+      (neo-point-auto-indent))))
 
 (defun neotree-previous-node ()
   "Jump to the previous node."
@@ -1127,7 +1153,10 @@ If arg is an integer then the node is opened in a window selected via
               (neotree-change-root)
             (progn
               (neo-buffer--toggle-expand btn-full-path)
-              (neo-buffer--refresh t)))
+              (neo-buffer--refresh t)
+              (when neo-auto-indent-point
+                (next-line)
+                (neo-point-auto-indent))))
         (progn
           (if (eq (safe-length (window-list)) 1)
               (neo-global--with-buffer
