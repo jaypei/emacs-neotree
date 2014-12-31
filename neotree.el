@@ -1228,42 +1228,41 @@ necessary. "
                                (directory-file-name root-slash)))))))
 
 (defun neotree-select-down-node ()
-  "Select a down directory or file according to the current node:
-- it is the first expanded child node if current node has one
-- otherwise it the next expanded sibling node
-- if there is no expanded sibling then it is the first file of current node."
+  "Select an expanded directory or content directory according to the
+current node, in this order:
+- select the first expanded child node if the current node has one
+- select the content of current node if it is expanded
+- select the next expanded sibling if the current node is not expanded."
   (interactive)
   (let* ((btn-full-path (neo-buffer--get-filename-current-line))
          (path (if btn-full-path btn-full-path neo-buffer--start-node))
-         (select-siblingp))
-    (if (or (equal path neo-buffer--start-node)
-            (neo-buffer--expanded-node-p path))
-        ;; select the first expanded child node
-        (let ((nodes (neo-buffer--get-nodes-for-select-down-node path)))
-          (when nodes
-            (let ((expanded-dir (catch 'break
-                                  (dolist (node (car nodes))
-                                    (if (neo-buffer--expanded-node-p node)
-                                        (throw 'break node)))
-                                  nil)))
-              (if expanded-dir
-                  (neotree-find expanded-dir)
-                (setq select-siblingp t)))))
-      (setq select-siblingp t))
-    ;; select the next expanded sibling
-    (if select-siblingp
+         (nodes (neo-buffer--get-nodes-for-select-down-node path)))
+    (when nodes
+      (if (or (equal path neo-buffer--start-node)
+              (neo-buffer--expanded-node-p path))
+          ;; select the first expanded child node
+          (let ((expanded-dir (catch 'break
+                                (dolist (node (car nodes))
+                                  (if (neo-buffer--expanded-node-p node)
+                                      (throw 'break node)))
+                                nil)))
+            (if expanded-dir
+                (neotree-find expanded-dir)
+              ;; select the directory content if needed
+              (let ((dirs (car nodes))
+                    (files (cdr nodes)))
+                (if (> (length dirs) 0)
+                    (neotree-find (car dirs))
+                  (when (> (length files) 0)
+                    (neotree-find (car files)))))))
+        ;; select the next expanded sibling
         (let ((sibling (neo-buffer--sibling path)))
           (while (and (not (neo-buffer--expanded-node-p sibling))
                       (not (equal sibling path)))
             (setq sibling (neo-buffer--sibling sibling)))
-          ;; since the directories are alphabetically sorted we can detect
-          ;; cycles based on the order
-          (if (or (string< sibling path)
-                  (string= sibling path))
-              ;; select the first file
-              (neotree-find (nth 0 (cdr (neo-buffer--get-nodes path))))
-            ;; select next epxanded sibling
-            (neotree-find sibling))))))
+          (when (not (string< sibling path))
+            ;; select next expanded sibling
+            (neotree-find sibling)))))))
 
 (defun neotree-select-next-sibling-node ()
   "Select the next sibling of current node.
