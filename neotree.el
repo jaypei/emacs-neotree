@@ -160,12 +160,26 @@ the mode-line format."
 ;; Faces
 ;;
 
-(defface neo-header-face
+(defface neo-banner-face
   '((((background dark)) (:foreground "lightblue" :weight bold))
+    (t                   (:foreground "DarkMagenta")))
+  "*Face used for the banner in neotree buffer."
+  :group 'neotree :group 'font-lock-highlighting-faces)
+(defvar neo-banner-face 'neo-banner-face)
+
+(defface neo-header-face
+  '((((background dark)) (:foreground "White"))
     (t                   (:foreground "DarkMagenta")))
   "*Face used for the header in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-header-face 'neo-header-face)
+
+(defface neo-root-dir-face
+  '((((background dark)) (:foreground "lightblue" :weight bold))
+    (t                   (:foreground "DarkMagenta")))
+  "*Face used for the root dir in neotree buffer."
+  :group 'neotree :group 'font-lock-highlighting-faces)
+(defvar neo-root-dir-face 'neo-root-dir-face)
 
 (defface neo-dir-link-face
   '((((background dark)) (:foreground "DeepSkyBlue"))
@@ -629,21 +643,21 @@ visible remains as buttons that, when clicked, navigate to that
 parent directory."
   (let* ((dirs (reverse (maplist 'identity (reverse (split-string path "/" :omitnulls)))))
          (last (car-safe (car-safe (last dirs)))))
-    (neo-path--insert-chroot-button "/" "/" 'neo-header-face)
+    (neo-path--insert-chroot-button "/" "/" 'neo-root-dir-face)
     (dolist (dir dirs)
       (if (string= (car dir) last)
-        (neo-buffer--insert-with-face last 'neo-header-face)
+        (neo-buffer--insert-with-face last 'neo-root-dir-face)
         (neo-path--insert-chroot-button
          (concat (car dir) "/")
          (apply 'neo-path--join (cons "/" (reverse dir)))
-         'neo-header-face))))
+         'neo-root-dir-face))))
   ;;shorten the line if need be
   (when (> (current-column) (window-body-width))
     (forward-char (- (window-body-width)))
     (delete-region (point-at-bol) (point))
     (let* ((button (button-at (point)))
            (path (if button (overlay-get button 'neo-full-path) "/")))
-      (neo-path--insert-chroot-button "<" path 'neo-header-face))
+      (neo-path--insert-chroot-button "<" path 'neo-root-dir-face))
     (end-of-line)))
 
 (defun neo-path--updir (path)
@@ -857,7 +871,7 @@ PATH is value."
   (unless (null neo-banner-message)
     (let ((start (point)))
       (insert neo-banner-message)
-      (set-text-properties start (point) '(face neo-header-face)))
+      (set-text-properties start (point) '(face neo-banner-face)))
     (neo-buffer--newline-and-begin)))
 
 (defun neo-buffer--insert-root-entry (node)
@@ -868,7 +882,9 @@ PATH is value."
                    'follow-link t
                    'face neo-file-link-face
                    'neo-full-path (neo-path--updir node))
-    (insert " (up a dir)")
+    (let ((start (point)))
+      (insert " (up a dir)")
+      (set-text-properties start (point) '(face neo-header-face)))
     (neo-buffer--newline-and-begin))
   (neo-buffer--node-list-set nil node)
   (cond
@@ -876,7 +892,7 @@ PATH is value."
     (neo-path--insert-header-buttonized node))
    (t
     (neo-buffer--insert-with-face (neo-path--shorten node (window-body-width))
-                                  'neo-header-face)))
+                                  'neo-root-dir-face)))
   (neo-buffer--newline-and-begin))
 
 (defun neo-buffer--insert-dir-entry (node depth expanded)
