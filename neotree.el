@@ -953,13 +953,15 @@ Return nil if NODE has not been found in NODES."
       t nil))
 
 (defun neo-buffer--set-expand (node do-expand)
-  "Set the expanded state of the NODE to DO-EXPAND."
+  "Set the expanded state of the NODE to DO-EXPAND.
+Return the new expand state for NODE (t for expanded, nil for collapsed)."
   (if (not do-expand)
       (setq neo-buffer--expanded-node-list
             (neo-util--filter
              #'(lambda (x) (not (equal node x)))
              neo-buffer--expanded-node-list))
-    (push node neo-buffer--expanded-node-list)))
+    (push node neo-buffer--expanded-node-list))
+  do-expand)
 
 (defun neo-buffer--toggle-expand (node)
   (neo-buffer--set-expand node (not (neo-buffer--expanded-node-p node))))
@@ -1249,11 +1251,11 @@ If arg is an integer then the node is opened in a window selected via
           (if neo-click-changes-root
               (neotree-change-root)
             (progn
-              (neo-buffer--toggle-expand btn-full-path)
-              (neo-buffer--refresh t)
-              (when neo-auto-indent-point
-                (next-line)
-                (neo-point-auto-indent))))
+              (let ((new-state (neo-buffer--toggle-expand btn-full-path)))
+                (neo-buffer--refresh t)
+                (when neo-auto-indent-point
+                  (when new-state (next-line))
+                  (neo-point-auto-indent)))))
         (progn
           (if (eq (safe-length (window-list)) 1)
               (neo-global--with-buffer
