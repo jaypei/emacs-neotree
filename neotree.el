@@ -233,22 +233,12 @@ the mode-line format."
             (files (cdr nodes))
             (ndirs (length dirs))
             (nfiles (length files))
-            (nall (+ ndirs nfiles))
-            (has-dirs (> ndirs 0))
-            (has-files (> nfiles 0))
             (index
              (when fname
                (1+ (if (file-directory-p current)
                        (neo-buffer--get-node-index current dirs)
                      (+ ndirs (neo-buffer--get-node-index current files)))))))
-       (concat
-        (propertize
-         (concat
-          (when index (format "[%s/%s] " index nall))
-          (file-name-nondirectory (directory-file-name parent))
-          (when has-dirs (format (if has-files " (D:%s" " (D:%s)") ndirs))
-          (when has-files (format (if has-dirs " F:%s)" " (F:%s)") nfiles)))
-         'help-echo parent)))))
+       (neo-mode-line--compute-format parent index ndirs nfiles))))
   "Neotree mode-line displaying information on the current node.
 This mode-line format is used if `neo-mode-line-type' is set to `neotree'")
 
@@ -1129,6 +1119,32 @@ If PREVIOUS is non-nil the previous sibling is returned."
       (let ((i (neo-buffer--get-node-index path nodes))
             (l (length nodes)))
         (if i (nth (mod (+ i (if previous -1 1)) l) nodes))))))
+
+;;
+;; Mode-line methods
+;;
+
+(defun neo-mode-line--compute-format (path index ndirs nfiles)
+  "Return a formated string to be used in the `neotree' mode-line."
+  (let* ((nall (+ ndirs nfiles))
+         (has-dirs (> ndirs 0))
+         (has-files (> nfiles 0))
+         (msg-index (when index (format "[%s/%s] " index nall)))
+         (msg-ndirs (when has-dirs (format (if has-files " (D:%s" " (D:%s)") ndirs)))
+         (msg-nfiles (when has-files (format (if has-dirs " F:%s)" " (F:%s)") nfiles)))
+         (msg-directory (file-name-nondirectory (directory-file-name parent)))
+         (msg-directory-max-length (- (window-width)
+                                      (length msg-index)
+                                      (length msg-ndirs)
+                                      (length msg-nfiles))))
+    (setq msg-directory (if (<= (length msg-directory) msg-directory-max-length)
+                            msg-directory
+                          (concat (substring msg-directory
+                                             0 (- msg-directory-max-length 3))
+                                  "...")))
+    (propertize
+     (concat msg-index msg-directory msg-ndirs msg-nfiles)
+     'help-echo parent)))
 
 ;;
 ;; Window methods
