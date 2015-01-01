@@ -129,6 +129,11 @@ the mode-line format."
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-show-hidden-files nil
+  "*If non-nil, the hidden files are shown by default."
+  :type 'boolean
+  :group 'neotree)
+
 (defcustom neo-window-width 25
   "*Specifies the width of the NeoTree window."
   :type 'integer
@@ -317,7 +322,8 @@ The car of the pair will store fullpath, and cdr will store line number.")
   "A major mode for displaying the directory tree in text mode."
   (setq indent-tabs-mode nil            ; only spaces
         buffer-read-only t              ; read only
-        truncate-lines -1)
+        truncate-lines -1
+        neo-buffer--show-hidden-file-p neo-show-hidden-files)
   (pcase neo-mode-line-type
     (`neotree
      (setq-local mode-line-format neo-mode-line-format)
