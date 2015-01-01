@@ -881,7 +881,8 @@ PATH is value."
     (neo-buffer--newline-and-begin)))
 
 (defun neo-buffer--insert-root-entry (node)
-  (neo-buffer--newline-and-begin)
+  (when (or neo-banner-message neo-show-updir-line)
+    (neo-buffer--newline-and-begin))
   (when neo-show-updir-line
     (insert-button ".."
                    'action '(lambda (x) (neotree-change-root))
