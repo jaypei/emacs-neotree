@@ -46,6 +46,9 @@
   "Hidden files regexp.
 By default all filest starting with dot '.' including . and ..")
 
+(defconst neo-dir
+  (expand-file-name (file-name-directory (locate-library "neotree"))))
+
 (defconst neo-header-height 5)
 
 (eval-and-compile
@@ -106,8 +109,19 @@ buffer-local wherever it is set."
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-theme 'classic
+  "*The tree style to display.
+`ascii' is the simplest style, it will use +/- to display the fold state,
+it suitable for terminal.
+`arrow' use unicode arrow.
+`classic' use icon to display, it only it suitable for GUI mode."
+  :group 'neotree
+  :type '(choice (const ascii)
+                 (const arrow)
+                 (const classic)))
+
 (defcustom neo-mode-line-type 'neotree
-  "*The mode-line type to display, `default' is a non-modified mode-line,
+  "*The mode-line type to display, `default' is a non-modified mode-line, \
 `neotree' is a compact mode-line that shows useful information about the
  current node like the parent directory and the number of nodes,
 `custom' uses the format stored in `neo-mode-line-custom-format',
@@ -119,7 +133,7 @@ buffer-local wherever it is set."
                  (const none)))
 
 (defcustom neo-mode-line-custom-format nil
-  "*If `neo-mode-line-type' is set to `custom', this variable specifiy
+  "*If `neo-mode-line-type' is set to `custom', this variable specifiy \
 the mode-line format."
   :type 'sexp
   :group 'neotree)
@@ -778,11 +792,44 @@ Return nil if DIR is not an existing directory."
 ;;
 
 (defun neo-buffer--newline-and-begin ()
+  "Insert new line."
   (newline)
   (beginning-of-line))
 
+(defun neo-buffer--get-icon (name)
+  "Get image by NAME."
+  (let ((icon-path (neo-path--join neo-dir "icons"))
+        image)
+    (setq image (create-image
+                 (neo-path--join icon-path (concat name ".xpm"))
+                 'xpm nil :ascent 'center :mask '(heuristic t)))
+    image))
+
+(defun neo-buffer--insert-fold-symbol (name)
+  "Write icon by NAME, the icon style affected by neo-theme.
+`open' write opened folder icon.
+`close' write closed folder icon.
+`leaf' write leaf icon."
+  (let ((n-insert-image (lambda (n)
+                          (insert-image (neo-buffer--get-icon n))))
+        (n-insert-symbol (lambda (n)
+                           (neo-buffer--insert-with-face
+                            n 'neo-expand-btn-face))))
+    (cond
+     ((and window-system (equal neo-theme 'classic))
+      (or (and (equal name 'open)  (funcall n-insert-image "open"))
+          (and (equal name 'close) (funcall n-insert-image "close"))
+          (and (equal name 'leaf)  (funcall n-insert-image "leaf"))))
+     ((equal neo-theme 'arrow)
+      (or (and (equal name 'open)  (funcall n-insert-symbol "▾"))
+          (and (equal name 'close) (funcall n-insert-symbol "▸"))))
+     (t
+      (or (and (equal name 'open)  (funcall n-insert-symbol "-"))
+          (and (equal name 'close) (funcall n-insert-symbol "+")))))))
+
 (defun neo-buffer--save-cursor-pos (&optional node-path line-pos)
-  "Save cursor position."
+  "Save cursor position.
+If NODE-PATH and LINE-POS is nil, it will be save the current line node position."
   (let ((cur-node-path nil)
         (cur-line-pos nil)
         (ws-wind (selected-window))
@@ -900,10 +947,9 @@ PATH is value."
         (node-short-name (neo-path--file-short-name node)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (setq btn-start-pos (point))
-    (neo-buffer--insert-with-face (if expanded "-" "+")
-                          'neo-expand-btn-face)
+    (neo-buffer--insert-fold-symbol (if expanded 'open 'close))
     (neo-buffer--insert-with-face (concat node-short-name "/")
-                          'neo-dir-link-face)
+                                  'neo-dir-link-face)
     (setq btn-end-pos (point))
     (make-button btn-start-pos
                  btn-end-pos
@@ -917,6 +963,7 @@ PATH is value."
 (defun neo-buffer--insert-file-entry (node depth)
   (let ((node-short-name (neo-path--file-short-name node)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
+    (neo-buffer--insert-fold-symbol 'leaf)
     (insert-button node-short-name
                    'action '(lambda (_) (neotree-enter current-prefix-arg))
                    'follow-link t
