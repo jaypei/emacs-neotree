@@ -902,7 +902,7 @@ PATH is value."
     (setq btn-start-pos (point))
     (neo-buffer--insert-with-face (if expanded "-" "+")
                           'neo-expand-btn-face)
-    (neo-buffer--insert-with-face (concat " " node-short-name "/")
+    (neo-buffer--insert-with-face (concat node-short-name "/")
                           'neo-dir-link-face)
     (setq btn-end-pos (point))
     (make-button btn-start-pos
@@ -917,7 +917,6 @@ PATH is value."
 (defun neo-buffer--insert-file-entry (node depth)
   (let ((node-short-name (neo-path--file-short-name node)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
-    (insert-char ?\s 2)
     (insert-button node-short-name
                    'action '(lambda (_) (neotree-enter current-prefix-arg))
                    'follow-link t
