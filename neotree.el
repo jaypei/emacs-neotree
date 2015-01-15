@@ -821,11 +821,11 @@ Return nil if DIR is not an existing directory."
           (and (equal name 'close) (funcall n-insert-image "close"))
           (and (equal name 'leaf)  (funcall n-insert-image "leaf"))))
      ((equal neo-theme 'arrow)
-      (or (and (equal name 'open)  (funcall n-insert-symbol "▾"))
-          (and (equal name 'close) (funcall n-insert-symbol "▸"))))
+      (or (and (equal name 'open)  (funcall n-insert-symbol "▼ "))
+          (and (equal name 'close) (funcall n-insert-symbol "► "))))
      (t
-      (or (and (equal name 'open)  (funcall n-insert-symbol "-"))
-          (and (equal name 'close) (funcall n-insert-symbol "+")))))))
+      (or (and (equal name 'open)  (funcall n-insert-symbol "- "))
+          (and (equal name 'close) (funcall n-insert-symbol "+ ")))))))
 
 (defun neo-buffer--save-cursor-pos (&optional node-path line-pos)
   "Save cursor position.
