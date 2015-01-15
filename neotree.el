@@ -962,7 +962,7 @@ PATH is value."
 
 (defun neo-buffer--insert-file-entry (node depth)
   (let ((node-short-name (neo-path--file-short-name node)))
-    (insert-char ?\s (* (- depth 1) 2)) ; indent
+    (insert-char ?\s (* depth 2)) ; indent
     (neo-buffer--insert-fold-symbol 'leaf)
     (insert-button node-short-name
                    'action '(lambda (_) (neotree-enter current-prefix-arg))
