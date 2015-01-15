@@ -289,7 +289,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
 (defvar neotree-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "SPC")     'neotree-enter)
-    (define-key map (kbd "TAB")     'neotree-enter)
+    (define-key map (kbd "TAB")     'neotree-folder-toggle)
     (define-key map (kbd "RET")     'neotree-enter)
     (define-key map (kbd "|")       'neotree-enter-vertical-split)
     (define-key map (kbd "-")       'neotree-enter-horizontal-split)
@@ -1336,6 +1336,19 @@ If ARG is `-' then the node is opened in new horizontally split window."
             (select-window (get-mru-window)))
           (find-file btn-full-path))))
     btn-full-path))
+
+(defun neotree-folder-toggle ()
+  "Toggle a folder."
+  (interactive)
+  (let ((btn-full-path (neo-buffer--get-filename-current-line)))
+    (unless (null btn-full-path)
+      (if (file-directory-p btn-full-path)
+          (progn
+            (let ((new-state (neo-buffer--toggle-expand btn-full-path)))
+              (neo-buffer--refresh t)
+              (when neo-auto-indent-point
+                (when new-state (forward-line))
+                (neo-point-auto-indent))))))))
 
 (defun neotree-enter-vertical-split ()
   "Open the current node is a vertically split window."
