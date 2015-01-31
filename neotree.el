@@ -107,14 +107,16 @@ buffer-local wherever it is set."
 
 (defcustom neo-theme 'classic
   "*The tree style to display.
+`classic' use icon to display, it only it suitable for GUI mode.
 `ascii' is the simplest style, it will use +/- to display the fold state,
 it suitable for terminal.
 `arrow' use unicode arrow.
-`classic' use icon to display, it only it suitable for GUI mode."
+`nerd' use the nerdtree indentation mode and arrow."
   :group 'neotree
-  :type '(choice (const ascii)
+  :type '(choice (const classic)
+                 (const ascii)
                  (const arrow)
-                 (const classic)))
+                 (const nerd)))
 
 (defcustom neo-mode-line-type 'neotree
   "*The mode-line type to display, `default' is a non-modified mode-line, \
@@ -831,6 +833,10 @@ Return nil if DIR is not an existing directory."
      ((equal neo-theme 'arrow)
       (or (and (equal name 'open)  (funcall n-insert-symbol "▾"))
           (and (equal name 'close) (funcall n-insert-symbol "▸"))))
+     ((equal neo-theme 'nerd)
+      (or (and (equal name 'open)  (funcall n-insert-symbol "▾ "))
+          (and (equal name 'close) (funcall n-insert-symbol "▸ "))
+          (and (equal name 'leaf)  (funcall n-insert-symbol "  "))))
      (t
       (or (and (equal name 'open)  (funcall n-insert-symbol "-"))
           (and (equal name 'close) (funcall n-insert-symbol "+")))))))
