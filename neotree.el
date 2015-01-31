@@ -179,6 +179,10 @@ the mode-line format."
   :type  '(repeat (choice regexp))
   :group 'neotree)
 
+(defcustom neo-enter-hook nil
+  "Functions to run if enter node occured."
+  :type 'hook
+  :group 'neotree)
 
 ;;
 ;; Faces
@@ -1301,6 +1305,52 @@ the directory instead of showing the directory contents."
   (interactive)
   (setq neo-click-changes-root (not neo-click-changes-root)))
 
+(defun neo-buffer--enter-file (path)
+  "Open a file node, the PATH is full-path of the file."
+  (find-file path))
+
+(defun neo-buffer--enter-dir (path)
+  "Toggle fold a directory node, the PATH is full-path of the directory."
+  (if neo-click-changes-root
+      (neotree-change-root)
+    (progn
+      (let ((new-state (neo-buffer--toggle-expand path)))
+        (neo-buffer--refresh t)
+        (when neo-auto-indent-point
+          (when new-state (next-line))
+          (neo-point-auto-indent))))))
+
+(defun neo-global--select-mru-window (arg)
+  "Create or find a window to select when open a file node.
+The description of ARG is in `neotree-enter'."
+  (if (eq (safe-length (window-list)) 1)
+      (neo-global--with-buffer
+        (neo-buffer--unlock-width)
+        (split-window-horizontally)
+        (neo-buffer--lock-width)))
+  (neo-global--when-window
+    (neo-window--zoom 'minimize))
+  ;; select target window
+  (cond
+   ;; select window with window numbering
+   ((and (integerp arg)
+         (boundp 'window-numbering-mode)
+         (symbol-value window-numbering-mode)
+         (fboundp 'select-window-by-number))
+    (select-window-by-number arg))
+   ;; open node in a new vertically split window
+   ((and (stringp arg) (string= arg "|"))
+    (select-window (get-mru-window))
+    (split-window-right)
+    (windmove-right))
+   ;; open node in a new horizontally split window
+   ((and (stringp arg) (string= arg "-"))
+    (select-window (get-mru-window))
+    (split-window-below)
+    (windmove-down)))
+  ;; open node in last active window
+  (select-window (get-mru-window)))
+
 (defun neotree-enter (&optional arg)
   "Open a node, like 'o' in NERDTree.
 
@@ -1311,44 +1361,15 @@ If ARG is `-' then the node is opened in new horizontally split window."
   (interactive "P")
   (let ((btn-full-path (neo-buffer--get-filename-current-line)))
     (unless (null btn-full-path)
-      (if (file-directory-p btn-full-path)
-          (if neo-click-changes-root
-              (neotree-change-root)
-            (progn
-              (let ((new-state (neo-buffer--toggle-expand btn-full-path)))
-                (neo-buffer--refresh t)
-                (when neo-auto-indent-point
-                  (when new-state (next-line))
-                  (neo-point-auto-indent)))))
-        (progn
-          (if (eq (safe-length (window-list)) 1)
-              (neo-global--with-buffer
-                (neo-buffer--unlock-width)
-                (split-window-horizontally)
-                (neo-buffer--lock-width)))
-          (neo-global--when-window
-            (neo-window--zoom 'minimize))
-          ;; select target window
-          (if arg (cond
-                   ;; select window with window numbering
-                   ((and (integerp arg)
-                         (boundp 'window-numbering-mode)
-                         (symbol-value window-numbering-mode)
-                         (fboundp 'select-window-by-number))
-                    (select-window-by-number arg))
-                   ;; open node in a new vertically split window
-                   ((and (stringp arg) (string= arg "|"))
-                    (select-window (get-mru-window))
-                    (split-window-right)
-                    (windmove-right))
-                   ;; open node in a new horizontally split window
-                   ((and (stringp arg) (string= arg "-"))
-                    (select-window (get-mru-window))
-                    (split-window-below)
-                    (windmove-down)))
-            ;; open node in last active window
-            (select-window (get-mru-window)))
-          (find-file btn-full-path))))
+      (let* ((is-file-p (not (file-directory-p btn-full-path)))
+             (enter-fn (if is-file-p
+                           'neo-buffer--enter-file
+                         'neo-buffer--enter-dir)))
+        (when is-file-p
+          (neo-global--select-mru-window arg))
+        (funcall enter-fn btn-full-path)
+        (run-hook-with-args 'neo-enter-hook
+                            (if is-file-p 'file 'directory))))
     btn-full-path))
 
 (defun neotree-enter-vertical-split ()
