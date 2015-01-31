@@ -42,10 +42,6 @@
 (defconst neo-buffer-name " *NeoTree*"
   "Name of the buffer where neotree shows directory contents.")
 
-(defconst neo-hidden-files-regexp "^\\."
-  "Hidden files regexp.
-By default all filest starting with dot '.' including . and ..")
-
 (defconst neo-dir
   (expand-file-name (file-name-directory (locate-library "neotree"))))
 
@@ -154,13 +150,13 @@ the mode-line format."
   :group 'neotree)
 
 (defcustom neo-keymap-style 'default
-  "The default keybindings for neotree-mode-map."
+  "*The default keybindings for neotree-mode-map."
   :group 'neotree
   :type '(choice (const default)
                  (const concise)))
 
 (defcustom neo-cwd-line-style 'text
-  "The default header style."
+  "*The default header style."
   :group 'neotree
   :type '(choice (const text)
                  (const button)))
@@ -174,6 +170,13 @@ the mode-line format."
   "*If non-nil the point is autmotically put on the first letter of a node."
   :type 'boolean
   :group 'neotree)
+
+(defcustom neo-hidden-regexp-list
+  '("^\\." "\\.pyc$" "~$" "^#.*#$" "\\.elc$")
+  "*The regexp list matching hidden files."
+  :type  '(repeat (choice regexp))
+  :group 'neotree)
+
 
 ;;
 ;; Faces
@@ -599,14 +602,19 @@ This procedure does not work when CONDP is the `null' function."
   (replace-regexp-in-string "\n" "" string))
 
 (defun neo-util--walk-dir (path)
+  "Return the subdirectories and subfiles of the PATH."
   (let* ((full-path (neo-path--file-truename path)))
-    (directory-files path 'full
-                     directory-files-no-dot-files-regexp)))
+    (directory-files
+     path 'full directory-files-no-dot-files-regexp)))
 
 (defun neo-util--hidden-path-filter (node)
+  "A filter function, if the NODE can not match each item in \
+`neo-hidden-regexp-list', return t."
   (if (not neo-buffer--show-hidden-file-p)
-      (not (string-match neo-hidden-files-regexp
-                         (neo-path--file-short-name node)))
+      (let ((shortname (neo-path--file-short-name node)))
+        (null (neo-util--filter
+                    (lambda (x) (not (null (string-match-p x shortname))))
+                    neo-hidden-regexp-list)))
     node))
 
 (defun neo-str--trim-left (s)
