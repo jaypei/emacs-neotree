@@ -467,7 +467,7 @@ it will create the neotree window and return it."
          (member neo-global--window windows))))
 
 (defun neo-global--open ()
-  "Show the NeoTree widnow."
+  "Show the NeoTree window."
   (let ((valid-start-node-p nil))
     (neo-buffer--save-excursion
      (setf valid-start-node-p (neo-buffer--valid-start-node-p)))
@@ -1231,7 +1231,7 @@ NeoTree buffer is BUFFER."
   window)
 
 (defun neo-window--set-width (window n)
-  "Make neotree widnow(WINDOW) N columns width."
+  "Make neotree window(WINDOW) N columns width."
   (let ((w (max n window-min-width)))
     (unless (null window)
       (if (> (window-width) w)
@@ -1584,7 +1584,7 @@ automatically."
 
 ;;;###autoload
 (defun neotree-show ()
-  "Show the NeoTree widnow."
+  "Show the NeoTree window."
   (interactive)
   (if neo-smart-open
       (neotree-find)
