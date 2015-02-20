@@ -667,7 +667,7 @@ the last folder (the current one)."
   "Shortens the PATH to (window-body-width) and displays any \
 visible remains as buttons that, when clicked, navigate to that
 parent directory."
-  (let* ((dirs (reverse (maplist 'identity (reverse (split-string path "/" :omitnulls)))))
+  (let* ((dirs (reverse (cl-maplist 'identity (reverse (split-string path "/" :omitnulls)))))
          (last (car-safe (car-safe (last dirs)))))
     (neo-path--insert-chroot-button "/" "/" 'neo-root-dir-face)
     (dolist (dir dirs)
@@ -1192,7 +1192,7 @@ If PREVIOUS is non-nil the previous sibling is returned."
 ;; Mode-line methods
 ;;
 
-(defun neo-mode-line--compute-format (path index ndirs nfiles)
+(defun neo-mode-line--compute-format (parent index ndirs nfiles)
   "Return a formated string to be used in the `neotree' mode-line."
   (let* ((nall (+ ndirs nfiles))
          (has-dirs (> ndirs 0))
@@ -1317,7 +1317,7 @@ the directory instead of showing the directory contents."
       (let ((new-state (neo-buffer--toggle-expand path)))
         (neo-buffer--refresh t)
         (when neo-auto-indent-point
-          (when new-state (next-line))
+          (when new-state (forward-line 1))
           (neo-point-auto-indent))))))
 
 (defun neo-global--select-mru-window (arg)
