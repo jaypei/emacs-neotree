@@ -366,8 +366,10 @@ The car of the pair will store fullpath, and cdr will store line number.")
 (defmacro neo-global--with-buffer (&rest body)
   "Execute the forms in BODY with global NeoTree buffer."
   (declare (indent 0) (debug t))
-  `(with-current-buffer (neo-global--get-buffer)
-     ,@body))
+  `(let ((neotree-buffer (neo-global--get-buffer)))
+     (unless (null neotree-buffer)
+       (with-current-buffer neotree-buffer
+         ,@body))))
 
 (defmacro neo-global--with-window (&rest body)
   "Execute the forms in BODY with global NeoTree window."
@@ -382,16 +384,31 @@ The car of the pair will store fullpath, and cdr will store line number.")
   `(when (eq (selected-window) neo-global--window)
      ,@body))
 
-(defmacro neo-buffer--save-excursion (&rest body)
-  "Execute BODY in neotree window, then restore previous window configuration."
-  `(save-window-excursion
-     (let ((rlt nil))
-       (switch-to-buffer (neo-global--get-buffer))
-       (setq buffer-read-only nil)
-       (setf rlt (progn ,@body))
-       (setq buffer-read-only t)
-       rlt)))
+(defmacro neo-global--switch-to-buffer ()
+  "Switch to NeoTree buffer."
+  `(let ((neotree-buffer (neo-global--get-buffer)))
+     (unless (null neotree-buffer)
+       (switch-to-buffer neotree-buffer))))
 
+(defmacro neo-buffer--with-editing-buffer (&rest body)
+  "Execute BODY in neotree buffer without read-only restriction."
+  `(let (rlt)
+     (neo-global--with-buffer
+       (setq buffer-read-only nil))
+     (setq rlt (progn ,@body))
+     (neo-global--with-buffer
+       (setq buffer-read-only t))
+     rlt))
+
+(defmacro neo-buffer--with-resizable-window (&rest body)
+  "Execute BODY in neotree window without `window-size-fixed' restriction."
+  `(let (rlt)
+     (neo-global--with-buffer
+       (neo-buffer--unlock-width))
+     (setq rlt (progn ,@body))
+     (neo-global--with-buffer
+       (neo-buffer--lock-width))
+     rlt))
 
 ;;
 ;; Global methods
@@ -469,7 +486,7 @@ it will create the neotree window and return it."
 (defun neo-global--open ()
   "Show the NeoTree window."
   (let ((valid-start-node-p nil))
-    (neo-buffer--save-excursion
+    (neo-global--with-buffer
      (setf valid-start-node-p (neo-buffer--valid-start-node-p)))
     (if (not valid-start-node-p)
         (neo-global--open-dir (neo-path--get-working-dir))
@@ -478,7 +495,7 @@ it will create the neotree window and return it."
 (defun neo-global--open-dir (path)
   "Show the NeoTree window, and change root to PATH."
   (neo-global--get-window t)
-  (neo-buffer--save-excursion
+  (neo-global--with-buffer
    (neo-buffer--change-root path)))
 
 (defun neo-global--open-and-find (path)
@@ -523,12 +540,8 @@ it will create the neotree window and return it."
 (defadvice mouse-drag-vertical-line
   (around neotree-drag-vertical-line (start-event) activate)
   "Drag and drop is not affected by the lock."
-  (neo-global--with-buffer
-   (neo-buffer--unlock-width))
-  ad-do-it
-  (neo-global--with-buffer
-   (neo-buffer--lock-width))
-  ad-return-value)
+  (neo-buffer--with-resizable-window
+   ad-do-it))
 
 (eval-after-load 'popwin
   '(progn
@@ -538,12 +551,12 @@ it will create the neotree window and return it."
              (neopersist neo-persist-show))
          (when neobuffer
            (setq neo-persist-show nil)
-           (with-current-buffer (neo-global--get-buffer)
+           (neo-global--with-buffer
              (neo-buffer--unlock-width)))
          ad-do-it
          (when neobuffer
            (setq neo-persist-show neopersist)
-           (with-current-buffer (neo-global--get-buffer)
+           (neo-global--with-buffer
              (neo-buffer--lock-width))
            ;; set neotree global window and buffer to the new ones
            ;; created by popwin
@@ -557,12 +570,12 @@ it will create the neotree window and return it."
              (neopersist neo-persist-show))
          (when neobuffer
            (setq neo-persist-show nil)
-           (with-current-buffer (neo-global--get-buffer)
+           (neo-global--with-buffer
              (neo-buffer--unlock-width)))
          ad-do-it
          (when neobuffer
            (setq neo-persist-show neopersist)
-           (with-current-buffer (neo-global--get-buffer)
+           (neo-global--with-buffer
              (neo-buffer--lock-width))
            ;; set neotree global window and buffer to the new ones
            ;; created by popwin
@@ -1050,16 +1063,17 @@ Return the new expand state for NODE (t for expanded, nil for collapsed)."
   "Refresh the NeoTree buffer.
 If SAVE-POS is non-nil, it will be auto save current line number."
   (let ((start-node neo-buffer--start-node))
-    (neo-buffer--save-excursion
-     ;; save context
-     (when save-pos
-       (neo-buffer--save-cursor-pos))
-     ;; starting refresh
-     (erase-buffer)
-     (neo-buffer--node-list-clear)
-     (neo-buffer--insert-banner)
-     (setq neo-buffer--start-line neo-header-height)
-     (neo-buffer--insert-tree start-node 1))
+    (save-window-excursion
+      (neo-buffer--with-editing-buffer
+       ;; save context
+       (when save-pos
+         (neo-buffer--save-cursor-pos))
+       ;; starting refresh
+       (erase-buffer)
+       (neo-buffer--node-list-clear)
+       (neo-buffer--insert-banner)
+       (setq neo-buffer--start-line neo-header-height)
+       (neo-buffer--insert-tree start-node 1)))
     ;; restore context
     (neo-buffer--goto-cursor-pos)))
 
@@ -1221,13 +1235,10 @@ If PREVIOUS is non-nil the previous sibling is returned."
 (defun neo-window--init (window buffer)
   "Make WINDOW a NeoTree window.
 NeoTree buffer is BUFFER."
-  (neo-global--with-buffer
-    (neo-buffer--unlock-width))
-  (switch-to-buffer buffer)
-  (neo-window--set-width window neo-window-width)
-  (set-window-dedicated-p window t)
-  (neo-global--with-buffer
-    (neo-buffer--lock-width))
+  (neo-buffer--with-resizable-window
+   (switch-to-buffer buffer)
+   (neo-window--set-width window neo-window-width)
+   (set-window-dedicated-p window t))
   window)
 
 (defun neo-window--set-width (window n)
@@ -1323,11 +1334,9 @@ the directory instead of showing the directory contents."
 (defun neo-global--select-mru-window (arg)
   "Create or find a window to select when open a file node.
 The description of ARG is in `neotree-enter'."
-  (if (eq (safe-length (window-list)) 1)
-      (neo-global--with-buffer
-        (neo-buffer--unlock-width)
-        (split-window-horizontally)
-        (neo-buffer--lock-width)))
+  (when (eq (safe-length (window-list)) 1)
+    (neo-buffer--with-resizable-window
+     (split-window-horizontally)))
   (neo-global--when-window
     (neo-window--zoom 'minimize))
   ;; select target window
