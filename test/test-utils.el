@@ -99,4 +99,13 @@
                               (cdr x))))
    cases))
 
+(ert-deftest neo-test-file-equal-p ()
+  (let ((fn 'neo-path--file-equal-p)
+        (cases '((("/etc/passwd" "/etc/passwd") . t)
+                 (("/tmp/no-exists-file" "/tmp/no-exists-file") . nil)
+                 ((nil "/etc/passwd") . nil)
+                 (("/etc/passwd" nil) . nil))))
+    (mapcar (lambda (x) (should (eq (apply fn (car x)) (cdr x)))) cases)))
+
+
 ;;; test-utils.el ends here
