@@ -767,9 +767,11 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
 (defun neo-path--file-equal-p (file1 file2)
   "Return non-nil if files FILE1 and FILE2 name the same file.
 If FILE1 or FILE2 does not exist, the return value is unspecified."
-  (let ((nfile1 (neo-path--strip file1))
-        (nfile2 (neo-path--strip file2)))
-    (file-equal-p nfile1 nfile2)))
+  (unless (or (null file1)
+              (null file2))
+    (let ((nfile1 (neo-path--strip file1))
+          (nfile2 (neo-path--strip file2)))
+      (file-equal-p nfile1 nfile2))))
 
 (defun neo-path--file-in-directory-p (file dir)
   "Return non-nil if FILE is in DIR or a subdirectory of DIR.
@@ -874,9 +876,7 @@ If NODE-PATH and LINE-POS is nil, it will be save the current line node position
         (mapc
          (lambda (x)
            (setq line-pos (1+ line-pos))
-           (when (and (not (null x))
-                      (not (null node))
-                      (neo-path--file-equal-p x node))
+           (when (neo-path--file-equal-p x node)
              (throw 'line-pos-founded line-pos)))
          neo-buffer--node-list))
       (setq line-pos (cdr neo-buffer--cursor-pos))
