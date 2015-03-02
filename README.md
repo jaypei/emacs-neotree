@@ -15,13 +15,13 @@ A Emacs tree plugin like NerdTree for Vim.
 
 ### Melpa
 
-You can install the plugin using the packages on [melpa](http://melpa.milkbox.net/).
+You can install the plugin using the packages on [melpa](http://melpa.org/).
 
 Make sure you have something like the following in your Emacs startup file (`~/.emacs.d/init.el`, or `~/.emacs`):
 
 ```elisp
     (add-to-list 'package-archives
-                 '("melpa" . "http://melpa.milkbox.net/packages/"))
+                 '("melpa" . "http://melpa.org/packages/"))
 ```
 
 To make that take effect, either evaluate that elisp expression or restart Emacs.
