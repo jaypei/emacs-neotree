@@ -306,6 +306,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "q")       'neotree-hide)
     (define-key map (kbd "p")       'previous-line)
     (define-key map (kbd "n")       'next-line)
+    (define-key map (kbd "o")       'neotree-open)
     (define-key map (kbd "A")       'neotree-stretch-toggle)
     (define-key map (kbd "U")       'neotree-select-up-node)
     (define-key map (kbd "D")       'neotree-select-down-node)
@@ -1400,6 +1401,21 @@ If ARG is `-' then the node is opened in new horizontally split window."
   "Open the current node is a horizontally split window."
   (interactive)
   (neotree-enter "-"))
+
+(defun neotree-open (&optional arg)
+  "Open a node in a buffer.
+
+This is roughly equivalent to NEOTREE-ENTER for files, but for directories
+it will open the directory in dired mode instead of opening the tree inside
+neotree.
+
+ARG behaves in the same way as in NEOTREE-ENTER."
+  (interactive "P")
+  (let ((btn-full-path (neo-buffer--get-filename-current-line)))
+    (unless (null btn-full-path)
+      (neo-global--select-mru-window arg)
+      (find-file btn-full-path))
+    btn-full-path))
 
 (defun neotree-change-root ()
   "Change root to current node dir.
