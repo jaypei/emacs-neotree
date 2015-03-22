@@ -146,6 +146,12 @@ buffer-local wherever it is set."
   :group 'neotree
   :link '(info-link "(neotree)Configuration"))
 
+(defgroup neotree-vc-options nil
+  "Neotree-VC customizations."
+  :prefix "neo-vc-"
+  :group 'neotree
+  :link '(info-link "(neotree)Configuration"))
+
 (defcustom neo-create-file-auto-open nil
   "*If non-nil, the file will auto open when created."
   :type 'boolean
@@ -250,6 +256,33 @@ the mode-line format."
   :type 'hook
   :group 'neotree)
 
+(defcustom neo-vc-integration nil
+  "If non-nil, show VC status."
+  :group 'neotree-vc
+  :type '(set (const :tag "Use different faces" face)
+              (const :tag "Use different characters" char)))
+
+(defcustom neo-vc-state-char-alist
+  '((up-to-date       . ?\s)
+    (edited           . ?E)
+    (added            . ?+)
+    (removed          . ?-)
+    (missing          . ?!)
+    (needs-merge      . ?M)
+    (conflict         . ?!)
+    (unlocked-changes . ?!)
+    (needs-update     . ?U)
+    (ignored          . ?\s)
+    (user             . ?U)
+    (unregistered     . ?\s)
+    (nil              . ?\s))
+  "Alist of vc-states to indicator characters.
+This variable is used in `neo-vc-for-node' when
+`neo-vc-integration' contains `char'."
+  :group 'neotree-vc
+  :type '(alist :key-type symbol
+                :value-type character))
+
 ;;
 ;; Faces
 ;;
@@ -302,6 +335,92 @@ the mode-line format."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-expand-btn-face 'neo-expand-btn-face)
 
+(defface neo-vc-default-face
+  '((((background dark)) (:foreground "White"))
+    (t                   (:foreground "Black")))
+  "*Face used for unknown files in the neotree buffer.
+Used only when \(vc-state node\) returns nil."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-default-face 'neo-vc-default-face)
+
+(defface neo-vc-user-face
+  '((t                   (:foreground "Red" :slant italic)))
+  "*Face used for user-locked files in the neotree buffer."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-user-face 'neo-vc-user-face)
+
+(defface neo-vc-up-to-date-face
+  '((((background dark)) (:foreground "LightGray"))
+    (t                   (:foreground "DarkGray")))
+  "*Face used for vc-up-to-date files in the neotree buffer."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-up-to-date-face 'neo-vc-up-to-date-face)
+
+(defface neo-vc-edited-face
+  '((((background dark)) (:foreground "Magenta"))
+    (t                   (:foreground "DarkMagenta")))
+  "*Face used for vc-edited files in the neotree buffer."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-edited-face 'neo-vc-edited-face)
+
+(defface neo-vc-needs-update-face
+  '((t                   (:underline t)))
+  "*Face used for vc-needs-update files in the neotree buffer."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-needs-update-face 'neo-vc-needs-update-face)
+
+(defface neo-vc-needs-merge-face
+  '((((background dark)) (:foreground "Red1"))
+    (t                   (:foreground "Red3")))
+  "*Face used for vc-needs-merge files in the neotree buffer."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-needs-merge-face 'neo-vc-needs-merge-face)
+
+(defface neo-vc-unlocked-changes-face
+  '((t                   (:foreground "Red" :background "Blue")))
+  "*Face used for vc-unlocked-changes files in the neotree buffer."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-unlocked-changes-face 'neo-vc-unlocked-changes-face)
+
+(defface neo-vc-added-face
+  '((((background dark)) (:foreground "LightGreen"))
+    (t                   (:foreground "DarkGreen")))
+  "*Face used for vc-added files in the neotree buffer."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-added-face 'neo-vc-added-face)
+
+(defface neo-vc-removed-face
+  '((t                    (:strike-through t)))
+  "*Face used for vc-removed files in the neotree buffer."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-removed-face 'neo-vc-removed-face)
+
+(defface neo-vc-conflict-face
+  '((((background dark)) (:foreground "Red1"))
+    (t                   (:foreground "Red3")))
+  "*Face used for vc-conflict files in the neotree buffer."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-conflict-face 'neo-vc-conflict-face)
+
+(defface neo-vc-missing-face
+  '((((background dark)) (:foreground "Red1"))
+    (t                   (:foreground "Red3")))
+  "*Face used for vc-missing files in the neotree buffer."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-missing-face 'neo-vc-missing-face)
+
+(defface neo-vc-ignored-face
+  '((((background dark)) (:foreground "DarkGrey"))
+    (t                   (:foreground "LightGray")))
+  "*Face used for vc-ignored files in the neotree buffer."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-ignored-face 'neo-vc-ignored-face)
+
+(defface neo-vc-unregistered-face
+  nil
+  "*Face used for vc-unregistered files in the neotree buffer."
+  :group 'neotree-vc :group 'font-lock-highlighting-faces)
+(defvar  neo-vc-unregistered-face 'neo-vc-unregistered-face)
 
 ;;
 ;; Variables
@@ -1030,6 +1149,8 @@ PATH is value."
         (btn-end-pos nil)
         (node-short-name (neo-path--file-short-name node)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
+    (when (memq 'char neo-vc-integration)
+      (insert-char ?\s 2))
     (setq btn-start-pos (point))
     (neo-buffer--insert-fold-symbol (if expanded 'open 'close))
     (neo-buffer--insert-with-face (concat node-short-name "/")
@@ -1046,17 +1167,47 @@ PATH is value."
     (neo-buffer--newline-and-begin)))
 
 (defun neo-buffer--insert-file-entry (node depth)
-  (let ((node-short-name (neo-path--file-short-name node)))
+  (let ((node-short-name (neo-path--file-short-name node))
+        (vc (when neo-vc-integration (neo-vc-for-node node))))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (neo-buffer--insert-fold-symbol 'leaf)
+    (when (memq 'char neo-vc-integration)
+      (insert-char (car vc))
+      (insert-char ?\s))
     (insert-button node-short-name
                    'action '(lambda (_) (neotree-enter current-prefix-arg))
                    'follow-link t
-                   'face neo-file-link-face
+                   'face (if (memq 'face neo-vc-integration)
+                             (cdr vc)
+                           neo-file-link-face)
                    'neo-full-path node
                    'keymap nil)
     (neo-buffer--node-list-set nil node)
     (neo-buffer--newline-and-begin)))
+
+(defun neo-vc-for-node (node)
+  (let ((backend (vc-backend node)))
+    (let* ((vc-state (if backend
+                         (vc-state-refresh node backend)
+                       (vc-state node)))
+           (vc-state (if (stringp vc-state)
+                         'user
+                       vc-state)))
+      (cons (cdr (assoc vc-state neo-vc-state-char-alist))
+            (cl-case vc-state
+              (up-to-date       neo-vc-up-to-date-face)
+              (edited           neo-vc-edited-face)
+              (needs-update     neo-vc-needs-update-face)
+              (needs-merge      neo-vc-needs-merge-face)
+              (unlocked-changes neo-vc-unlocked-changes-face)
+              (added            neo-vc-added-face)
+              (removed          neo-vc-removed-face)
+              (conflict         neo-vc-conflict-face)
+              (missing          neo-vc-missing-face)
+              (ignored          neo-vc-ignored-face)
+              (unregistered     neo-vc-unregistered-face)
+              (user             neo-vc-user-face)
+              (otherwise        neo-vc-default-face))))))
 
 (defun neo-buffer--get-nodes (path)
   (let* ((nodes (neo-util--walk-dir path))
@@ -1107,7 +1258,8 @@ Return the new expand state for NODE (t for expanded, nil for collapsed)."
       (neo-buffer--insert-root-entry path))
   (let* ((contents (neo-buffer--get-nodes path))
          (nodes (car contents))
-         (leafs (cdr contents)))
+         (leafs (cdr contents))
+         (default-directory path))
     (dolist (node nodes)
       (let ((expanded (neo-buffer--expanded-node-p node)))
         (neo-buffer--insert-dir-entry
