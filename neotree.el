@@ -4,7 +4,7 @@
 
 ;; Author: jaypei <jaypei97159@gmail.com>
 ;; URL: https://github.com/jaypei/emacs-neotree
-;; Version: 0.2.1
+;; Version: 0.3
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -68,6 +68,72 @@ buffer-local wherever it is set."
       (declare (debug defvar) (doc-string 3))
       (list 'progn (list 'defvar var val docstring)
             (list 'make-variable-buffer-local (list 'quote var))))))
+
+
+;;
+;; Macros
+;;
+
+(defmacro neo-util--to-bool (obj)
+  "If OBJ is non-nil, return t, else return nil."
+  `(and ,obj t))
+
+(defmacro neo-global--with-buffer (&rest body)
+  "Execute the forms in BODY with global NeoTree buffer."
+  (declare (indent 0) (debug t))
+  `(let ((neotree-buffer (neo-global--get-buffer)))
+     (unless (null neotree-buffer)
+       (with-current-buffer neotree-buffer
+         ,@body))))
+
+(defmacro neo-global--with-window (&rest body)
+  "Execute the forms in BODY with global NeoTree window."
+  (declare (indent 0) (debug t))
+  `(save-selected-window
+     (neo-global--select-window)
+     ,@body))
+
+(defmacro neo-global--when-window (&rest body)
+  "Execute the forms in BODY when selected window is NeoTree window."
+  (declare (indent 0) (debug t))
+  `(when (eq (selected-window) neo-global--window)
+     ,@body))
+
+(defmacro neo-global--switch-to-buffer ()
+  "Switch to NeoTree buffer."
+  `(let ((neotree-buffer (neo-global--get-buffer)))
+     (unless (null neotree-buffer)
+       (switch-to-buffer neotree-buffer))))
+
+(defmacro neo-buffer--with-editing-buffer (&rest body)
+  "Execute BODY in neotree buffer without read-only restriction."
+  `(let (rlt)
+     (neo-global--with-buffer
+       (setq buffer-read-only nil))
+     (setq rlt (progn ,@body))
+     (neo-global--with-buffer
+       (setq buffer-read-only t))
+     rlt))
+
+(defmacro neo-buffer--with-resizable-window (&rest body)
+  "Execute BODY in neotree window without `window-size-fixed' restriction."
+  `(let (rlt)
+     (neo-global--with-buffer
+       (neo-buffer--unlock-width))
+     (setq rlt (progn ,@body))
+     (neo-global--with-buffer
+       (neo-buffer--lock-width))
+     rlt))
+
+(defmacro neotree-make-executor (&rest fn-form)
+  "Make an open event handler, FN-FORM is event handler form."
+  (let* ((get-args-fn
+          (lambda (sym) (or (plist-get fn-form sym) (lambda (&rest _)))))
+         (file-fn (funcall get-args-fn :file-fn))
+         (dir-fn (funcall get-args-fn :dir-fn)))
+    `(lambda (&optional arg)
+       (interactive "P")
+       (neo-buffer--executor arg ,file-fn ,dir-fn))))
 
 
 ;;
@@ -297,11 +363,15 @@ The car of the pair will store fullpath, and cdr will store line number.")
 
 (defvar neotree-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "SPC")     'neotree-enter)
-    (define-key map (kbd "TAB")     'neotree-enter)
-    (define-key map (kbd "RET")     'neotree-enter)
-    (define-key map (kbd "|")       'neotree-enter-vertical-split)
-    (define-key map (kbd "-")       'neotree-enter-horizontal-split)
+    (define-key map (kbd "TAB")     (neotree-make-executor
+                                     :dir-fn  'neo-open-dir))
+    (define-key map (kbd "RET")     (neotree-make-executor
+                                     :file-fn 'neo-open-file
+                                     :dir-fn  'neo-open-dir))
+    (define-key map (kbd "|")       (neotree-make-executor
+                                     :file-fn 'neo-open-file-vertical-split))
+    (define-key map (kbd "-")       (neotree-make-executor
+                                     :file-fn 'neo-open-file-horizontal-split))
     (define-key map (kbd "g")       'neotree-refresh)
     (define-key map (kbd "q")       'neotree-hide)
     (define-key map (kbd "p")       'previous-line)
@@ -357,62 +427,6 @@ The car of the pair will store fullpath, and cdr will store line number.")
               (lambda (arg) 'no-indent) nil 'local))
   (when neo-auto-indent-point
     (add-hook 'post-command-hook 'neo-hook--node-first-letter nil t)))
-
-
-;;
-;; Macros
-;;
-
-(defmacro neo-util--to-bool (obj)
-  "If OBJ is non-nil, return t, else return nil."
-  `(and ,obj t))
-
-(defmacro neo-global--with-buffer (&rest body)
-  "Execute the forms in BODY with global NeoTree buffer."
-  (declare (indent 0) (debug t))
-  `(let ((neotree-buffer (neo-global--get-buffer)))
-     (unless (null neotree-buffer)
-       (with-current-buffer neotree-buffer
-         ,@body))))
-
-(defmacro neo-global--with-window (&rest body)
-  "Execute the forms in BODY with global NeoTree window."
-  (declare (indent 0) (debug t))
-  `(save-selected-window
-     (neo-global--select-window)
-     ,@body))
-
-(defmacro neo-global--when-window (&rest body)
-  "Execute the forms in BODY when selected window is NeoTree window."
-  (declare (indent 0) (debug t))
-  `(when (eq (selected-window) neo-global--window)
-     ,@body))
-
-(defmacro neo-global--switch-to-buffer ()
-  "Switch to NeoTree buffer."
-  `(let ((neotree-buffer (neo-global--get-buffer)))
-     (unless (null neotree-buffer)
-       (switch-to-buffer neotree-buffer))))
-
-(defmacro neo-buffer--with-editing-buffer (&rest body)
-  "Execute BODY in neotree buffer without read-only restriction."
-  `(let (rlt)
-     (neo-global--with-buffer
-       (setq buffer-read-only nil))
-     (setq rlt (progn ,@body))
-     (neo-global--with-buffer
-       (setq buffer-read-only t))
-     rlt))
-
-(defmacro neo-buffer--with-resizable-window (&rest body)
-  "Execute BODY in neotree window without `window-size-fixed' restriction."
-  `(let (rlt)
-     (neo-global--with-buffer
-       (neo-buffer--unlock-width))
-     (setq rlt (progn ,@body))
-     (neo-global--with-buffer
-       (neo-buffer--lock-width))
-     rlt))
 
 ;;
 ;; Global methods
@@ -995,7 +1009,8 @@ PATH is value."
                  'action '(lambda (_) (neotree-enter current-prefix-arg))
                  'follow-link t
                  'face neo-button-face
-                 'neo-full-path node)
+                 'neo-full-path node
+                 'keymap nil)
     (neo-buffer--node-list-set nil node)
     (neo-buffer--newline-and-begin)))
 
@@ -1007,7 +1022,8 @@ PATH is value."
                    'action '(lambda (_) (neotree-enter current-prefix-arg))
                    'follow-link t
                    'face neo-file-link-face
-                   'neo-full-path node)
+                   'neo-full-path node
+                   'keymap nil)
     (neo-buffer--node-list-set nil node)
     (neo-buffer--newline-and-begin)))
 
@@ -1325,21 +1341,6 @@ the directory instead of showing the directory contents."
   (interactive)
   (setq neo-click-changes-root (not neo-click-changes-root)))
 
-(defun neo-buffer--enter-file (path)
-  "Open a file node, the PATH is full-path of the file."
-  (find-file path))
-
-(defun neo-buffer--enter-dir (path)
-  "Toggle fold a directory node, the PATH is full-path of the directory."
-  (if neo-click-changes-root
-      (neotree-change-root)
-    (progn
-      (let ((new-state (neo-buffer--toggle-expand path)))
-        (neo-buffer--refresh t)
-        (when neo-auto-indent-point
-          (when new-state (forward-line 1))
-          (neo-point-auto-indent))))))
-
 (defun neo-global--select-mru-window (arg)
   "Create or find a window to select when open a file node.
 The description of ARG is in `neotree-enter'."
@@ -1369,37 +1370,61 @@ The description of ARG is in `neotree-enter'."
   ;; open node in last active window
   (select-window (get-mru-window)))
 
-(defun neotree-enter (&optional arg)
-  "Open a node, like 'o' in NERDTree.
+(defun neo-open-dir (full-path &optional arg)
+  "Toggle fold a directory node.
 
+FULL-PATH is the path of the directory.
+ARG is ignored."
+  (if neo-click-changes-root
+      (neotree-change-root)
+    (progn
+      (let ((new-state (neo-buffer--toggle-expand full-path)))
+        (neo-buffer--refresh t)
+        (when neo-auto-indent-point
+          (when new-state (forward-line 1))
+          (neo-point-auto-indent))))))
+
+(defun neo-open-file (full-path &optional arg)
+  "Open a file node.
+
+FULL-PATH is the file path you want to open.
 If ARG is an integer then the node is opened in a window selected via
 `window-numbering' (if available) according to the passed number.
 If ARG is `|' then the node is opened in new vertically split window.
 If ARG is `-' then the node is opened in new horizontally split window."
+  (neo-global--select-mru-window arg)
+  (find-file full-path))
+
+(defun neo-open-file-vertical-split (full-path arg)
+  "Open the current node is a vertically split window.
+FULL-PATH and ARG are the same as `neo-open-file'."
+  (neo-open-file full-path "|"))
+
+(defun neo-open-file-horizontal-split (full-path arg)
+  "Open the current node is horizontally vertically split window.
+FULL-PATH and ARG are the same as `neo-open-file'."
+  (neo-open-file full-path "-"))
+
+(defun neo-buffer--executor (arg &optional file-fn dir-fn)
+  "Define the behaviors for keyboard event.
+ARG is the parameter for command.
+If FILE-FN is non-nil, it will executed when a file node.
+If DIR-FN is non-nil, it will executed when a dir node."
   (interactive "P")
-  (let ((btn-full-path (neo-buffer--get-filename-current-line)))
+  (let* ((btn-full-path (neo-buffer--get-filename-current-line))
+         is-file-p
+         enter-fn)
     (unless (null btn-full-path)
-      (let* ((is-file-p (not (file-directory-p btn-full-path)))
-             (enter-fn (if is-file-p
-                           'neo-buffer--enter-file
-                         'neo-buffer--enter-dir)))
-        (when is-file-p
-          (neo-global--select-mru-window arg))
-        (funcall enter-fn btn-full-path)
-        (run-hook-with-args 'neo-enter-hook
-                            (if is-file-p 'file 'directory))))
+      (setq is-file-p (not (file-directory-p btn-full-path))
+            enter-fn (if is-file-p file-fn dir-fn))
+      (unless (null enter-fn)
+        (funcall enter-fn btn-full-path arg)
+        (run-hook-with-args
+         'neo-enter-hook
+         (if is-file-p 'file 'directory)
+         btn-full-path
+         arg)))
     btn-full-path))
-
-(defun neotree-enter-vertical-split ()
-  "Open the current node is a vertically split window."
-  (interactive)
-  (message "vertical")
-  (neotree-enter "|"))
-
-(defun neotree-enter-horizontal-split ()
-  "Open the current node is a horizontally split window."
-  (interactive)
-  (neotree-enter "-"))
 
 (defun neotree-change-root ()
   "Change root to current node dir.
@@ -1625,6 +1650,34 @@ automatically."
 
 ;;;###autoload
 (defalias 'neotree 'neotree-show "Show the NeoTree window.")
+
+;;
+;; backward compatible
+;;
+
+(defun neo-bc--make-obsolete-message (from to)
+  (message "Warning: `%S' is obsolete. Use `%S' instead." from to))
+
+(defun neo-buffer--enter-file (path)
+  (neo-bc--make-obsolete-message 'neo-buffer--enter-file 'neo-open-file))
+
+(defun neo-buffer--enter-dir (path)
+  (neo-bc--make-obsolete-message 'neo-buffer--enter-dir 'neo-open-dir))
+
+(defun neotree-enter (&optional arg)
+  (interactive "P")
+  (neo-bc--make-obsolete-message 'neotree-enter 'neotree-make-executor)
+  (neo-buffer--executor arg 'neo-open-file 'neo-open-dir))
+
+(defun neotree-enter-vertical-split ()
+  (interactive)
+  (neo-bc--make-obsolete-message 'neotree-enter-vertical-split 'neotree-make-executor)
+  (neo-buffer--executor nil 'neo-open-file-vertical-split 'neo-open-dir))
+
+(defun neotree-enter-horizontal-split ()
+  (interactive)
+  (neo-bc--make-obsolete-message 'neotree-enter-horizontal-split 'neotree-make-executor)
+  (neo-buffer--executor nil 'neo-open-file-horizontal-split 'neo-open-dir))
 
 
 (provide 'neotree)
