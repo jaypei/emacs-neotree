@@ -374,8 +374,10 @@ The car of the pair will store fullpath, and cdr will store line number.")
                                      :file-fn 'neo-open-file-horizontal-split))
     (define-key map (kbd "g")       'neotree-refresh)
     (define-key map (kbd "q")       'neotree-hide)
-    (define-key map (kbd "p")       'previous-line)
-    (define-key map (kbd "n")       'next-line)
+    (define-key map (kbd "p")       'neotree-previous-line)
+    (define-key map (kbd "C-p")     'neotree-previous-line)
+    (define-key map (kbd "n")       'neotree-next-line)
+    (define-key map (kbd "C-n")     'neotree-next-line)
     (define-key map (kbd "A")       'neotree-stretch-toggle)
     (define-key map (kbd "U")       'neotree-select-up-node)
     (define-key map (kbd "D")       'neotree-select-down-node)
@@ -532,6 +534,35 @@ If INIT-P is non-nil and global NeoTree buffer not exists, then create it."
       (neo-global--open-dir root-dir))
     (neo-global--with-window
       (neo-buffer--select-file-node npath t))))
+
+(defun neo-global--select-mru-window (arg)
+  "Create or find a window to select when open a file node.
+The description of ARG is in `neotree-enter'."
+  (when (eq (safe-length (window-list)) 1)
+    (neo-buffer--with-resizable-window
+     (split-window-horizontally)))
+  (neo-global--when-window
+    (neo-window--zoom 'minimize))
+  ;; select target window
+  (cond
+   ;; select window with window numbering
+   ((and (integerp arg)
+         (boundp 'window-numbering-mode)
+         (symbol-value window-numbering-mode)
+         (fboundp 'select-window-by-number))
+    (select-window-by-number arg))
+   ;; open node in a new vertically split window
+   ((and (stringp arg) (string= arg "|"))
+    (select-window (get-mru-window))
+    (split-window-right)
+    (windmove-right))
+   ;; open node in a new horizontally split window
+   ((and (stringp arg) (string= arg "-"))
+    (select-window (get-mru-window))
+    (split-window-below)
+    (windmove-down)))
+  ;; open node in last active window
+  (select-window (get-mru-window)))
 
 ;;
 ;; Advices
@@ -919,7 +950,7 @@ If NODE-PATH and LINE-POS is nil, it will be save the current line node position
       (throw 'line-pos-founded line-pos))
     ;; goto line
     (goto-char (point-min))
-    (forward-line (1- line-pos))
+    (neo-buffer--forward-line (1- line-pos))
     ;; scroll window
     (when (equal (selected-window) ws-wind)
       (set-window-start ws-wind ws-pos t))))
@@ -1102,6 +1133,17 @@ If SAVE-POS-P is non-nil, it will be auto save current line number."
     ;; restore context
     (neo-buffer--goto-cursor-pos)))
 
+(defun neo-buffer--post-move ()
+  "Reset current directory when position moved."
+  (funcall
+   (neotree-make-executor
+    :file-fn
+    '(lambda (path _)
+       (setq default-directory (neo-path--updir btn-full-path)))
+    :dir-fn
+    '(lambda (path _)
+       (setq default-directory path)))))
+
 (defun neo-buffer--get-button-current-line ()
   "Return the first button in current line."
   (let* ((btn-position nil)
@@ -1227,6 +1269,37 @@ If PREVIOUS is non-nil the previous sibling is returned."
             (l (length nodes)))
         (if i (nth (mod (+ i (if previous -1 1)) l) nodes))))))
 
+(defun neo-buffer--executor (arg &optional file-fn dir-fn)
+  "Define the behaviors for keyboard event.
+ARG is the parameter for command.
+If FILE-FN is non-nil, it will executed when a file node.
+If DIR-FN is non-nil, it will executed when a dir node."
+  (interactive "P")
+  (let* ((btn-full-path (neo-buffer--get-filename-current-line))
+         is-file-p
+         enter-fn)
+    (unless (null btn-full-path)
+      (setq is-file-p (not (file-directory-p btn-full-path))
+            enter-fn (if is-file-p file-fn dir-fn))
+      (unless (null enter-fn)
+        (funcall enter-fn btn-full-path arg)
+        (run-hook-with-args
+         'neo-enter-hook
+         (if is-file-p 'file 'directory)
+         btn-full-path
+         arg)))
+    btn-full-path))
+
+(defun neo-buffer--set-show-hidden-file-p (show-p)
+  "If SHOW-P is non-nil, show hidden nodes in tree."
+  (setq neo-buffer--show-hidden-file-p show-p)
+  (neo-buffer--refresh t))
+
+(defun neo-buffer--forward-line (n)
+  "Move N lines forward in NeoTree buffer."
+  (forward-line (or n 1))
+  (neo-buffer--post-move))
+
 ;;
 ;; Mode-line methods
 ;;
@@ -1294,15 +1367,20 @@ NeoTree buffer is BUFFER."
   "Return non-nil when the NeoTree window is minimize."
   (<= (window-width) neo-window-width))
 
-(defun neo-buffer--set-show-hidden-file-p (show-p)
-  "If SHOW-P is non-nil, show hidden nodes in tree."
-  (setq neo-buffer--show-hidden-file-p show-p)
-  (neo-buffer--refresh t))
-
 
 ;;
 ;; Interactive functions
 ;;
+
+(defun neotree-next-line ()
+  "Move next line in NeoTree buffer."
+  (interactive)
+  (neo-buffer--forward-line 1))
+
+(defun neotree-previous-line ()
+  "Move previous line in NeoTree buffer."
+  (interactive)
+  (neo-buffer--forward-line -1))
 
 ;;;###autoload
 (defun neotree-find (&optional path default-path)
@@ -1324,51 +1402,12 @@ If path is nil and no buffer file name, then use DEFAULT-PATH,"
       (neo-point-auto-indent)))
   (neo-global--select-window))
 
-(defun neotree-previous-node ()
-  "Jump to the previous node."
-  (interactive)
-  (backward-button 1 nil))
-
-(defun neotree-next-node ()
-  "Jump to the next node."
-  (interactive)
-  (forward-button 1 nil))
-
 (defun neotree-click-changes-root-toggle ()
   "Toggle the variable neo-click-changes-root.
 If true, clicking on a directory will change the current root to
 the directory instead of showing the directory contents."
   (interactive)
   (setq neo-click-changes-root (not neo-click-changes-root)))
-
-(defun neo-global--select-mru-window (arg)
-  "Create or find a window to select when open a file node.
-The description of ARG is in `neotree-enter'."
-  (when (eq (safe-length (window-list)) 1)
-    (neo-buffer--with-resizable-window
-     (split-window-horizontally)))
-  (neo-global--when-window
-    (neo-window--zoom 'minimize))
-  ;; select target window
-  (cond
-   ;; select window with window numbering
-   ((and (integerp arg)
-         (boundp 'window-numbering-mode)
-         (symbol-value window-numbering-mode)
-         (fboundp 'select-window-by-number))
-    (select-window-by-number arg))
-   ;; open node in a new vertically split window
-   ((and (stringp arg) (string= arg "|"))
-    (select-window (get-mru-window))
-    (split-window-right)
-    (windmove-right))
-   ;; open node in a new horizontally split window
-   ((and (stringp arg) (string= arg "-"))
-    (select-window (get-mru-window))
-    (split-window-below)
-    (windmove-down)))
-  ;; open node in last active window
-  (select-window (get-mru-window)))
 
 (defun neo-open-dir (full-path &optional arg)
   "Toggle fold a directory node.
@@ -1404,27 +1443,6 @@ FULL-PATH and ARG are the same as `neo-open-file'."
   "Open the current node is horizontally vertically split window.
 FULL-PATH and ARG are the same as `neo-open-file'."
   (neo-open-file full-path "-"))
-
-(defun neo-buffer--executor (arg &optional file-fn dir-fn)
-  "Define the behaviors for keyboard event.
-ARG is the parameter for command.
-If FILE-FN is non-nil, it will executed when a file node.
-If DIR-FN is non-nil, it will executed when a dir node."
-  (interactive "P")
-  (let* ((btn-full-path (neo-buffer--get-filename-current-line))
-         is-file-p
-         enter-fn)
-    (unless (null btn-full-path)
-      (setq is-file-p (not (file-directory-p btn-full-path))
-            enter-fn (if is-file-p file-fn dir-fn))
-      (unless (null enter-fn)
-        (funcall enter-fn btn-full-path arg)
-        (run-hook-with-args
-         'neo-enter-hook
-         (if is-file-p 'file 'directory)
-         btn-full-path
-         arg)))
-    btn-full-path))
 
 (defun neotree-change-root ()
   "Change root to current node dir.
