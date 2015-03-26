@@ -133,6 +133,7 @@ buffer-local wherever it is set."
          (dir-fn (funcall get-args-fn :dir-fn)))
     `(lambda (&optional arg)
        (interactive "P")
+       (neo-global--select-window)
        (neo-buffer--executor arg ,file-fn ,dir-fn))))
 
 
@@ -360,6 +361,21 @@ The car of the pair will store fullpath, and cdr will store line number.")
 ;;
 ;; Major mode definitions
 ;;
+
+(defvar neotree-file-button-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-2]
+      (neotree-make-executor
+       :file-fn 'neo-open-file))
+    map)
+  "Keymap for file-node button.")
+
+(defvar neotree-dir-button-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-2]
+      (neotree-make-executor :dir-fn  'neo-open-dir))
+    map)
+  "Keymap for dir-node button.")
 
 (defvar neotree-mode-map
   (let ((map (make-sparse-keymap)))
@@ -1037,11 +1053,10 @@ PATH is value."
     (setq btn-end-pos (point))
     (make-button btn-start-pos
                  btn-end-pos
-                 'action '(lambda (_) (neotree-enter current-prefix-arg))
                  'follow-link t
                  'face neo-button-face
                  'neo-full-path node
-                 'keymap nil)
+                 'keymap neotree-dir-button-keymap)
     (neo-buffer--node-list-set nil node)
     (neo-buffer--newline-and-begin)))
 
@@ -1050,11 +1065,10 @@ PATH is value."
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (neo-buffer--insert-fold-symbol 'leaf)
     (insert-button node-short-name
-                   'action '(lambda (_) (neotree-enter current-prefix-arg))
                    'follow-link t
                    'face neo-file-link-face
                    'neo-full-path node
-                   'keymap nil)
+                   'keymap neotree-file-button-keymap)
     (neo-buffer--node-list-set nil node)
     (neo-buffer--newline-and-begin)))
 
