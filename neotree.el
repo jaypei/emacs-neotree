@@ -134,7 +134,7 @@ buffer-local wherever it is set."
     `(lambda (&optional arg)
        (interactive "P")
        (neo-global--select-window)
-       (neo-buffer--executor arg ,file-fn ,dir-fn))))
+       (neo-buffer--execute arg ,file-fn ,dir-fn))))
 
 
 ;;
@@ -1283,7 +1283,7 @@ If PREVIOUS is non-nil the previous sibling is returned."
             (l (length nodes)))
         (if i (nth (mod (+ i (if previous -1 1)) l) nodes))))))
 
-(defun neo-buffer--executor (arg &optional file-fn dir-fn)
+(defun neo-buffer--execute (arg &optional file-fn dir-fn)
   "Define the behaviors for keyboard event.
 ARG is the parameter for command.
 If FILE-FN is non-nil, it will executed when a file node.
