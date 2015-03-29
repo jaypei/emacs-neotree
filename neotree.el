@@ -1454,7 +1454,7 @@ FULL-PATH and ARG are the same as `neo-open-file'."
   (neo-open-file full-path "|"))
 
 (defun neo-open-file-horizontal-split (full-path arg)
-  "Open the current node is horizontally vertically split window.
+  "Open the current node is horizontally split window.
 FULL-PATH and ARG are the same as `neo-open-file'."
   (neo-open-file full-path "-"))
 
@@ -1697,19 +1697,20 @@ automatically."
   (neo-bc--make-obsolete-message 'neo-buffer--enter-dir 'neo-open-dir))
 
 (defun neotree-enter (&optional arg)
+  "NeoTree typical open event.
+ARG are the same as `neo-open-file'."
   (interactive "P")
-  (neo-bc--make-obsolete-message 'neotree-enter 'neotree-make-executor)
-  (neo-buffer--executor arg 'neo-open-file 'neo-open-dir))
+  (neo-buffer--execute arg 'neo-open-file 'neo-open-dir))
 
 (defun neotree-enter-vertical-split ()
+  "NeoTree open event, file node will opened in new vertically split window."
   (interactive)
-  (neo-bc--make-obsolete-message 'neotree-enter-vertical-split 'neotree-make-executor)
-  (neo-buffer--executor nil 'neo-open-file-vertical-split 'neo-open-dir))
+  (neo-buffer--execute nil 'neo-open-file-vertical-split 'neo-open-dir))
 
 (defun neotree-enter-horizontal-split ()
+  "NeoTree open event, file node will opened in new horizontally split window."
   (interactive)
-  (neo-bc--make-obsolete-message 'neotree-enter-horizontal-split 'neotree-make-executor)
-  (neo-buffer--executor nil 'neo-open-file-horizontal-split 'neo-open-dir))
+  (neo-buffer--execute nil 'neo-open-file-horizontal-split 'neo-open-dir))
 
 
 (provide 'neotree)
