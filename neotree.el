@@ -141,11 +141,10 @@ buffer-local wherever it is set."
 ;; Customization
 ;;
 
-(defgroup neotree-options nil
+(defgroup neotree nil
   "Options for neotree."
   :prefix "neo-"
-  :group 'neotree
-  :link '(info-link "(neotree)Configuration"))
+  :group 'files)
 
 (defcustom neo-create-file-auto-open nil
   "*If non-nil, the file will auto open when created."
