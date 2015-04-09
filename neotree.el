@@ -387,6 +387,8 @@ The car of the pair will store fullpath, and cdr will store line number.")
                                      :file-fn 'neo-open-file-vertical-split))
     (define-key map (kbd "-")       (neotree-make-executor
                                      :file-fn 'neo-open-file-horizontal-split))
+    (define-key map (kbd "d")       (neotree-make-executor
+                                     :dir-fn 'neo-open-dired))
     (define-key map (kbd "g")       'neotree-refresh)
     (define-key map (kbd "q")       'neotree-hide)
     (define-key map (kbd "p")       'neotree-previous-line)
@@ -1435,6 +1437,14 @@ ARG is ignored."
         (when neo-auto-indent-point
           (when new-state (forward-line 1))
           (neo-point-auto-indent))))))
+
+(defun neo-open-dired (full-path &optional arg)
+  "Open file or directory node in `dired-mode'.
+
+FULL-PATH is the path of node.
+ARG is same as `neo-open-file'."
+  (neo-global--select-mru-window arg)
+  (dired full-path))
 
 (defun neo-open-file (full-path &optional arg)
   "Open a file node.
