@@ -35,6 +35,8 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'subr-x))
+
 ;;
 ;; Constants
 ;;
@@ -169,6 +171,11 @@ buffer-local wherever it is set."
 (defcustom neo-show-updir-line t
   "*If non-nil, show the updir line (..)."
   :type 'boolean
+  :group 'neotree)
+
+(defcustom neo-strip-path-prefix (getenv "HOME")
+  "Remove this common prefix from paths when shortening them for display."
+  :type 'string
   :group 'neotree)
 
 (defcustom neo-theme 'classic
@@ -731,13 +738,14 @@ This procedure does not work when CONDP is the `null' function."
         r-path)))
 
 (defun neo-path--shorten (path length)
-  "Shorten a given PATH to a specified LENGTH.
+ "Shorten a given PATH to a specified LENGTH.
 This is needed for paths, which are to long for the window to display
 completely.  The function cuts of the first part of the path to remain
 the last folder (the current one)."
+ (let ((path (string-remove-prefix neo-strip-path-prefix path)))
   (if (> (string-width path) length)
-      (concat "<" (substring path (- (- length 1))))
-    path))
+   (concat "<" (substring path (- (- length 1))))
+   path)))
 
 (defun neo-path--insert-chroot-button (label path face)
   (insert-button
