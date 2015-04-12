@@ -35,8 +35,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'subr-x))
-
 ;;
 ;; Constants
 ;;
@@ -724,7 +722,13 @@ This procedure does not work when CONDP is the `null' function."
   "Remove whitespace at the end of S."
   (if (string-match "[ \t\n\r]+\\'" s)
       (replace-match "" t t s)
-    s))
+   s))
+
+(defun neo-str--remove-prefix (prefix s)
+ "Remove PREFIX from string S."
+ (if (string-prefix-p prefix s)
+  (substring s (length prefix))
+  s))
 
 (defun neo-str--trim (s)
   "Remove whitespace at the beginning and end of S."
@@ -742,7 +746,7 @@ This procedure does not work when CONDP is the `null' function."
 This is needed for paths, which are to long for the window to display
 completely.  The function cuts of the first part of the path to remain
 the last folder (the current one)."
- (let ((path (string-remove-prefix neo-strip-path-prefix path)))
+ (let ((path (neo-str--remove-prefix neo-strip-path-prefix path)))
   (if (> (string-width path) length)
    (concat "<" (substring path (- (- length 1))))
    path)))
