@@ -1162,34 +1162,29 @@ PATH is value."
   (neo-buffer--newline-and-begin))
 
 (defun neo-buffer--insert-dir-entry (node depth expanded)
-  (let ((btn-start-pos nil)
-        (btn-end-pos nil)
-        (node-short-name (neo-path--file-short-name node)))
+  (let ((node-short-name (neo-path--file-short-name node)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (when (memq 'char neo-vc-integration)
       (insert-char ?\s 2))
-    (setq btn-start-pos (point))
-    (neo-buffer--insert-fold-symbol (if expanded 'open 'close))
-    (neo-buffer--insert-with-face (concat node-short-name "/")
-                                  'neo-dir-link-face)
-    (setq btn-end-pos (point))
-    (make-button btn-start-pos
-                 btn-end-pos
-                 'follow-link t
-                 'face neo-button-face
-                 'neo-full-path node
-                 'keymap neotree-dir-button-keymap)
+    (neo-buffer--insert-fold-symbol
+     (if expanded 'open 'close))
+    (insert-button (concat node-short-name "/")
+                   'follow-link t
+                   'face neo-dir-link-face
+                   'neo-full-path node
+                   'keymap neotree-dir-button-keymap)
     (neo-buffer--node-list-set nil node)
     (neo-buffer--newline-and-begin)))
 
 (defun neo-buffer--insert-file-entry (node depth)
   (let ((node-short-name (neo-path--file-short-name node))
-        (vc (when neo-vc-integration (neo-vc-for-node node))))
+        (vc (or neo-vc-integration (neo-vc-for-node node)
+                ?\s)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
-    (neo-buffer--insert-fold-symbol 'leaf)
     (when (memq 'char neo-vc-integration)
       (insert-char (car vc))
       (insert-char ?\s))
+    (neo-buffer--insert-fold-symbol 'leaf)
     (insert-button node-short-name
                    'follow-link t
                    'face (if (memq 'face neo-vc-integration)
