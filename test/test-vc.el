@@ -1,4 +1,4 @@
-;;; neotree-test.el --- test utilities
+;;; test-vc.el --- test cases
 
 ;; Copyright (C) 2014 jaypei
 
@@ -22,26 +22,23 @@
 
 ;;; Code:
 
-(defmacro neo-test--with-temp-dir (&rest body)
-  (declare (indent 0) (debug t))
-  `(let* ((temp-cwd (file-name-as-directory (make-temp-file "dir" t)))
-          (temp-pd (neo-path--join temp-cwd "neo-test" "./")))
-     (mkdir temp-pd)
-     (unwind-protect
-         (let ((default-directory temp-cwd)) ,@body)
-       (delete-directory temp-cwd t))))
+(require 'neotree)
+(require 'neotree-test)
 
-(defun neo-test--with-temp-dir-open ()
-  (neo-test--with-temp-dir
-    (write-region "" nil "file-1")
-    (write-region "hello" nil "file-2")
-    (neotree-dir temp-cwd)))
+(neo-test--try-open
+ neo-test-vc-mode-with-face
+ (shell-command-to-string "git init")
+ (setq neo-vc-integration '(face)))
 
-(defmacro neo-test--try-open (name &rest body)
-  (declare (indent 0) (debug t))
-  `(ert-deftest ,name ()
-     ,@body
-     (neo-test--with-temp-dir-open)))
+(neo-test--try-open
+ neo-test-vc-mode-with-char
+ (shell-command-to-string "git init")
+ (setq neo-vc-integration '(char)))
 
-(provide 'neotree-test)
-;;; neotree-test.el ends here
+(neo-test--try-open
+ neo-test-vc-mode-with-char-face
+ (shell-command-to-string "git init")
+ (setq neo-vc-integration '(char face)))
+
+
+;;; test-vc.el ends here

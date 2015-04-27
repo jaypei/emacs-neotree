@@ -1178,8 +1178,7 @@ PATH is value."
 
 (defun neo-buffer--insert-file-entry (node depth)
   (let ((node-short-name (neo-path--file-short-name node))
-        (vc (or neo-vc-integration (neo-vc-for-node node)
-                ?\s)))
+        (vc (when neo-vc-integration (neo-vc-for-node node))))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (when (memq 'char neo-vc-integration)
       (insert-char (car vc))

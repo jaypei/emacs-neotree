@@ -16,6 +16,7 @@ test: compile
 		-l test/test-utils.el \
 		-l test/test-cmds.el \
 		-l test/test-buffer.el \
+		-l test/test-vc.el \
 		--eval "(let (pop-up-windows) (ert t))"
 
 test-batch: compile
