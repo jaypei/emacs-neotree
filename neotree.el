@@ -1819,7 +1819,9 @@ automatically."
   (if neo-smart-open
       (neotree-find)
     (neo-global--open))
-  (neo-global--select-window))
+  (neo-global--select-window)
+  (when evil-mode
+    (evil-local-mode 0)))
 
 ;;;###autoload
 (defun neotree-hide ()
