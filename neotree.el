@@ -1822,7 +1822,9 @@ automatically."
   "Show the NeoTree window."
   (interactive)
   (if neo-project-root-open
-      (neo-global--open-dir (projectile-project-root))
+      (let ((project-root (or (projectile-project-p)
+                              (neo-path--get-working-dir))))
+        (neo-global--open-dir project-root))
     (if neo-smart-open
         (neotree-find)
       (neo-global--open)))
