@@ -125,6 +125,12 @@ buffer-local wherever it is set."
        (neo-buffer--lock-width))
      rlt))
 
+(defmacro neo-window--fit-to-contents ()
+  "Shrinks the Neotree window to fit its contents"
+  '(neo-buffer--with-resizable-window
+    (let ((fit-window-to-buffer-horizontally t))
+      (fit-window-to-buffer))))
+
 (defmacro neotree-make-executor (&rest fn-form)
   "Make an open event handler, FN-FORM is event handler form."
   (let* ((get-args-fn
@@ -221,6 +227,11 @@ the mode-line format."
 (defcustom neo-window-width 25
   "*Specifies the width of the NeoTree window."
   :type 'integer
+  :group 'neotree)
+
+(defcustom neo-fit-to-contents nil
+  "*If non-nil, NeoTree window will ignore neo-window-width and automatically resize window with fit-window-to-buffer."
+  :type 'boolean
   :group 'neotree)
 
 (defcustom neo-keymap-style 'default
@@ -1582,7 +1593,9 @@ ARG is ignored."
         (neo-buffer--refresh t)
         (when neo-auto-indent-point
           (when new-state (forward-line 1))
-          (neo-point-auto-indent))))))
+          (neo-point-auto-indent)))
+      (if neo-fit-to-contents
+          (neo-window--fit-to-contents)))))
 
 (defun neo-open-dired (full-path &optional arg)
   "Open file or directory node in `dired-mode'.
@@ -1819,6 +1832,8 @@ automatically."
   (if neo-smart-open
       (neotree-find)
     (neo-global--open))
+  (if neo-fit-to-contents
+      (neo-window--fit-to-contents))
   (neo-global--select-window))
 
 ;;;###autoload
