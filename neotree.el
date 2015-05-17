@@ -213,6 +213,11 @@ the mode-line format."
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-project-root-open nil
+  "*If non-nil, every time when the neotree window is opened, it will try to open the Projectile root as neotree root."
+  :type 'boolean
+  :group 'neotree)
+
 (defcustom neo-show-hidden-files nil
   "*If non-nil, the hidden files are shown by default."
   :type 'boolean
@@ -1816,9 +1821,11 @@ automatically."
 (defun neotree-show ()
   "Show the NeoTree window."
   (interactive)
-  (if neo-smart-open
-      (neotree-find)
-    (neo-global--open))
+  (if neo-project-root-open
+      (neo-global--open-dir (projectile-project-root))
+    (if neo-smart-open
+        (neotree-find)
+      (neo-global--open)))
   (neo-global--select-window))
 
 ;;;###autoload
