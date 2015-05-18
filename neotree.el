@@ -1813,7 +1813,9 @@ automatically."
   (interactive)
   (cond
    ((fboundp 'projectile-project-root)
-    (neotree-dir (projectile-project-root)))
+    (neotree-dir (projectile-project-root))
+    (if neo-fit-to-contents
+        (neo-window--fit-to-contents)))
    (t
     (error "Projectile is not available"))))
 
