@@ -1362,6 +1362,22 @@ If there is no button in current line, then return DEFAULT."
       (neo-buffer--refresh t)
       (message "Rename successed."))))
 
+(defun neo-buffer--copy-node ()
+  "Copies current node as another path."
+  (interactive)
+  (let* ((current-path (neo-buffer--get-filename-current-line))
+         (buffer (find-buffer-visiting current-path))
+         to-path
+         msg)
+    (unless (null current-path)
+      (setq msg (format "Copy [%s] to: " (neo-path--file-short-name current-path)))
+      (setq to-path (read-file-name msg (file-name-directory current-path)))
+      (if (file-directory-p current-path)
+          (copy-directory current-path to-path)
+        (copy-file current-path to-path))
+      (neo-buffer--refresh t)
+      (message "Copy successed."))))
+
 (defun neo-buffer--select-file-node (file &optional recursive-p)
   "Select the node that corresponds to the FILE.
 If RECURSIVE-P is non nil, find files will recursively."
@@ -1765,6 +1781,11 @@ If the current node is the first node then the last node is selected."
   "Rename current node."
   (interactive)
   (neo-buffer--rename-node))
+
+(defun neotree-copy-node ()
+  "Copy current node."
+  (interactive)
+  (neo-buffer--copy-node))
 
 (defun neotree-hidden-file-toggle ()
   "Toggle show hidden files."
