@@ -223,6 +223,11 @@ the mode-line format."
   :type 'integer
   :group 'neotree)
 
+(defcustom neo-modern-sidebar nil
+  "*If non-nil, NeoTree window will always be the left-most window with a full height, like a modern sidebar."
+  :type 'boolean
+  :group 'neotree)
+
 (defcustom neo-keymap-style 'default
   "*The default keybindings for neotree-mode-map."
   :group 'neotree
@@ -607,8 +612,12 @@ it will create the neotree window and return it."
   (let ((window nil)
         (buffer (neo-global--get-buffer t))
         (curr-window-buffer (current-buffer)))
-    (select-window (neo-global--get-first-window))
-    (split-window-horizontally)
+    (if neo-modern-sidebar
+        (progn
+          (split-window (frame-root-window (window-frame)) nil 'left)
+          (select-window (neo-global--get-first-window)))
+      (select-window (neo-global--get-first-window))
+      (split-window-horizontally))
     (setq window (selected-window))
     (neo-window--init window buffer)
     (setq neo-global--window window)
