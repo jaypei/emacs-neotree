@@ -43,7 +43,9 @@
   "Name of the buffer where neotree shows directory contents.")
 
 (defconst neo-dir
-  (expand-file-name (file-name-directory (locate-library "neotree"))))
+  (expand-file-name (if load-file-name
+                        (file-name-directory load-file-name)
+                      default-directory)))
 
 (defconst neo-header-height 5)
 
