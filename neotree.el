@@ -1058,8 +1058,8 @@ Return nil if DIR is not an existing directory."
           (and (equal name 'close) (funcall n-insert-symbol "▸ "))
           (and (equal name 'leaf)  (funcall n-insert-symbol "  "))))
      ((and window-system (equal neo-theme 'uni))
-      (or (and (equal name 'open)  (funcall n-insert-symbol "▼  "))
-          (and (equal name 'close) (funcall n-insert-symbol "►  "))
+      (or (and (equal name 'open)  (funcall n-insert-symbol "  "))
+          (and (equal name 'close) (funcall n-insert-symbol "  "))
           (and (equal name 'leaf)  (funcall n-insert-symbol "   "))))
      (t
       (or (and (equal name 'open)  (funcall n-insert-symbol "-"))
