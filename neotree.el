@@ -482,6 +482,8 @@ The car of the pair will store fullpath, and cdr will store line number.")
 (defvar-local neo-buffer--node-list-1 nil
   "The model of current NeoTree buffer (temp).")
 
+(defvar-local neo-buffer--persist-show nil
+  "A local variable for `neo-persist-show'.")
 
 ;;
 ;; Major mode definitions
@@ -620,11 +622,12 @@ it will create the neotree window and return it."
         (progn
           (split-window (frame-root-window (window-frame)) nil 'left)
           (select-window (neo-global--get-first-window)))
-      (select-window (neo-global--get-first-window))
-      (split-window-horizontally))
+      (progn
+        (select-window (neo-global--get-first-window))
+        (split-window-horizontally)))
     (setq window (selected-window))
     (neo-window--init window buffer)
-    (setq neo-global--window window)
+    (neo-global--attach)
     (select-window (or (get-buffer-window curr-window-buffer)
                        window))
     window))
@@ -713,15 +716,33 @@ The description of ARG is in `neotree-enter'."
   ;; open node in last active window
   (select-window (get-mru-window)))
 
+(defun neo-global--detach ()
+  "Detach the global neotree buffer."
+  (neo-global--with-buffer
+    (setq neo-buffer--persist-show nil)
+    (neo-buffer--unlock-width))
+  (setq neo-global--buffer nil)
+  (setq neo-global--window nil))
+
+(defun neo-global--attach ()
+  "Attach the global neotree buffer"
+  (setq neo-global--buffer (get-buffer neo-buffer-name))
+  (setq neo-global--window (get-buffer-window
+                            neo-global--buffer))
+  (neo-global--with-buffer
+    (setq neo-buffer--persist-show neo-persist-show)
+    (neo-buffer--lock-width)))
+
 ;;
 ;; Advices
 ;;
 
 (defadvice delete-other-windows
-  (around neotree-delete-other-windows activate)
+    (around neotree-delete-other-windows activate)
   "Delete all windows except neotree."
   (interactive)
-  (if neo-persist-show
+  (if (neo-global--with-buffer
+        neo-buffer--persist-show)
       (mapc
        (lambda (window)
          (unless (string-equal (buffer-name (window-buffer window))
@@ -731,7 +752,7 @@ The description of ARG is in `neotree-enter'."
     ad-do-it))
 
 (defadvice delete-window
-  (around neotree-delete-window activate)
+    (around neotree-delete-window activate)
   "Stop to delete window which it is the last window except NeoTree."
   (if (and neo-dont-be-alone
            (not (eq window
@@ -741,7 +762,7 @@ The description of ARG is in `neotree-enter'."
     ad-do-it))
 
 (defadvice mouse-drag-vertical-line
-  (around neotree-drag-vertical-line (start-event) activate)
+    (around neotree-drag-vertical-line (start-event) activate)
   "Drag and drop is not affected by the lock."
   (neo-buffer--with-resizable-window
    ad-do-it))
@@ -749,42 +770,16 @@ The description of ARG is in `neotree-enter'."
 (eval-after-load 'popwin
   '(progn
      (defadvice popwin:popup-buffer
-       (around neotree/popwin-popup-buffer activate)
-       (let ((neobuffer (get-buffer neo-buffer-name))
-             (neopersist neo-persist-show))
-         (when neobuffer
-           (setq neo-persist-show nil)
-           (neo-global--with-buffer
-             (neo-buffer--unlock-width)))
-         ad-do-it
-         (when neobuffer
-           (setq neo-persist-show neopersist)
-           (neo-global--with-buffer
-             (neo-buffer--lock-width))
-           ;; set neotree global window and buffer to the new ones
-           ;; created by popwin
-           (setq neo-global--buffer (get-buffer neo-buffer-name))
-           (setq neo-global--window (get-buffer-window
-                                     neo-global--buffer)))))
+         (around neotree/popwin-popup-buffer activate)
+       (neo-global--detach)
+       ad-do-it
+       (neo-global--attach))
 
      (defadvice popwin:close-popup-window
-       (around neotree/popwin-close-popup-window activate)
-       (let ((neobuffer (get-buffer neo-buffer-name))
-             (neopersist neo-persist-show))
-         (when neobuffer
-           (setq neo-persist-show nil)
-           (neo-global--with-buffer
-             (neo-buffer--unlock-width)))
-         ad-do-it
-         (when neobuffer
-           (setq neo-persist-show neopersist)
-           (neo-global--with-buffer
-             (neo-buffer--lock-width))
-           ;; set neotree global window and buffer to the new ones
-           ;; created by popwin
-           (setq neo-global--buffer (get-buffer neo-buffer-name))
-           (setq neo-global--window (get-buffer-window
-                                     neo-global--buffer)))))))
+         (around neotree/popwin-close-popup-window activate)
+       (neo-global--detach)
+       ad-do-it
+       (neo-global--attach))))
 
 ;;
 ;; Hooks
