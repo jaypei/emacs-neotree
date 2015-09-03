@@ -225,6 +225,11 @@ the mode-line format."
   :type 'integer
   :group 'neotree)
 
+(defcustom neo-window-fixed-size t
+  "*If non-nil, NeoTree window use fixed size."
+  :type 'integer
+  :group 'neotree)
+
 (defcustom neo-modern-sidebar nil
   "*If non-nil, NeoTree window will always be the left-most window with a full height, like a modern sidebar."
   :type 'boolean
@@ -1351,7 +1356,8 @@ If there is no button in current line, then return DEFAULT."
 
 (defun neo-buffer--lock-width ()
   "Lock the width size for NeoTree window."
-  (setq window-size-fixed 'width))
+  (if neo-window-fixed-size
+      (setq window-size-fixed 'width)))
 
 (defun neo-buffer--unlock-width ()
   "Unlock the width size for NeoTree window."
