@@ -169,7 +169,7 @@ buffer-local wherever it is set."
   :type 'boolean
   :group 'neotree)
 
-(defcustom neo-banner-message "Press ? for help."
+(defcustom neo-banner-message nil
   "*The banner message of neotree window."
   :type 'string
   :group 'neotree)
@@ -1148,8 +1148,6 @@ PATH is value."
     (neo-buffer--newline-and-begin)))
 
 (defun neo-buffer--insert-root-entry (node)
-  (when (or neo-banner-message neo-show-updir-line)
-    (neo-buffer--newline-and-begin))
   (when neo-show-updir-line
     (insert-button ".."
                    'action '(lambda (x) (neotree-change-root))
