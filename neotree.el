@@ -263,6 +263,11 @@ the mode-line format."
   :type 'hook
   :group 'neotree)
 
+(defcustom neo-after-create-hook nil
+  "Hooks called after creating the neotree buffer."
+  :type 'hook
+  :group 'neotree)
+
 (defcustom neo-vc-integration nil
   "If non-nil, show VC status."
   :group 'neotree-vc
@@ -630,6 +635,7 @@ it will create the neotree window and return it."
     (neo-global--attach)
     (select-window (or (get-buffer-window curr-window-buffer)
                        window))
+    (run-hook-with-args 'neo-after-create-hook '(window))
     window))
 
 (defun neo-global--get-buffer (&optional init-p)
