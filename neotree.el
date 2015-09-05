@@ -545,6 +545,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "C-x 3")   'neotree-empty-fn)
     (define-key map (kbd "C-c C-f") 'find-file-other-window)
     (define-key map (kbd "C-c C-c") 'neotree-change-root)
+    (define-key map (kbd "C-c c")   'neotree-dir)
     (cond
      ((eq neo-keymap-style 'default)
       (define-key map (kbd "C-c C-n") 'neotree-create-node)
@@ -626,8 +627,7 @@ it will create the neotree window and return it."
 (defun neo-global--create-window ()
   "Create global neotree window."
   (let ((window nil)
-        (buffer (neo-global--get-buffer t))
-        (curr-window-buffer (current-buffer)))
+        (buffer (neo-global--get-buffer t)))
     (if neo-modern-sidebar
         (progn
           (split-window (frame-root-window (window-frame)) nil 'left)
@@ -638,9 +638,7 @@ it will create the neotree window and return it."
     (setq window (selected-window))
     (neo-window--init window buffer)
     (neo-global--attach)
-    (select-window (or (get-buffer-window curr-window-buffer)
-                       window))
-    (run-hook-with-args 'neo-after-create-hook '(window))
+    (neo-global--reset-window-size)
     window))
 
 (defun neo-global--get-buffer (&optional init-p)
@@ -742,7 +740,14 @@ The description of ARG is in `neotree-enter'."
                             neo-global--buffer))
   (neo-global--with-buffer
     (setq neo-buffer--persist-show neo-persist-show)
-    (neo-buffer--lock-width)))
+    (neo-buffer--lock-width))
+  (run-hook-with-args 'neo-after-create-hook '(window)))
+
+(defun neo-global--reset-window-size ()
+  "Set neotree window width to `neo-window-width'."
+  (neo-global--with-window
+    (neo-buffer--with-resizable-window
+     (neo-util--set-window-width (neo-global--get-window) neo-window-width))))
 
 ;;
 ;; Advices
@@ -780,17 +785,25 @@ The description of ARG is in `neotree-enter'."
 
 (eval-after-load 'popwin
   '(progn
-     (defadvice popwin:popup-buffer
+     (defadvice popwin:create-popup-window
          (around neotree/popwin-popup-buffer activate)
-       (neo-global--detach)
-       ad-do-it
-       (neo-global--attach))
+       (let ((neo-exists-p (neo-global--window-exists-p)))
+         (when neo-exists-p
+           (neo-global--detach))
+         ad-do-it
+         (when neo-exists-p
+           (neo-global--attach)
+           (neo-global--reset-window-size))))
 
      (defadvice popwin:close-popup-window
          (around neotree/popwin-close-popup-window activate)
-       (neo-global--detach)
-       ad-do-it
-       (neo-global--attach))))
+       (let ((neo-exists-p (neo-global--window-exists-p)))
+         (when neo-exists-p
+           (neo-global--detach))
+         ad-do-it
+         (when neo-exists-p
+           (neo-global--attach)
+           (neo-global--reset-window-size))))))
 
 ;;
 ;; Hooks
@@ -1017,6 +1030,15 @@ Return nil if DIR is not an existing directory."
              (file-directory-p filename)
              (neo-path--has-subfile-p filename))
         (neo-util--kill-buffers-for-path filename)))))
+
+(defun neo-util--set-window-width (window n)
+  "Make WINDOW N columns width."
+  (let ((w (max n window-min-width)))
+    (unless (null window)
+      (if (> (window-width) w)
+          (shrink-window-horizontally (- (window-width) w))
+        (if (< (window-width) w)
+            (enlarge-window-horizontally (- w (window-width))))))))
 
 (defun neo-point-auto-indent ()
   "Put the point on the first letter of the current node."
@@ -1530,18 +1552,8 @@ If DIR-FN is non-nil, it will executed when a dir node."
 NeoTree buffer is BUFFER."
   (neo-buffer--with-resizable-window
    (switch-to-buffer buffer)
-   (neo-window--set-width window neo-window-width)
    (set-window-dedicated-p window t))
   window)
-
-(defun neo-window--set-width (window n)
-  "Make neotree window(WINDOW) N columns width."
-  (let ((w (max n window-min-width)))
-    (unless (null window)
-      (if (> (window-width) w)
-          (shrink-window-horizontally (- (window-width) w))
-        (if (< (window-width) w)
-            (enlarge-window-horizontally (- w (window-width))))))))
 
 (defun neo-window--zoom (method)
   "Zoom the NeoTree window, the METHOD should one of these options:
@@ -1551,7 +1563,7 @@ NeoTree buffer is BUFFER."
    ((eq method 'maximize)
     (maximize-window))
    ((eq method 'minimize)
-    (neo-window--set-width (selected-window) neo-window-width))
+    (neo-util--set-window-width (selected-window) neo-window-width))
    ((eq method 'zoom-in)
     (shrink-window-horizontally 2))
    ((eq method 'zoom-out)
