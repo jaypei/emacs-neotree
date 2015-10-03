@@ -154,6 +154,12 @@ buffer-local wherever it is set."
   :group 'neotree
   :link '(info-link "(neotree)Configuration"))
 
+(defcustom neo-window-position 'left
+  "*The position of NeoTree window."
+  :group 'neotree
+  :type '(choice (const left)
+                 (const right)))
+
 (defcustom neo-create-file-auto-open nil
   "*If non-nil, the file will auto open when created."
   :type 'boolean
@@ -610,22 +616,21 @@ it will create the neotree window and return it."
           (neo-global--create-window)))
   neo-global--window)
 
-(defun neo-global--get-first-window ()
-  "Return the top-left window."
-  (let (w)
-    (if (null w)
-        (setq w (window-at 0 0)))
-    (if (null w)
-        (setq w (selected-window)))
-    w))
+(defun neo-global--get-position-window (position)
+  "Return the window by top and POSITION."
+  (or (window-at (if (eq position 'left) 0 (frame-width)) 0)
+      (selected-window)))
 
 (defun neo-global--create-window ()
   "Create global neotree window."
   (let ((window nil)
         (buffer (neo-global--get-buffer t)))
-    (split-window (frame-root-window (window-frame (selected-window))) nil 'left)
-    (select-window (neo-global--get-first-window))
-    (setq window (selected-window))
+    (split-window (neo-global--get-position-window neo-window-position)
+                  nil
+                  (if (eq neo-window-position 'left) 'right 'left))
+    (setq window
+          (select-window
+           (neo-global--get-position-window neo-window-position)))
     (neo-window--init window buffer)
     (neo-global--attach)
     (neo-global--reset-window-size)
