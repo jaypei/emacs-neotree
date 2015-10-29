@@ -1395,7 +1395,7 @@ If there is no button in current line, then return DEFAULT."
             (set-visited-file-name to-path nil t)))
       (rename-file current-path to-path)
       (neo-buffer--refresh t)
-      (message "Rename successed."))))
+      (message "Rename successful."))))
 
 (defun neo-buffer--copy-node ()
   "Copies current node as another path."
@@ -1411,7 +1411,7 @@ If there is no button in current line, then return DEFAULT."
           (copy-directory current-path to-path)
         (copy-file current-path to-path))
       (neo-buffer--refresh t)
-      (message "Copy successed."))))
+      (message "Copy successful."))))
 
 (defun neo-buffer--select-file-node (file &optional recursive-p)
   "Select the node that corresponds to the FILE.
