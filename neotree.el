@@ -742,7 +742,7 @@ The description of ARG is in `neotree-enter'."
   "Set neotree window width to WIDTH."
   (neo-global--with-window
     (neo-buffer--with-resizable-window
-     (neo-util--set-window-width window width))))
+     (neo-util--set-window-width (selected-window) width))))
 
 (defun neo-global--reset-width ()
   "Set neotree window width to `neo-window-width'."
