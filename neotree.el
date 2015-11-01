@@ -232,8 +232,8 @@ the mode-line format."
   :group 'neotree)
 
 (defcustom neo-window-fixed-size t
-  "*If non-nil, NeoTree window use fixed size."
-  :type 'integer
+  "*If the neotree windows is fixed, it won't be resize when rebalance windows."
+  :type 'boolean
   :group 'neotree)
 
 (defcustom neo-keymap-style 'default
@@ -633,7 +633,7 @@ it will create the neotree window and return it."
            (neo-global--get-position-window neo-window-position)))
     (neo-window--init window buffer)
     (neo-global--attach)
-    (neo-global--reset-window-size)
+    (neo-global--reset-width)
     window))
 
 (defun neo-global--get-buffer (&optional init-p)
@@ -738,11 +738,15 @@ The description of ARG is in `neotree-enter'."
     (neo-buffer--lock-width))
   (run-hook-with-args 'neo-after-create-hook '(window)))
 
-(defun neo-global--reset-window-size ()
-  "Set neotree window width to `neo-window-width'."
+(defun neo-global--set-window-width (width)
+  "Set neotree window width to WIDTH."
   (neo-global--with-window
     (neo-buffer--with-resizable-window
-     (neo-util--set-window-width (neo-global--get-window) neo-window-width))))
+     (neo-util--set-window-width window width))))
+
+(defun neo-global--reset-width ()
+  "Set neotree window width to `neo-window-width'."
+  (neo-global--set-window-width neo-window-width))
 
 ;;
 ;; Advices
@@ -778,6 +782,19 @@ The description of ARG is in `neotree-enter'."
   (neo-buffer--with-resizable-window
    ad-do-it))
 
+(defadvice balance-windows
+    (around neotree-balance-windows activate)
+  "Fix neotree inhibits balance-windows."
+  (if (neo-global--window-exists-p)
+      (let (old-width)
+        (neo-global--with-window
+          (setq old-width (window-width)))
+        (neo-buffer--with-resizable-window
+         ad-do-it)
+        (neo-global--with-window
+          (neo-global--set-window-width old-width)))
+    ad-do-it))
+
 (eval-after-load 'popwin
   '(progn
      (defadvice popwin:create-popup-window
@@ -788,7 +805,7 @@ The description of ARG is in `neotree-enter'."
          ad-do-it
          (when neo-exists-p
            (neo-global--attach)
-           (neo-global--reset-window-size))))
+           (neo-global--reset-width))))
 
      (defadvice popwin:close-popup-window
          (around neotree/popwin-close-popup-window activate)
@@ -798,7 +815,7 @@ The description of ARG is in `neotree-enter'."
          ad-do-it
          (when neo-exists-p
            (neo-global--attach)
-           (neo-global--reset-window-size))))))
+           (neo-global--reset-width))))))
 
 ;;
 ;; Hooks
