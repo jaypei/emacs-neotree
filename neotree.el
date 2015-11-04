@@ -593,6 +593,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
 ;; Global methods
 ;;
 
+;;;###autoload
 (defun neo-global--window-exists-p ()
   "Return non-nil if neotree window exists."
   (and (not (null (window-buffer neo-global--window)))
@@ -671,6 +672,7 @@ If INIT-P is non-nil and global NeoTree buffer not exists, then create it."
         (neo-global--open-dir (neo-path--get-working-dir))
       (neo-global--get-window t))))
 
+;;;###autoload
 (defun neo-global--open-dir (path)
   "Show the NeoTree window, and change root to PATH."
   (neo-global--get-window t)
