@@ -526,6 +526,8 @@ The car of the pair will store fullpath, and cdr will store line number.")
                                      :file-fn 'neo-open-file-vertical-split))
     (define-key map (kbd "-")       (neotree-make-executor
                                      :file-fn 'neo-open-file-horizontal-split))
+    (define-key map (kbd "a")       (neotree-make-executor
+                                     :file-fn 'neo-open-file-ace-window))
     (define-key map (kbd "d")       (neotree-make-executor
                                      :dir-fn 'neo-open-dired))
     (define-key map (kbd "g")       'neotree-refresh)
@@ -708,6 +710,9 @@ The description of ARG is in `neotree-enter'."
          (fboundp 'select-window-by-number))
     (select-window-by-number arg))
    ;; open node in a new vertically split window
+   ((and (stringp arg) (string= arg "a")
+         (fboundp 'ace-select-window))
+    (ace-select-window))
    ((and (stringp arg) (string= arg "|"))
     (select-window (get-mru-window))
     (split-window-right)
@@ -1671,6 +1676,11 @@ FULL-PATH and ARG are the same as `neo-open-file'."
 FULL-PATH and ARG are the same as `neo-open-file'."
   (neo-open-file full-path "-"))
 
+(defun neo-open-file-ace-window (full-path arg)
+  "Open the current node in a window chosen by ace-window.
+FULL-PATH and ARG are the same as `neo-open-file'."
+  (neo-open-file full-path "a"))
+
 (defun neotree-change-root ()
   "Change root to current node dir.
 If current node is a file, then it will do nothing.
@@ -1930,6 +1940,10 @@ ARG are the same as `neo-open-file'."
   (interactive)
   (neo-buffer--execute nil 'neo-open-file-horizontal-split 'neo-open-dir))
 
+(defun neotree-enter-ace-window ()
+  "NeoTree open event, file node will be opened in window chosen by ace-window."
+  (interactive)
+  (neo-buffer--execute nil 'neo-open-file-ace-window 'neo-open-dir))
 
 (provide 'neotree)
 ;;; neotree.el ends here
