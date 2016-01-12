@@ -857,8 +857,12 @@ This procedure does not work when CONDP is the `null' function."
 (defun neo-util--walk-dir (path)
   "Return the subdirectories and subfiles of the PATH."
   (let* ((full-path (neo-path--file-truename path)))
-    (directory-files
-     path 'full directory-files-no-dot-files-regexp)))
+    (condition-case nil
+        (directory-files
+         path 'full directory-files-no-dot-files-regexp)
+      ('file-error
+       (message "Walk directory %S failed." path)
+       nil))))
 
 (defun neo-util--hidden-path-filter (node)
   "A filter function, if the NODE can not match each item in \
