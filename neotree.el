@@ -616,21 +616,15 @@ it will create the neotree window and return it."
           (neo-global--create-window)))
   neo-global--window)
 
-(defun neo-global--get-position-window (position)
-  "Return the window by top and POSITION."
-  (or (window-at (if (eq position 'left) 0 (frame-width)) 0)
-      (selected-window)))
-
 (defun neo-global--create-window ()
   "Create global neotree window."
   (let ((window nil)
-        (buffer (neo-global--get-buffer t)))
-    (split-window (neo-global--get-position-window neo-window-position)
-                  nil
-                  (if (eq neo-window-position 'left) 'right 'left))
+        (buffer (neo-global--get-buffer t))
+        (window-pos (if (eq neo-window-position 'left) 'left 'right)))
     (setq window
           (select-window
-           (neo-global--get-position-window neo-window-position)))
+           (split-window
+            (frame-root-window (window-frame)) nil window-pos)))
     (neo-window--init window buffer)
     (neo-global--attach)
     (neo-global--reset-width)
