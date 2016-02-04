@@ -1408,7 +1408,7 @@ If there is no button in current line, then return DEFAULT."
       (if buffer
           (with-current-buffer buffer
             (set-visited-file-name to-path nil t)))
-      (rename-file current-path to-path)
+      (rename-file current-path to-path 1)
       (neo-buffer--refresh t)
       (message "Rename successful."))))
 
