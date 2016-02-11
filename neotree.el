@@ -528,6 +528,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
                                      :file-fn 'neo-open-file-horizontal-split))
     (define-key map (kbd "d")       (neotree-make-executor
                                      :dir-fn 'neo-open-dired))
+    (define-key map (kbd "SPC")     'neotree-quick-look)
     (define-key map (kbd "g")       'neotree-refresh)
     (define-key map (kbd "q")       'neotree-hide)
     (define-key map (kbd "p")       'neotree-previous-line)
@@ -1912,6 +1913,13 @@ automatically."
 ARG are the same as `neo-open-file'."
   (interactive "P")
   (neo-buffer--execute arg 'neo-open-file 'neo-open-dir))
+
+(defun neotree-quick-look (&optional arg)
+  "Quick Look like NeoTree open event.
+ARG are the same as `neo-open-file'."
+  (interactive "P")
+  (neotree-enter arg)
+  (neo-global--select-window))
 
 (defun neotree-enter-vertical-split ()
   "NeoTree open event, file node will opened in new vertically split window."
