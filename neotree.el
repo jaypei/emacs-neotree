@@ -1246,7 +1246,8 @@ PATH is value."
     (neo-buffer--newline-and-begin)))
 
 (defun neo-vc-for-node (node)
-  (let* ((backend (vc-responsible-backend node))
+  (let* ((backend (ignore-errors
+                    (vc-responsible-backend node)))
          (vc-state (when backend (vc-state node backend))))
     (cons (cdr (assoc vc-state neo-vc-state-char-alist))
           (cl-case vc-state
