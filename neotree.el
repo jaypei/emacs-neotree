@@ -71,6 +71,8 @@ buffer-local wherever it is set."
       (list 'progn (list 'defvar var val docstring)
             (list 'make-variable-buffer-local (list 'quote var))))))
 
+;; Add autoload function for vc (#153).
+(autoload 'vc-responsible-backend "vc.el")
 
 ;;
 ;; Macros
