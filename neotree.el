@@ -626,7 +626,7 @@ it will create the neotree window and return it."
     (setq window
           (select-window
            (split-window
-            (frame-root-window (window-frame)) nil window-pos)))
+            (frame-root-window (window-frame nil)) nil window-pos)))
     (neo-window--init window buffer)
     (neo-global--attach)
     (neo-global--reset-width)
