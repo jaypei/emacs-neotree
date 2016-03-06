@@ -113,9 +113,8 @@ buffer-local wherever it is set."
   "Execute BODY in neotree buffer without read-only restriction."
   `(let (rlt)
      (neo-global--with-buffer
-       (setq buffer-read-only nil))
-     (setq rlt (progn ,@body))
-     (neo-global--with-buffer
+       (setq buffer-read-only nil)
+       (setq rlt (progn ,@body))
        (setq buffer-read-only t))
      rlt))
 
