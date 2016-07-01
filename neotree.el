@@ -161,6 +161,15 @@ buffer-local wherever it is set."
   :type '(choice (const left)
                  (const right)))
 
+(defcustom neo-display-action '(neo-default-display-fn)
+  "*Action to use for displaying NeoTree window.
+If you change the action so it doesn't use
+`neo-default-display-fn', then other variables such as
+`neo-window-position' won't be respected when opening NeoTree
+window."
+  :type 'sexp
+  :group 'neotree)
+
 (defcustom neo-create-file-auto-open nil
   "*If non-nil, the file will auto open when created."
   :type 'boolean
@@ -617,16 +626,23 @@ it will create the neotree window and return it."
           (neo-global--create-window)))
   neo-global--window)
 
+(defun neo-default-display-fn (buffer _alist)
+  "Display BUFFER to the left or right of the root window.
+The side is decided according to `neo-window-position'.
+The root window is the root window of the selected frame.
+_ALIST is ignored."
+  (let ((window-pos (if (eq neo-window-position 'left) 'left 'right)))
+    (split-window
+     (frame-root-window (window-frame (selected-window)))
+     nil window-pos)))
+
 (defun neo-global--create-window ()
   "Create global neotree window."
   (let ((window nil)
-        (buffer (neo-global--get-buffer t))
-        (window-pos (if (eq neo-window-position 'left) 'left 'right)))
+        (buffer (neo-global--get-buffer t)))
     (setq window
           (select-window
-           (split-window
-            (frame-root-window (window-frame (selected-window)))
-            nil window-pos)))
+           (display-buffer buffer neo-display-action)))
     (neo-window--init window buffer)
     (neo-global--attach)
     (neo-global--reset-width)
