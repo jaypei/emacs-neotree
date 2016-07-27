@@ -1148,7 +1148,7 @@ If NODE-PATH and LINE-POS is nil, it will be save the current line node position
         (mapc
          (lambda (x)
            (setq line-pos (1+ line-pos))
-           (when (neo-path--file-equal-p x node)
+           (when (string-equal x node)
              (throw 'line-pos-founded line-pos)))
          neo-buffer--node-list))
       (setq line-pos (cdr neo-buffer--cursor-pos))
