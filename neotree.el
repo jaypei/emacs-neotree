@@ -1027,6 +1027,11 @@ Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
         (setq rlt "/")))
     rlt))
 
+(defun neo-path--path-equal-p (path1 path2)
+  "Return non-nil if pathes PATH1 and PATH2 are the same path."
+  (string-equal (neo-path--strip path1)
+                (neo-path--strip path2)))
+
 (defun neo-path--file-equal-p (file1 file2)
   "Return non-nil if files FILE1 and FILE2 name the same file.
 If FILE1 or FILE2 does not exist, the return value is unspecified."
@@ -1148,8 +1153,9 @@ If NODE-PATH and LINE-POS is nil, it will be save the current line node position
         (mapc
          (lambda (x)
            (setq line-pos (1+ line-pos))
-           (when (string-equal x node)
-             (throw 'line-pos-founded line-pos)))
+           (unless (null x)
+             (when (neo-path--path-equal-p x node)
+               (throw 'line-pos-founded line-pos))))
          neo-buffer--node-list))
       (setq line-pos (cdr neo-buffer--cursor-pos))
       (throw 'line-pos-founded line-pos))
