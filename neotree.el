@@ -909,13 +909,13 @@ This procedure does not work when CONDP is the `null' function."
         (setq r-path (expand-file-name r-path current-dir))
         r-path)))
 
-(defun neo-path--shorten (path length)
-  "Shorten a given PATH to a specified LENGTH.
+(defun neo-path--shorten (path len)
+  "Shorten a given PATH to a specified LEN.
 This is needed for paths, which are to long for the window to display
 completely.  The function cuts of the first part of the path to remain
 the last folder (the current one)."
-  (if (> (string-width path) length)
-      (concat "<" (substring path (- (- length 1))))
+  (if (> (length path) len)
+      (concat "<" (substring path (- (- len 2))))
     path))
 
 (defun neo-path--insert-chroot-button (label path face)
