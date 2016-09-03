@@ -1352,21 +1352,23 @@ Return the new expand state for NODE (t for expanded, nil for collapsed)."
 (defun neo-buffer--refresh (save-pos-p)
   "Refresh the NeoTree buffer.
 If SAVE-POS-P is non-nil, it will be auto save current line number."
-  (let ((start-node neo-buffer--start-node))
-    (unless start-node
-      (setq start-node default-directory))
-    (neo-buffer--with-editing-buffer
-     ;; save context
-     (when save-pos-p
-       (neo-buffer--save-cursor-pos))
-     ;; starting refresh
-     (erase-buffer)
-     (neo-buffer--node-list-clear)
-     (neo-buffer--insert-banner)
-     (setq neo-buffer--start-line neo-header-height)
-     (neo-buffer--insert-tree start-node 1))
-    ;; restore context
-    (neo-buffer--goto-cursor-pos)))
+  (save-excursion
+    (let ((start-node neo-buffer--start-node))
+      (unless start-node
+        (setq start-node default-directory))
+
+      (neo-buffer--with-editing-buffer
+       ;; save context
+       (when save-pos-p
+         (neo-buffer--save-cursor-pos))
+       ;; starting refresh
+       (erase-buffer)
+       (neo-buffer--node-list-clear)
+       (neo-buffer--insert-banner)
+       (setq neo-buffer--start-line neo-header-height)
+       (neo-buffer--insert-tree start-node 1))
+      ;; restore context
+      (neo-buffer--goto-cursor-pos))))
 
 (defun neo-buffer--post-move ()
   "Reset current directory when position moved."
