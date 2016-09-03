@@ -1353,6 +1353,8 @@ Return the new expand state for NODE (t for expanded, nil for collapsed)."
   "Refresh the NeoTree buffer.
 If SAVE-POS-P is non-nil, it will be auto save current line number."
   (let ((start-node neo-buffer--start-node))
+    (unless start-node
+      (setq start-node default-directory))
     (neo-buffer--with-editing-buffer
      ;; save context
      (when save-pos-p
