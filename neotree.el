@@ -918,7 +918,8 @@ the last folder (the current one)."
          (if (> (length path) len)
              (concat "<" (substring path (- (- len 2))))
            path)))
-    (decode-coding-string result 'utf-8)))
+    (when result
+      (decode-coding-string result 'utf-8))))
 
 (defun neo-path--insert-chroot-button (label path face)
   (insert-button
