@@ -914,9 +914,11 @@ This procedure does not work when CONDP is the `null' function."
 This is needed for paths, which are to long for the window to display
 completely.  The function cuts of the first part of the path to remain
 the last folder (the current one)."
-  (if (> (length path) len)
-      (concat "<" (substring path (- (- len 2))))
-    path))
+  (let ((result
+         (if (> (length path) len)
+             (concat "<" (substring path (- (- len 2))))
+           path)))
+    (decode-coding-string result 'utf-8)))
 
 (defun neo-path--insert-chroot-button (label path face)
   (insert-button
@@ -1570,8 +1572,8 @@ If DIR-FN is non-nil, it will executed when a dir node."
                                              0 (- msg-directory-max-length 3))
                                   "...")))
     (propertize
-     (concat msg-index msg-directory msg-ndirs msg-nfiles)
-     'help-echo parent)))
+     (decode-coding-string (concat msg-index msg-directory msg-ndirs msg-nfiles) 'utf-8)
+     'help-echo (decode-coding-string parent 'utf-8))))
 
 ;;
 ;; Window methods
