@@ -1915,10 +1915,13 @@ automatically."
 (defun neotree-show ()
   "Show the NeoTree window."
   (interactive)
-  (if neo-smart-open
-      (neotree-find)
-    (neo-global--open))
-  (neo-global--select-window))
+  (let ((cw (selected-window)))  ;; save current window
+    (if neo-smart-open
+        (neotree-find)
+      (neo-global--open))
+    (neo-global--select-window)
+    (when neo-toggle-window-keep-p
+      (select-window cw))))
 
 ;;;###autoload
 (defun neotree-hide ()
