@@ -311,6 +311,11 @@ This variable is used in `neo-vc-for-node' when
   :type '(alist :key-type symbol
                 :value-type character))
 
+(defcustom neo-toggle-window-keep-p nil
+  "If not nil, not switch to *NeoTree* buffer when executing `neotree-toggle'."
+  :type 'boolean
+  :group 'neotree)
+
 ;;
 ;; Faces
 ;;
