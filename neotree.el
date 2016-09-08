@@ -1350,7 +1350,7 @@ Return the new expand state for NODE (t for expanded, nil for collapsed)."
     (dolist (leaf leafs)
       (neo-buffer--insert-file-entry leaf depth))))
 
-(defun neo-buffer--refresh (save-pos-p)
+(defun neo-buffer--refresh (save-pos-p &optional non-neotree-buffer)
   "Refresh the NeoTree buffer.
 If SAVE-POS-P is non-nil, it will be auto save current line number."
   (let ((start-node neo-buffer--start-node))
@@ -1361,6 +1361,8 @@ If SAVE-POS-P is non-nil, it will be auto save current line number."
      ;; save context
      (when save-pos-p
        (neo-buffer--save-cursor-pos))
+     (when non-neotree-buffer
+       (setq neo-buffer--start-node start-node))
      ;; starting refresh
      (erase-buffer)
      (neo-buffer--node-list-clear)
@@ -1866,7 +1868,11 @@ If the current node is the first node then the last node is selected."
 (defun neotree-refresh ()
   "Refresh the NeoTree buffer."
   (interactive)
-  (neo-buffer--refresh t))
+  (if (eq (current-buffer) (neo-global--get-buffer))
+      (neo-buffer--refresh t)
+    (progn
+      (save-excursion
+        (neo-buffer--refresh t t)))))
 
 (defun neotree-stretch-toggle ()
   "Make the NeoTree window toggle maximize/minimize."
