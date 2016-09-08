@@ -1875,9 +1875,11 @@ If the current node is the first node then the last node is selected."
   (interactive)
   (if (eq (current-buffer) (neo-global--get-buffer))
       (neo-buffer--refresh t)
-    (progn
-      (save-excursion
-        (neo-buffer--refresh t t)))))
+    (save-excursion
+      (let ((cw (selected-window)))  ;; save current window
+        (neo-buffer--refresh t t)
+        (when neo-toggle-window-keep-p
+          (select-window cw))))))
 
 (defun neotree-stretch-toggle ()
   "Make the NeoTree window toggle maximize/minimize."
