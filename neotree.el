@@ -316,6 +316,11 @@ This variable is used in `neo-vc-for-node' when
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-force-change-root nil
+  "If not nil, do not prompt when switching root."
+  :type 'boolean
+  :group 'neotree)
+
 ;;
 ;; Faces
 ;;
@@ -1643,7 +1648,8 @@ If path is nil and no buffer file name, then use DEFAULT-PATH,"
          (npath (if path path
                   (or (buffer-file-name) ndefault-path)))
          (do-open-p nil))
-    (if (and (not (neo-global--file-in-root-p npath))
+    (if (and (not neo-force-change-root)
+             (not (neo-global--file-in-root-p npath))
              (neo-global--window-exists-p))
         (setq do-open-p (yes-or-no-p "File not found in root path, do you want to change root?"))
       (setq do-open-p t))
