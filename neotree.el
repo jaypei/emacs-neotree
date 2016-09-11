@@ -201,12 +201,14 @@ window."
 `ascii' is the simplest style, it will use +/- to display the fold state,
 it suitable for terminal.
 `arrow' use unicode arrow.
-`nerd' use the nerdtree indentation mode and arrow."
+`nerd' use the nerdtree indentation mode and arrow.
+`uni' use unicode characters for arrow, folder and file."
   :group 'neotree
   :type '(choice (const classic)
                  (const ascii)
                  (const arrow)
-                 (const nerd)))
+                 (const nerd)
+                 (const uni)))
 
 (defcustom neo-mode-line-type 'neotree
   "*The mode-line type to display, `default' is a non-modified mode-line, \
@@ -1139,6 +1141,10 @@ Return nil if DIR is not an existing directory."
       (or (and (equal name 'open)  (funcall n-insert-symbol "▾ "))
           (and (equal name 'close) (funcall n-insert-symbol "▸ "))
           (and (equal name 'leaf)  (funcall n-insert-symbol "  "))))
+     ((and window-system (equal neo-theme 'uni))
+      (or (and (equal name 'open)  (funcall n-insert-symbol "  "))
+          (and (equal name 'close) (funcall n-insert-symbol "  "))
+          (and (equal name 'leaf)  (funcall n-insert-symbol "   "))))
      (t
       (or (and (equal name 'open)  (funcall n-insert-symbol "-"))
           (and (equal name 'close) (funcall n-insert-symbol "+")))))))
