@@ -1121,12 +1121,12 @@ Return nil if DIR is not an existing directory."
                  'xpm nil :ascent 'center :mask '(heuristic t)))
     image))
 
-(defun neo-buffer--insert-fold-symbol (name &optional file-name)
+(defun neo-buffer--insert-fold-symbol (name &optional node-name)
   "Write icon by NAME, the icon style affected by neo-theme.
 `open' write opened folder icon.
 `close' write closed folder icon.
 `leaf' write leaf icon.
-Optional FILE-NAME is used for the `icons' theme"
+Optional NODE-NAME is used for the `icons' theme"
   (let ((n-insert-image (lambda (n)
                           (insert-image (neo-buffer--get-icon n))))
         (n-insert-symbol (lambda (n)
@@ -1145,9 +1145,9 @@ Optional FILE-NAME is used for the `icons' theme"
           (and (equal name 'close) (funcall n-insert-symbol "▸ "))
           (and (equal name 'leaf)  (funcall n-insert-symbol "  "))))
      ((equal neo-theme 'icons)
-      (or (and (equal name 'open)  (insert (all-the-icons-icon-for-dir file-name "down")))
-          (and (equal name 'close) (insert (all-the-icons-icon-for-dir file-name "right")))
-          (and (equal name 'leaf)  (insert (format "\t\t\t%s\t" (all-the-icons-icon-for-file file-name))))))
+      (or (and (equal name 'open)  (insert (all-the-icons-icon-for-dir node-name "down")))
+          (and (equal name 'close) (insert (all-the-icons-icon-for-dir node-name "right")))
+          (and (equal name 'leaf)  (insert (format "\t\t\t%s\t" (all-the-icons-icon-for-file node-name))))))
      (t
       (or (and (equal name 'open)  (funcall n-insert-symbol "-"))
           (and (equal name 'close) (funcall n-insert-symbol "+")))))))
