@@ -5,6 +5,7 @@
 ;; Author: jaypei <jaypei97159@gmail.com>
 ;; URL: https://github.com/jaypei/emacs-neotree
 ;; Version: 0.3
+;; Package-Requires: ((all-the-icons "1.0.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -34,6 +35,8 @@
 ;;
 
 ;;; Code:
+
+(require 'all-the-icons)
 
 ;;
 ;; Constants
@@ -206,6 +209,7 @@ it suitable for terminal.
   :type '(choice (const classic)
                  (const ascii)
                  (const arrow)
+                 (const icons)
                  (const nerd)))
 
 (defcustom neo-mode-line-type 'neotree
@@ -1117,11 +1121,12 @@ Return nil if DIR is not an existing directory."
                  'xpm nil :ascent 'center :mask '(heuristic t)))
     image))
 
-(defun neo-buffer--insert-fold-symbol (name)
+(defun neo-buffer--insert-fold-symbol (name &optional file-name)
   "Write icon by NAME, the icon style affected by neo-theme.
 `open' write opened folder icon.
 `close' write closed folder icon.
-`leaf' write leaf icon."
+`leaf' write leaf icon.
+Optional FILE-NAME is used for the `icons' theme"
   (let ((n-insert-image (lambda (n)
                           (insert-image (neo-buffer--get-icon n))))
         (n-insert-symbol (lambda (n)
@@ -1139,6 +1144,10 @@ Return nil if DIR is not an existing directory."
       (or (and (equal name 'open)  (funcall n-insert-symbol "▾ "))
           (and (equal name 'close) (funcall n-insert-symbol "▸ "))
           (and (equal name 'leaf)  (funcall n-insert-symbol "  "))))
+     ((equal neo-theme 'icons)
+      (or (and (equal name 'open)  (insert (all-the-icons-icon-for-dir file-name "down")))
+          (and (equal name 'close) (insert (all-the-icons-icon-for-dir file-name "right")))
+          (and (equal name 'leaf)  (insert (format "\t\t\t%s\t" (all-the-icons-icon-for-file file-name))))))
      (t
       (or (and (equal name 'open)  (funcall n-insert-symbol "-"))
           (and (equal name 'close) (funcall n-insert-symbol "+")))))))
@@ -1259,7 +1268,7 @@ PATH is value."
     (when (memq 'char neo-vc-integration)
       (insert-char ?\s 2))
     (neo-buffer--insert-fold-symbol
-     (if expanded 'open 'close))
+     (if expanded 'open 'close) node)
     (insert-button (concat node-short-name "/")
                    'follow-link t
                    'face neo-dir-link-face
@@ -1275,7 +1284,7 @@ PATH is value."
     (when (memq 'char neo-vc-integration)
       (insert-char (car vc))
       (insert-char ?\s))
-    (neo-buffer--insert-fold-symbol 'leaf)
+    (neo-buffer--insert-fold-symbol 'leaf node-short-name)
     (insert-button node-short-name
                    'follow-link t
                    'face (if (memq 'face neo-vc-integration)
