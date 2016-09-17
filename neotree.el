@@ -36,8 +36,6 @@
 
 ;;; Code:
 
-(require 'all-the-icons)
-
 ;;
 ;; Constants
 ;;
@@ -1145,6 +1143,8 @@ Optional NODE-NAME is used for the `icons' theme"
           (and (equal name 'close) (funcall n-insert-symbol "▸ "))
           (and (equal name 'leaf)  (funcall n-insert-symbol "  "))))
      ((equal neo-theme 'icons)
+      (unless (require 'all-the-icons nil 'noerror)
+        (error "Package `all-the-icons' isn't installed"))
       (or (and (equal name 'open)  (insert (all-the-icons-icon-for-dir node-name "down")))
           (and (equal name 'close) (insert (all-the-icons-icon-for-dir node-name "right")))
           (and (equal name 'leaf)  (insert (format "\t\t\t%s\t" (all-the-icons-icon-for-file node-name))))))
