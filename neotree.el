@@ -1144,6 +1144,7 @@ Optional NODE-NAME is used for the `icons' theme"
      ((equal neo-theme 'icons)
       (unless (require 'all-the-icons nil 'noerror)
         (error "Package `all-the-icons' isn't installed"))
+      (setq-local tab-width 1)
       (or (and (equal name 'open)  (insert (all-the-icons-icon-for-dir node-name "down")))
           (and (equal name 'close) (insert (all-the-icons-icon-for-dir node-name "right")))
           (and (equal name 'leaf)  (insert (format "\t\t\t%s\t" (all-the-icons-icon-for-file node-name))))))
