@@ -175,11 +175,6 @@ window."
   :type 'boolean
   :group 'neotree)
 
-(defcustom neo-dont-be-alone nil
-  "*If non-nil, you cannot left neotree window alone."
-  :type 'boolean
-  :group 'neotree)
-
 (defcustom neo-persist-show t
   "*If non-nil, NeoTree window will not be turned off while press C\-x 1."
   :type 'boolean
