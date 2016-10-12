@@ -175,11 +175,6 @@ window."
   :type 'boolean
   :group 'neotree)
 
-(defcustom neo-dont-be-alone nil
-  "*If non-nil, you cannot left neotree window alone."
-  :type 'boolean
-  :group 'neotree)
-
 (defcustom neo-persist-show t
   "*If non-nil, NeoTree window will not be turned off while press C\-x 1."
   :type 'boolean
@@ -646,9 +641,7 @@ The side is decided according to `neo-window-position'.
 The root window is the root window of the selected frame.
 _ALIST is ignored."
   (let ((window-pos (if (eq neo-window-position 'left) 'left 'right)))
-    (split-window
-     (frame-root-window (window-frame (selected-window)))
-     nil window-pos)))
+    (display-buffer-in-side-window buffer `((side . ,window-pos)))))
 
 (defun neo-global--create-window ()
   "Create global neotree window."
@@ -780,30 +773,6 @@ The description of ARG is in `neotree-enter'."
 ;;
 ;; Advices
 ;;
-
-(defadvice delete-other-windows
-    (around neotree-delete-other-windows activate)
-  "Delete all windows except neotree."
-  (interactive)
-  (if (neo-global--with-buffer
-        neo-buffer--persist-show)
-      (mapc
-       (lambda (window)
-         (unless (string-equal (buffer-name (window-buffer window))
-                               neo-buffer-name)
-           (delete-window window)))
-       (cdr (window-list)))
-    ad-do-it))
-
-(defadvice delete-window
-    (around neotree-delete-window activate)
-  "Stop to delete window which it is the last window except NeoTree."
-  (if (and neo-dont-be-alone
-           (not (eq window
-                    neo-global--window))
-           (neo-global--alone-p))
-      (message "only one window other than neotree left. won't close")
-    ad-do-it))
 
 (defadvice mouse-drag-vertical-line
     (around neotree-drag-vertical-line (start-event) activate)
