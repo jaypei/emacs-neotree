@@ -10,7 +10,7 @@ A Emacs tree plugin like NerdTree for Vim.
 ## Screenshots
 
 ![NeoTree-1] (https://raw.githubusercontent.com/wiki/jaypei/emacs-neotree/imgs/neotree-1.png)
-[NeoTree-2](./screenshots/icons.png)
+![NeoTree-2](screenshots/icons.png "spacemacs")
 
 ## Installation
 
