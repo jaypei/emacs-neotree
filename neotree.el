@@ -175,11 +175,6 @@ window."
   :type 'boolean
   :group 'neotree)
 
-(defcustom neo-persist-show t
-  "*If non-nil, NeoTree window will not be turned off while press C\-x 1."
-  :type 'boolean
-  :group 'neotree)
-
 (defcustom neo-banner-message nil
   "*The banner message of neotree window."
   :type 'string
@@ -509,9 +504,6 @@ The car of the pair will store fullpath, and cdr will store line number.")
 (defvar-local neo-buffer--node-list-1 nil
   "The model of current NeoTree buffer (temp).")
 
-(defvar-local neo-buffer--persist-show nil
-  "A local variable for `neo-persist-show'.")
-
 ;;
 ;; Major mode definitions
 ;;
@@ -745,7 +737,6 @@ The description of ARG is in `neotree-enter'."
 (defun neo-global--detach ()
   "Detach the global neotree buffer."
   (neo-global--with-buffer
-    (setq neo-buffer--persist-show nil)
     (neo-buffer--unlock-width))
   (setq neo-global--buffer nil)
   (setq neo-global--window nil))
@@ -756,7 +747,6 @@ The description of ARG is in `neotree-enter'."
   (setq neo-global--window (get-buffer-window
                             neo-global--buffer))
   (neo-global--with-buffer
-    (setq neo-buffer--persist-show neo-persist-show)
     (neo-buffer--lock-width))
   (run-hook-with-args 'neo-after-create-hook '(window)))
 
