@@ -1967,5 +1967,10 @@ ARG are the same as `neo-open-file'."
   (interactive)
   (neo-buffer--execute nil 'neo-open-file-ace-window 'neo-open-dir))
 
+(defun neotree-copy-filepath-to-yank-ring ()
+  "Neotree convenience interactive function: file node path will be added to the kill ring."
+  (interactive)
+  (kill-new (neo-buffer--get-filename-current-line)))
+
 (provide 'neotree)
 ;;; neotree.el ends here
