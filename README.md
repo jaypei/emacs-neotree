@@ -63,7 +63,7 @@ Theme can be configed by setting **neo-theme**. For example, use *icons* for win
 system and *arrow* terminal.
 
 ```elisp
-(setq neo-theme (if window-system 'icons 'arrow))
+(setq neo-theme (if (display-graphic-p) 'icons 'arrow))
 ```
 
 **Note**: For users who want to use the `icons` theme. Pls make sure you have installed the
