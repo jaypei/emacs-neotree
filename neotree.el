@@ -1089,7 +1089,7 @@ Optional NODE-NAME is used for the `icons' theme"
                            (neo-buffer--insert-with-face
                             n 'neo-expand-btn-face))))
     (cond
-     ((and window-system (equal neo-theme 'classic))
+     ((and (display-graphic-p) (equal neo-theme 'classic))
       (or (and (equal name 'open)  (funcall n-insert-image "open"))
           (and (equal name 'close) (funcall n-insert-image "close"))
           (and (equal name 'leaf)  (funcall n-insert-image "leaf"))))
@@ -1100,7 +1100,7 @@ Optional NODE-NAME is used for the `icons' theme"
       (or (and (equal name 'open)  (funcall n-insert-symbol "▾ "))
           (and (equal name 'close) (funcall n-insert-symbol "▸ "))
           (and (equal name 'leaf)  (funcall n-insert-symbol "  "))))
-     ((equal neo-theme 'icons)
+     ((and (display-graphic-p) (equal neo-theme 'icons))
       (unless (require 'all-the-icons nil 'noerror)
         (error "Package `all-the-icons' isn't installed"))
       (setq-local tab-width 1)
