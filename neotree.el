@@ -249,6 +249,15 @@ the mode-line format."
   :type '(choice (const text)
                  (const button)))
 
+(defcustom neo-help-echo-style 'default
+  "The message NeoTree displays when the mouse moves onto nodes.
+`default' means the node name is displayed if it has a
+width (including the indent) larger than `neo-window-width', and
+`none' means NeoTree doesn't display any messages."
+  :group 'neotree
+  :type '(choice (const default)
+                 (const none)))
+
 (defcustom neo-click-changes-root nil
   "*If non-nil, clicking on a directory will change the current root to the directory."
   :type 'boolean
@@ -1221,6 +1230,15 @@ PATH is value."
                                   'neo-root-dir-face)))
   (neo-buffer--newline-and-begin))
 
+(defun neo-buffer--help-echo-message (node-name)
+  (cond
+   ((eq neo-help-echo-style 'default)
+    (if (<= (+ (current-column) (string-width node-name))
+            neo-window-width)
+        nil
+      node-name))
+   (t nil)))
+
 (defun neo-buffer--insert-dir-entry (node depth expanded)
   (let ((node-short-name (neo-path--file-short-name node)))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
@@ -1232,7 +1250,8 @@ PATH is value."
                    'follow-link t
                    'face neo-dir-link-face
                    'neo-full-path node
-                   'keymap neotree-dir-button-keymap)
+                   'keymap neotree-dir-button-keymap
+                   'help-echo (neo-buffer--help-echo-message node-short-name))
     (neo-buffer--node-list-set nil node)
     (neo-buffer--newline-and-begin)))
 
@@ -1250,7 +1269,8 @@ PATH is value."
                              (cdr vc)
                            neo-file-link-face)
                    'neo-full-path node
-                   'keymap neotree-file-button-keymap)
+                   'keymap neotree-file-button-keymap
+                   'help-echo (neo-buffer--help-echo-message node-short-name))
     (neo-buffer--node-list-set nil node)
     (neo-buffer--newline-and-begin)))
 
