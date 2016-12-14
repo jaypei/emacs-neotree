@@ -155,6 +155,11 @@ buffer-local wherever it is set."
   :group 'neotree
   :link '(info-link "(neotree)Configuration"))
 
+(defgroup neotree-confirmations nil
+  "Neotree confirmation customizations."
+  :prefix "neo-confirm-"
+  :group 'neotree)
+
 (defcustom neo-window-position 'left
   "*The position of NeoTree window."
   :group 'neotree
@@ -301,6 +306,48 @@ This variable is used in `neo-vc-for-node' when
   :group 'neotree-vc
   :type '(alist :key-type symbol
                 :value-type character))
+
+(defcustom neo-confirm-change-root 'yes-or-no-p
+  "Confirmation asking for permission to change root if file was not found in root path."
+  :type '(choice (function-item :tag "Verbose" yes-or-no-p)
+		 (function-item :tag "Succinct" y-or-n-p)
+		 (function-item :tag "Off" off-p))
+  :group 'neotree-confirmations)
+
+(defcustom neo-confirm-create-file 'yes-or-no-p
+  "Confirmation asking whether *NeoTree* should create a file."
+  :type '(choice (function-item :tag "Verbose" yes-or-no-p)
+		 (function-item :tag "Succinct" y-or-n-p)
+		 (function-item :tag "Off" off-p))
+  :group 'neotree-confirmations)
+
+(defcustom neo-confirm-create-directory 'yes-or-no-p
+  "Confirmation asking whether *NeoTree* should create a directory."
+  :type '(choice (function-item :tag "Verbose" yes-or-no-p)
+		 (function-item :tag "Succinct" y-or-n-p)
+		 (function-item :tag "Off" off-p))
+  :group 'neotree-confirmations)
+
+(defcustom neo-confirm-delete-file 'yes-or-no-p
+  "Confirmation asking whether *NeoTree* should delete the file."
+  :type '(choice (function-item :tag "Verbose" yes-or-no-p)
+		 (function-item :tag "Succinct" y-or-n-p)
+		 (function-item :tag "Off" off-p))
+  :group 'neotree-confirmations)
+
+(defcustom neo-confirm-delete-directory-recursively 'yes-or-no-p
+  "Confirmation asking whether the directory should be deleted recursively."
+  :type '(choice (function-item :tag "Verbose" yes-or-no-p)
+		 (function-item :tag "Succinct" y-or-n-p)
+		 (function-item :tag "Off" off-p))
+  :group 'neotree-confirmations)
+
+(defcustom neo-confirm-kill-buffers-for-files-in-directory 'yes-or-no-p
+  "Confirmation asking whether *NeoTree* should kill buffers for the directory in question."
+  :type '(choice (function-item :tag "Verbose" yes-or-no-p)
+		 (function-item :tag "Succinct" y-or-n-p)
+		 (function-item :tag "Off" off-p))
+  :group 'neotree-confirmations)
 
 (defcustom neo-toggle-window-keep-p nil
   "If not nil, not switch to *NeoTree* buffer when executing `neotree-toggle'."
@@ -1059,6 +1106,10 @@ Return nil if DIR is not an existing directory."
     (re-search-forward "[^-\s+]" (line-end-position 1) t)
     (backward-char 1)))
 
+(defun off-p (msg)
+  "Returns true regardless of message value in the argument."
+  t)
+
 ;;
 ;; Buffer methods
 ;;
@@ -1624,7 +1675,7 @@ If path is nil and no buffer file name, then use DEFAULT-PATH,"
     (if (and (not neo-force-change-root)
              (not (neo-global--file-in-root-p npath))
              (neo-global--window-exists-p))
-        (setq do-open-p (yes-or-no-p "File not found in root path, do you want to change root?"))
+        (setq do-open-p (funcall neo-confirm-change-root "File not found in root path, do you want to change root?"))
       (setq do-open-p t))
     (when do-open-p
       (neo-global--open-and-find npath))
@@ -1781,7 +1832,7 @@ If the current node is the first node then the last node is selected."
         (message "File %S already exists." filename)
         (throw 'rlt nil))
       (when (and is-file
-                 (yes-or-no-p (format "Do you want to create file %S ?"
+                 (funcall neo-confirm-create-file (format "Do you want to create file %S ?"
                                       filename)))
         ;; NOTE: create a empty file
         (write-region "" nil filename)
@@ -1790,7 +1841,7 @@ If the current node is the first node then the last node is selected."
         (if neo-create-file-auto-open
             (find-file-other-window filename)))
       (when (and (not is-file)
-                 (yes-or-no-p (format "Do you want to create directory %S?"
+                 (funcall neo-confirm-create-directory (format "Do you want to create directory %S?"
                                       filename)))
         (mkdir filename)
         (neo-buffer--save-cursor-pos filename)
@@ -1805,7 +1856,7 @@ If the current node is the first node then the last node is selected."
     (catch 'end
       (if (null filename) (throw 'end nil))
       (if (not (file-exists-p filename)) (throw 'end nil))
-      (if (not (yes-or-no-p (format "Do you really want to delete %S?"
+      (if (not (funcall neo-confirm-delete-file (format "Do you really want to delete %S?"
                                     filename)))
           (throw 'end nil))
       (if (file-directory-p filename)
@@ -1815,10 +1866,10 @@ If the current node is the first node then the last node is selected."
               (delete-directory filename)
               (setq deleted-p t)
               (throw 'end nil))
-            (when (yes-or-no-p
+            (when (funcall neo-confirm-delete-directory-recursively
                    (format "%S is a directory, delete it recursively?"
                            filename))
-              (when (yes-or-no-p
+              (when (funcall neo-confirm-kill-buffers-for-files-in-directory
                      (format "kill buffers for files in directory %S?"
                              filename))
                 (neo-util--kill-buffers-for-path filename))
