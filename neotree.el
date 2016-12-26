@@ -759,6 +759,11 @@ The description of ARG is in `neotree-enter'."
     (neo-window--zoom 'minimize))
   ;; select target window
   (cond
+   ;; select window with winum
+   ((and (integerp arg)
+         (bound-and-true-p winum-mode)
+         (fboundp 'winum-select-window-by-number))
+    (winum-select-window-by-number arg))
    ;; select window with window numbering
    ((and (integerp arg)
          (boundp 'window-numbering-mode)
@@ -1717,7 +1722,7 @@ ARG is same as `neo-open-file'."
 
 FULL-PATH is the file path you want to open.
 If ARG is an integer then the node is opened in a window selected via
-`window-numbering' (if available) according to the passed number.
+`winum' or`window-numbering' (if available) according to the passed number.
 If ARG is `|' then the node is opened in new vertically split window.
 If ARG is `-' then the node is opened in new horizontally split window."
   (neo-global--select-mru-window arg)
