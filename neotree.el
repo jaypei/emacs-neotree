@@ -1164,8 +1164,8 @@ Optional NODE-NAME is used for the `icons' theme"
           (and (equal name 'close) (insert (all-the-icons-icon-for-dir node-name "right")))
           (and (equal name 'leaf)  (insert (format "\t\t\t%s\t" (all-the-icons-icon-for-file node-name))))))
      (t
-      (or (and (equal name 'open)  (funcall n-insert-symbol "-"))
-          (and (equal name 'close) (funcall n-insert-symbol "+")))))))
+      (or (and (equal name 'open)  (funcall n-insert-symbol "- "))
+          (and (equal name 'close) (funcall n-insert-symbol "+ ")))))))
 
 (defun neo-buffer--save-cursor-pos (&optional node-path line-pos)
   "Save cursor position.
