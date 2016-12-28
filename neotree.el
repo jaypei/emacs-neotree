@@ -1657,15 +1657,17 @@ NeoTree buffer is BUFFER."
 ;; Interactive functions
 ;;
 
-(defun neotree-next-line ()
-  "Move next line in NeoTree buffer."
-  (interactive)
-  (neo-buffer--forward-line 1))
+(defun neotree-next-line (&optional count)
+  "Move next line in NeoTree buffer.
+Optional COUNT argument, moves COUNT lines down."
+  (interactive "p")
+  (neo-buffer--forward-line (or count 1)))
 
-(defun neotree-previous-line ()
-  "Move previous line in NeoTree buffer."
-  (interactive)
-  (neo-buffer--forward-line -1))
+(defun neotree-previous-line (&optional count)
+  "Move previous line in NeoTree buffer.
+Optional COUNT argument, moves COUNT lines up."
+  (interactive "p")
+  (neo-buffer--forward-line (- (or count 1))))
 
 ;;;###autoload
 (defun neotree-find (&optional path default-path)
