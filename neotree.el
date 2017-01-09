@@ -1870,7 +1870,7 @@ If the current node is the first node then the last node is selected."
       (when (and (not is-file)
                  (funcall neo-confirm-create-directory (format "Do you want to create directory %S?"
                                                                filename)))
-        (mkdir filename)
+        (mkdir filename t)
         (neo-buffer--save-cursor-pos filename)
         (neo-buffer--refresh nil)))))
 
