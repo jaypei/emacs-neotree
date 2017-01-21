@@ -5,6 +5,7 @@
 ;; Author: jaypei <jaypei97159@gmail.com>
 ;; URL: https://github.com/jaypei/emacs-neotree
 ;; Version: 0.5
+;; Package-Requires: ((cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -34,6 +35,8 @@
 ;;
 
 ;;; Code:
+
+(require 'cl-lib)
 
 ;;
 ;; Constants
@@ -1862,7 +1865,7 @@ If the current node is the first node then the last node is selected."
                  (funcall neo-confirm-create-file (format "Do you want to create file %S ?"
                                                           filename)))
         ;; ensure parent directory exist before saving
-        (mkdir (substring filename 0 (+ 1 (position ?/ filename :from-end t))) t)
+        (mkdir (substring filename 0 (+ 1 (cl-position ?/ filename :from-end t))) t)
         ;; NOTE: create a empty file
         (write-region "" nil filename)
         (neo-buffer--save-cursor-pos filename)
