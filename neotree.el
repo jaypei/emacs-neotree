@@ -1536,9 +1536,12 @@ If RECURSIVE-P is non nil, find files will recursively."
         (when (neo-path--file-equal-p iter-curr-dir neo-buffer--start-node)
           (setq file-node-find-p t)
           (throw 'return nil))
-        (when (neo-path--file-equal-p iter-curr-dir "/")
-          (setq file-node-find-p nil)
-          (throw 'return nil))))
+        (let ((niter-curr-dir (file-remote-p iter-curr-dir 'localname)))
+          (unless niter-curr-dir
+            (setq niter-curr-dir iter-curr-dir))
+          (when (neo-path--file-equal-p niter-curr-dir "/")
+            (setq file-node-find-p nil)
+            (throw 'return nil)))))
     (when file-node-find-p
       (dolist (p file-node-list)
         (neo-buffer--set-expand p t))
