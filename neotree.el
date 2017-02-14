@@ -371,6 +371,13 @@ This variable is used in `neo-vc-for-node' when
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-filepath-sort-function 'string<
+  "Function to be called when sorting neotree nodes."
+  :type '(symbol (const :tag "Normal" string<)
+                 (const :tag "Sort Hidden at Bottom" neo-sort-hidden-last)
+                 (function :tag "Other"))
+  :group 'neotree)
+
 ;;
 ;; Faces
 ;;
@@ -1127,6 +1134,24 @@ Return nil if DIR is not an existing directory."
   "Returns true regardless of message value in the argument."
   t)
 
+(defun neo-sort-hidden-last (x y)
+    "Sort normally but with hidden files last."
+    (let ((x-hidden (neo-filepath-hidden-p x))
+          (y-hidden (neo-filepath-hidden-p y)))
+      (cond
+       ((and x-hidden (not y-hidden))
+        nil)
+       ((and (not x-hidden) y-hidden)
+        t)
+       (t
+        (string< x y)))))
+
+(defun neo-filepath-hidden-p (node)
+  "Return whether or not node is a hidden path."
+  (let ((shortname (neo-path--file-short-name node)))
+    (neo-util--filter
+     (lambda (x) (not (null (string-match-p x shortname))))
+     neo-hidden-regexp-list)))
 ;;
 ;; Buffer methods
 ;;
@@ -1354,12 +1379,11 @@ PATH is value."
             (otherwise        neo-vc-default-face)))))
 
 (defun neo-buffer--get-nodes (path)
-  (let* ((nodes (neo-util--walk-dir path))
-         (comp  #'(lambda (x y)
-                    (string< x y)))
-         (nodes (neo-util--filter 'neo-util--hidden-path-filter nodes)))
-    (cons (sort (neo-util--filter 'file-directory-p nodes) comp)
-          (sort (neo-util--filter #'(lambda (f) (not (file-directory-p f))) nodes) comp))))
+    (let* ((nodes (neo-util--walk-dir path))
+           (comp neo-filepath-sort-function)
+           (nodes (neo-util--filter 'neo-util--hidden-path-filter nodes)))
+      (cons (sort (neo-util--filter 'file-directory-p nodes) comp)
+            (sort (neo-util--filter #'(lambda (f) (not (file-directory-p f))) nodes) comp))))
 
 (defun neo-buffer--get-node-index (node nodes)
   "Return the index of NODE in NODES.
