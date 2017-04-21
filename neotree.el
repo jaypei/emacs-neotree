@@ -1158,12 +1158,12 @@ Return nil if DIR is not an existing directory."
   "Return list of unsaved buffers from projectile buffers."
   (interactive)
   (let ((rlist '()))
-                                        ; (when (boundp 'projectile-project-buffers)
+    (when (boundp 'projectile-project-buffers)
     (dolist (buf (projectile-project-buffers))
       (with-current-buffer buf
         (if (and (buffer-modified-p) buffer-file-name)
             (setq rlist (cons (buffer-file-name) rlist))
-          )));)
+          ))))
     rlist))
 
 ;;
