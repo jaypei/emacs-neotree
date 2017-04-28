@@ -14,7 +14,7 @@
 
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See theb
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
@@ -1158,7 +1158,7 @@ Return nil if DIR is not an existing directory."
   "Return list of unsaved buffers from projectile buffers."
   (interactive)
   (let ((rlist '()))
-    (when (boundp 'projectile-project-buffers)
+    (when (fboundp 'projectile-project-buffers)
     (dolist (buf (projectile-project-buffers))
       (with-current-buffer buf
         (if (and (buffer-modified-p) buffer-file-name)
