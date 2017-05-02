@@ -42,8 +42,11 @@
 ;; Constants
 ;;
 
-(defconst neo-buffer-name " *NeoTree*"
-  "Name of the buffer where neotree shows directory contents.")
+(defun neo-buffer-name ()
+  "Name of the buffer where neotree shows directory contents."
+  (if (projectile-project-p)
+      (format " *NeoTree <%s>*" (projectile-project-name))
+    (" *NeoTree*")))
 
 (defconst neo-dir
   (expand-file-name (if load-file-name
@@ -717,7 +720,7 @@ _ALIST is ignored."
   "Return the global neotree buffer if it exists.
 If INIT-P is non-nil and global NeoTree buffer not exists, then create it."
   (unless (equal (buffer-name neo-global--buffer)
-                 neo-buffer-name)
+                 (neo-buffer-name))
     (setf neo-global--buffer nil))
   (when (and init-p
              (null neo-global--buffer))
@@ -814,7 +817,7 @@ The description of ARG is in `neotree-enter'."
 
 (defun neo-global--attach ()
   "Attach the global neotree buffer"
-  (setq neo-global--buffer (get-buffer neo-buffer-name))
+  (setq neo-global--buffer (get-buffer (neo-buffer-name)))
   (setq neo-global--window (get-buffer-window
                             neo-global--buffer))
   (neo-global--with-buffer
@@ -1279,7 +1282,7 @@ PATH is value."
 (defun neo-buffer--create ()
   "Create and switch to NeoTree buffer."
   (switch-to-buffer
-   (generate-new-buffer-name neo-buffer-name))
+   (generate-new-buffer-name (neo-buffer-name)))
   (neotree-mode)
   ;; disable linum-mode
   (when (and (boundp 'linum-mode)
