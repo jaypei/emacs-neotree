@@ -827,7 +827,7 @@ The description of ARG is in `neotree-enter'."
 (defun neo-global--detach ()
   "Detach the global neotree buffer."
   (when neo-global--autorefresh-timer
-    cancel-timer neo-global--autorefresh-timer)
+    (cancel-timer neo-global--autorefresh-timer))
   (neo-global--with-buffer
     (neo-buffer--unlock-width))
   (setq neo-global--buffer nil)
