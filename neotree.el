@@ -75,7 +75,7 @@ buffer-local wherever it is set."
             (list 'make-variable-buffer-local (list 'quote var))))))
 
 ;; Add autoload function for vc (#153).
-(autoload 'vc-responsible-backend "vc.el")
+(autoload 'vc-responsible-backend "vc.elc")
 
 ;;
 ;; Macros
@@ -1135,16 +1135,16 @@ Return nil if DIR is not an existing directory."
   t)
 
 (defun neo-sort-hidden-last (x y)
-    "Sort normally but with hidden files last."
-    (let ((x-hidden (neo-filepath-hidden-p x))
-          (y-hidden (neo-filepath-hidden-p y)))
-      (cond
-       ((and x-hidden (not y-hidden))
-        nil)
-       ((and (not x-hidden) y-hidden)
-        t)
-       (t
-        (string< x y)))))
+  "Sort normally but with hidden files last."
+  (let ((x-hidden (neo-filepath-hidden-p x))
+        (y-hidden (neo-filepath-hidden-p y)))
+    (cond
+     ((and x-hidden (not y-hidden))
+      nil)
+     ((and (not x-hidden) y-hidden)
+      t)
+     (t
+      (string< x y)))))
 
 (defun neo-filepath-hidden-p (node)
   "Return whether or not node is a hidden path."
@@ -1379,11 +1379,11 @@ PATH is value."
             (otherwise        neo-vc-default-face)))))
 
 (defun neo-buffer--get-nodes (path)
-    (let* ((nodes (neo-util--walk-dir path))
-           (comp neo-filepath-sort-function)
-           (nodes (neo-util--filter 'neo-util--hidden-path-filter nodes)))
-      (cons (sort (neo-util--filter 'file-directory-p nodes) comp)
-            (sort (neo-util--filter #'(lambda (f) (not (file-directory-p f))) nodes) comp))))
+  (let* ((nodes (neo-util--walk-dir path))
+         (comp neo-filepath-sort-function)
+         (nodes (neo-util--filter 'neo-util--hidden-path-filter nodes)))
+    (cons (sort (neo-util--filter 'file-directory-p nodes) comp)
+          (sort (neo-util--filter #'(lambda (f) (not (file-directory-p f))) nodes) comp))))
 
 (defun neo-buffer--get-node-index (node nodes)
   "Return the index of NODE in NODES.
