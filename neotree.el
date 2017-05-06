@@ -235,6 +235,11 @@ the mode-line format."
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-autorefresh t
+  "*If non-nil, the neotree buffer will auto refresh."
+  :type 'boolean
+  :group 'neotree)
+
 (defcustom neo-window-width 25
   "*Specifies the width of the NeoTree window."
   :type 'integer
@@ -525,6 +530,8 @@ Used only when \(vc-state node\) returns nil."
 
 (defvar neo-global--window nil)
 
+(defvar neo-global--autorefresh-timer nil)
+
 (defvar neo-mode-line-format
   (list
    '(:eval
@@ -739,8 +746,20 @@ If INIT-P is non-nil and global NeoTree buffer not exists, then create it."
             2)
          (member neo-global--window windows))))
 
+(defun neo-global--do-autorefresh ()
+  "Do auto refresh."
+  (interactive)
+  (when (neo-global--window-exists-p)
+    (progn
+      (let ((cw (selected-window)))
+        (neo-global--select-window)
+        (neo-buffer--refresh t)
+        (select-window cw)
+        ))))
+
 (defun neo-global--open ()
   "Show the NeoTree window."
+
   (let ((valid-start-node-p nil))
     (neo-global--with-buffer
       (setf valid-start-node-p (neo-buffer--valid-start-node-p)))
@@ -807,6 +826,8 @@ The description of ARG is in `neotree-enter'."
 
 (defun neo-global--detach ()
   "Detach the global neotree buffer."
+  (when neo-global--autorefresh-timer
+    (cancel-timer neo-global--autorefresh-timer))
   (neo-global--with-buffer
     (neo-buffer--unlock-width))
   (setq neo-global--buffer nil)
@@ -814,6 +835,11 @@ The description of ARG is in `neotree-enter'."
 
 (defun neo-global--attach ()
   "Attach the global neotree buffer"
+  (when neo-global--autorefresh-timer
+    (cancel-timer neo-global--autorefresh-timer))
+  (when neo-autorefresh
+    (setq neo-global--autorefresh-timer
+          (run-with-idle-timer 2 10 'neo-global--do-autorefresh)))
   (setq neo-global--buffer (get-buffer neo-buffer-name))
   (setq neo-global--window (get-buffer-window
                             neo-global--buffer))
