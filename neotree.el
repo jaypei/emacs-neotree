@@ -1047,7 +1047,8 @@ Like Python's os.path.join,
   "Base file/directory name by FILE.
 Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
   (or (if (string= file "/") "/")
-      (neo-util--make-printable-string (file-name-nondirectory (directory-file-name file)))))
+      (if (member file (neo-get-unsaved-buffers-from-projectile)) (concat (neo-util--make-printable-string (file-name-nondirectory (directory-file-name file))) " *" )
+        (neo-util--make-printable-string (file-name-nondirectory (directory-file-name file))))))
 
 (defun neo-path--file-truename (path)
   (let ((rlt (file-truename path)))
@@ -1171,6 +1172,19 @@ Return nil if DIR is not an existing directory."
     (neo-util--filter
      (lambda (x) (not (null (string-match-p x shortname))))
      neo-hidden-regexp-list)))
+
+(defun neo-get-unsaved-buffers-from-projectile ()
+  "Return list of unsaved buffers from projectile buffers."
+  (interactive)
+  (let ((rlist '()))
+    (when (fboundp 'projectile-project-buffers)
+    (dolist (buf (projectile-project-buffers))
+      (with-current-buffer buf
+        (if (and (buffer-modified-p) buffer-file-name)
+            (setq rlist (cons (buffer-file-name) rlist))
+          ))))
+    rlist))
+
 ;;
 ;; Buffer methods
 ;;
@@ -1719,7 +1733,6 @@ NeoTree buffer is BUFFER."
 (defun neo-window--minimize-p ()
   "Return non-nil when the NeoTree window is minimize."
   (<= (window-width) neo-window-width))
-
 
 ;;
 ;; Interactive functions
