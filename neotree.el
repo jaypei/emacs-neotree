@@ -749,7 +749,8 @@ If INIT-P is non-nil and global NeoTree buffer not exists, then create it."
 (defun neo-global--do-autorefresh ()
   "Do auto refresh."
   (interactive)
-  (neotree-refresh t))
+  (when (neo-global--window-exists-p)
+    (neotree-refresh t)))
 
 (defun neo-global--open ()
   "Show the NeoTree window."
@@ -1178,11 +1179,11 @@ Return nil if DIR is not an existing directory."
   (interactive)
   (let ((rlist '()))
     (when (fboundp 'projectile-project-buffers)
-    (dolist (buf (projectile-project-buffers))
-      (with-current-buffer buf
-        (if (and (buffer-modified-p) buffer-file-name)
-            (setq rlist (cons (buffer-file-name) rlist))
-          ))))
+      (dolist (buf (projectile-project-buffers))
+        (with-current-buffer buf
+          (if (and (buffer-modified-p) buffer-file-name)
+              (setq rlist (cons (buffer-file-name) rlist))
+            ))))
     rlist))
 
 ;;
