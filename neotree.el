@@ -749,17 +749,10 @@ If INIT-P is non-nil and global NeoTree buffer not exists, then create it."
 (defun neo-global--do-autorefresh ()
   "Do auto refresh."
   (interactive)
-  (when (neo-global--window-exists-p)
-    (progn
-      (let ((cw (selected-window)))
-        (neo-global--select-window)
-        (neo-buffer--refresh t)
-        (select-window cw)
-        ))))
+  (neotree-refresh t))
 
 (defun neo-global--open ()
   "Show the NeoTree window."
-
   (let ((valid-start-node-p nil))
     (neo-global--with-buffer
       (setf valid-start-node-p (neo-buffer--valid-start-node-p)))
@@ -1468,7 +1461,6 @@ If SAVE-POS-P is non-nil, it will be auto save current line number."
   (let ((start-node neo-buffer--start-node))
     (unless start-node
       (setq start-node default-directory))
-
     (neo-buffer--with-editing-buffer
      ;; save context
      (when save-pos-p
@@ -1990,7 +1982,7 @@ If the current node is the first node then the last node is selected."
   "Used to bind the empty function to the shortcut."
   (interactive))
 
-(defun neotree-refresh ()
+(defun neotree-refresh (&optional is-auto-refresh)
   "Refresh the NeoTree buffer."
   (interactive)
   (if (eq (current-buffer) (neo-global--get-buffer))
@@ -1998,7 +1990,7 @@ If the current node is the first node then the last node is selected."
     (save-excursion
       (let ((cw (selected-window)))  ;; save current window
         (neo-buffer--refresh t t)
-        (when neo-toggle-window-keep-p
+        (when (or is-auto-refresh neo-toggle-window-keep-p)
           (select-window cw))))))
 
 (defun neotree-stretch-toggle ()
