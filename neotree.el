@@ -748,7 +748,7 @@ If INIT-P is non-nil and global NeoTree buffer not exists, then create it."
 (defun neo-global--do-autorefresh ()
   "Do auto refresh."
   (interactive)
-  (when (neo-global--window-exists-p)
+  (when (and neo-autorefresh (neo-global--window-exists-p))
     (neotree-refresh t)))
 
 (defun neo-global--open ()
