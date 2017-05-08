@@ -1047,8 +1047,7 @@ Like Python's os.path.join,
   "Base file/directory name by FILE.
 Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
   (or (if (string= file "/") "/")
-      (if (member file (neo-get-unsaved-buffers-from-projectile)) (concat (neo-util--make-printable-string (file-name-nondirectory (directory-file-name file))) " *" )
-        (neo-util--make-printable-string (file-name-nondirectory (directory-file-name file))))))
+      (neo-util--make-printable-string (file-name-nondirectory (directory-file-name file)))))
 
 (defun neo-path--file-truename (path)
   (let ((rlt (file-truename path)))
