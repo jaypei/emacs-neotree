@@ -1176,8 +1176,12 @@ Return nil if DIR is not an existing directory."
 (defun neo-get-unsaved-buffers-from-projectile ()
   "Return list of unsaved buffers from projectile buffers."
   (interactive)
-  (let ((rlist '()))
-    (when (fboundp 'projectile-project-buffers)
+  (let ((rlist '())
+        (rtag t))
+    (condition-case nil
+        (projectile-project-buffers)
+      (error (setq rtag nil)))
+    (when (and rtag (fboundp 'projectile-project-buffers))
       (dolist (buf (projectile-project-buffers))
         (with-current-buffer buf
           (if (and (buffer-modified-p) buffer-file-name)
