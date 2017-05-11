@@ -235,7 +235,7 @@ the mode-line format."
   :type 'boolean
   :group 'neotree)
 
-(defcustom neo-autorefresh t
+(defcustom neo-autorefresh nil
   "*If non-nil, the neotree buffer will auto refresh."
   :type 'boolean
   :group 'neotree)
