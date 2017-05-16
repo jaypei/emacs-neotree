@@ -1341,14 +1341,25 @@ PATH is value."
       (insert " (up a dir)")
       (set-text-properties start (point) '(face neo-header-face)))
     (neo-buffer--newline-and-begin))
-  (neo-buffer--node-list-set nil node)
-  (cond
-   ((eq neo-cwd-line-style 'button)
-    (neo-path--insert-header-buttonized node))
-   (t
-    (neo-buffer--insert-with-face (neo-path--shorten node (window-body-width))
-                                  'neo-root-dir-face)))
-  (neo-buffer--newline-and-begin))
+
+  (let ((project-name-or-node node)
+        (project-root nil))
+
+    (if (and (fboundp 'projectile-project-root)
+             (projectile-project-p))
+        (setq project-name-or-node
+              (concat "Project: "
+                      (file-name-nondirectory (directory-file-name (projectile-project-root))))))
+
+    (neo-buffer--node-list-set nil project-name-or-node)
+
+    (cond
+     ((eq neo-cwd-line-style 'button)
+      (neo-path--insert-header-buttonized project-name-or-node))
+     (t
+      (neo-buffer--insert-with-face (neo-path--shorten project-name-or-node (window-body-width))
+                                    'neo-root-dir-face)))
+    (neo-buffer--newline-and-begin)))
 
 (defun neo-buffer--help-echo-message (node-name)
   (cond
