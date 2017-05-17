@@ -383,6 +383,12 @@ This variable is used in `neo-vc-for-node' when
                  (function :tag "Other"))
   :group 'neotree)
 
+(defcustom neo-default-system-application "xdg-open"
+  "*Name of the application that is used to open a file under point.
+By default it is xdg-open."
+  :type 'string
+  :group 'neotree)
+
 ;;
 ;; Faces
 ;;
@@ -624,6 +630,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "H")       'neotree-hidden-file-toggle)
     (define-key map (kbd "S")       'neotree-select-previous-sibling-node)
     (define-key map (kbd "s")       'neotree-select-next-sibling-node)
+    (define-key map (kbd "o")       'neotree-open-file-in-system-application)
     (define-key map (kbd "C-x C-f") 'find-file-other-window)
     (define-key map (kbd "C-x 1")   'neotree-empty-fn)
     (define-key map (kbd "C-x 2")   'neotree-empty-fn)
@@ -1828,6 +1835,14 @@ FULL-PATH and ARG are the same as `neo-open-file'."
   "Open the current node in a window chosen by ace-window.
 FULL-PATH and ARG are the same as `neo-open-file'."
   (neo-open-file full-path "a"))
+
+(defun neotree-open-file-in-system-application ()
+  "Open a file under point in the system application."
+  (interactive)
+  (shell-command
+   (concat neo-default-system-application
+           " "
+           (neo-buffer--get-filename-current-line))))
 
 (defun neotree-change-root ()
   "Change root to current node dir.
