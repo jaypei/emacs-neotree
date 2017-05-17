@@ -1839,10 +1839,8 @@ FULL-PATH and ARG are the same as `neo-open-file'."
 (defun neotree-open-file-in-system-application ()
   "Open a file under point in the system application."
   (interactive)
-  (shell-command
-   (concat neo-default-system-application
-           " "
-           (neo-buffer--get-filename-current-line))))
+  (call-process neo-default-system-application nil 0 nil
+                (neo-buffer--get-filename-current-line)))
 
 (defun neotree-change-root ()
   "Change root to current node dir.
