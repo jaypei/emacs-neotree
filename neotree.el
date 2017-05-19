@@ -2010,6 +2010,7 @@ If the current node is the first node then the last node is selected."
               (when (and (fboundp 'projectile-project-p)
                          (projectile-project-p)
                          (fboundp 'projectile-project-root))
+                (neo-global--open-dir (projectile-project-root))
                 (neotree-find (projectile-project-root)))
               (neotree-find origin-buffer-file-name))
           (neo-buffer--refresh t t))
