@@ -2007,7 +2007,9 @@ If the current node is the first node then the last node is selected."
       (let ((cw (selected-window)))  ;; save current window
         (if is-auto-refresh
             (let ((origin-buffer-file-name (buffer-file-name)))
-              (when (fboundp 'projectile-project-root)
+              (when (and (fboundp 'projectile-project-p)
+                         (projectile-project-p)
+                         (fboundp 'projectile-project-root))
                 (neotree-find (projectile-project-root)))
               (neotree-find origin-buffer-file-name))
           (neo-buffer--refresh t t))
