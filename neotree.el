@@ -2006,7 +2006,10 @@ If the current node is the first node then the last node is selected."
     (save-excursion
       (let ((cw (selected-window)))  ;; save current window
         (if is-auto-refresh
-            (neotree-find buffer-file-name)
+            (let ((origin-buffer-file-name (buffer-file-name)))
+              (when (fboundp 'projectile-project-root)
+                (neotree-find (projectile-project-root)))
+              (neotree-find origin-buffer-file-name))
           (neo-buffer--refresh t t))
         (when (or is-auto-refresh neo-toggle-window-keep-p)
           (select-window cw))))))
