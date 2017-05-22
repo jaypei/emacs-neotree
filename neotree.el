@@ -976,11 +976,11 @@ This procedure does not work when CONDP is the `null' function."
   (neo-str--trim-left (neo-str--trim-right s)))
 
 (defun neo-path--expand-name (path &optional current-dir)
-  (or (if (file-name-absolute-p path) path)
-      (let ((r-path path))
-        (setq r-path (substitute-in-file-name r-path))
-        (setq r-path (expand-file-name r-path current-dir))
-        r-path)))
+  (expand-file-name (or (if (file-name-absolute-p path) path)
+			(let ((r-path path))
+			  (setq r-path (substitute-in-file-name r-path))
+			  (setq r-path (expand-file-name r-path current-dir))
+			  r-path))))
 
 (defun neo-path--shorten (path len)
   "Shorten a given PATH to a specified LEN.
