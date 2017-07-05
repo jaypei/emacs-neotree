@@ -1752,13 +1752,17 @@ NeoTree buffer is BUFFER."
   "Move next line in NeoTree buffer.
 Optional COUNT argument, moves COUNT lines down."
   (interactive "p")
-  (neo-buffer--forward-line (or count 1)))
+  (neo-buffer--forward-line (or count 1))
+  (when neo-auto-indent-point
+    (neo-point-auto-indent)))
 
 (defun neotree-previous-line (&optional count)
   "Move previous line in NeoTree buffer.
 Optional COUNT argument, moves COUNT lines up."
   (interactive "p")
-  (neo-buffer--forward-line (- (or count 1))))
+  (neo-buffer--forward-line (- (or count 1)))
+  (when neo-auto-indent-point
+    (neo-point-auto-indent)))
 
 ;;;###autoload
 (defun neotree-find (&optional path default-path)
