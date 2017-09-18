@@ -282,7 +282,7 @@ width (including the indent) larger than `neo-window-width', and
   :group 'neotree)
 
 (defcustom neo-hidden-regexp-list
-  '("^\\." "\\.pyc$" "~$" "^#.*#$" "\\.elc$")
+  '("^\\." "\\.pyc$" "~$" "^#.*#$" "\\.elc$" "\\.o$")
   "*The regexp list matching hidden files."
   :type  '(repeat (choice regexp))
   :group 'neotree)
