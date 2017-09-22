@@ -1236,7 +1236,7 @@ Optional NODE-NAME is used for the `icons' theme"
       (or (and (equal name 'open)  (funcall n-insert-symbol "▾ "))
           (and (equal name 'close) (funcall n-insert-symbol "▸ "))
           (and (equal name 'leaf)  (funcall n-insert-symbol "  "))))
-     ((and (display-graphic-p) (equal neo-theme 'icons))
+     ((equal neo-theme 'icons)
       (unless (require 'all-the-icons nil 'noerror)
         (error "Package `all-the-icons' isn't installed"))
       (setq-local tab-width 1)
