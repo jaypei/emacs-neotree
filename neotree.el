@@ -45,7 +45,8 @@
 (defconst neo-buffer-name " *NeoTree*"
   "Name of the buffer where neotree shows directory contents.")
 
-(defvar neo-buffer-preview-list '())
+(defvar neo-preview-buffer-list '())
+(defvar neotree-preview-mode-enabled nil)
 
 (defconst neo-dir
   (expand-file-name (if load-file-name
@@ -620,6 +621,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "d")       (neotree-make-executor
                                      :dir-fn 'neo-open-dired))
     (define-key map (kbd "SPC")     'neotree-quick-look)
+    (define-key map (kbd "P")     'neotree-enable-preview-mode)
     (define-key map (kbd "g")       'neotree-refresh)
     (define-key map (kbd "q")       'neotree-hide)
     (define-key map (kbd "p")       'neotree-previous-line)
@@ -1754,13 +1756,16 @@ NeoTree buffer is BUFFER."
   "Move next line in NeoTree buffer.
 Optional COUNT argument, moves COUNT lines down."
   (interactive "p")
-  (neo-buffer--forward-line (or count 1)))
+  (neo-buffer--forward-line (or count 1))
+  (if neotree-preview-mode-enabled (neotree-quick-look))
+  )
 
 (defun neotree-previous-line (&optional count)
   "Move previous line in NeoTree buffer.
 Optional COUNT argument, moves COUNT lines up."
   (interactive "p")
-  (neo-buffer--forward-line (- (or count 1))))
+  (neo-buffer--forward-line (- (or count 1)))
+  (if neotree-preview-mode-enabled (neotree-quick-look)))
 
 ;;;###autoload
 (defun neotree-find (&optional path default-path)
@@ -1824,7 +1829,7 @@ If ARG is `-' then the node is opened in new horizontally split window."
   (find-file full-path))
 
 (defun neo-open-file-preview (full-path &optional arg)
-  (add-to-list 'neo-buffer-preview-list (neo-open-file full-path arg))
+  (add-to-list 'neo-preview-buffer-list (neo-open-file full-path arg))
   )
 
 (defun neo-open-file-vertical-split (full-path arg)
@@ -2116,12 +2121,14 @@ automatically."
   "NeoTree typical open event.
 ARG are the same as `neo-open-file'."
   (interactive "P")
+  (neotree-kill-preview-buffers)
+  (setq neo-preview-buffer-list '())
   (neo-buffer--execute arg 'neo-open-file 'neo-open-dir))
 
 (defun neotree-enter-preview (&optional arg)
   "Opens a neotree buffer and adds it to the preview buffer list"
   (interactive "P")
-  (neo-buffer--execute arg 'neo-open-file-preview 'neo-open-dir)
+  (neo-buffer--execute arg 'neo-open-file-preview (lambda ()))
   )
 
 (defun neotree-quick-look (&optional arg)
@@ -2131,9 +2138,14 @@ ARG are the same as `neo-open-file'."
   (neotree-enter-preview arg)
   (neo-global--select-window))
 
+(defun neotree-toggle-preview-mode ()
+  (interactive)
+  (setq neotree-preview-mode-enabled (not neotree-preview-mode-enabled))
+  )
+
 (defun neotree-kill-preview-buffers ()
   (interactive)
-  (set 'neo-buffer-preview-list (remove-if #'kill-buffer-if-not-modified neo-buffer-preview-list))
+  (set 'neo-preview-buffer-list (remove-if #'kill-buffer-if-not-modified neo-preview-buffer-list))
   )
 
 (defun neotree-enter-vertical-split ()
