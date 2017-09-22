@@ -45,6 +45,8 @@
 (defconst neo-buffer-name " *NeoTree*"
   "Name of the buffer where neotree shows directory contents.")
 
+(defvar neo-buffer-preview-list '())
+
 (defconst neo-dir
   (expand-file-name (if load-file-name
                         (file-name-directory load-file-name)
@@ -1821,6 +1823,10 @@ If ARG is `-' then the node is opened in new horizontally split window."
   (neo-global--select-mru-window arg)
   (find-file full-path))
 
+(defun neo-open-file-preview (full-path &optional arg)
+  (add-to-list 'neo-buffer-preview-list (neo-open-file full-path arg))
+  )
+
 (defun neo-open-file-vertical-split (full-path arg)
   "Open the current node is a vertically split window.
 FULL-PATH and ARG are the same as `neo-open-file'."
@@ -2080,7 +2086,8 @@ automatically."
   "Close the NeoTree window."
   (interactive)
   (if (neo-global--window-exists-p)
-      (delete-window neo-global--window)))
+      (delete-window neo-global--window))
+  (neotree-kill-preview-buffers))
 
 ;;;###autoload
 (defun neotree-dir (path)
@@ -2111,12 +2118,23 @@ ARG are the same as `neo-open-file'."
   (interactive "P")
   (neo-buffer--execute arg 'neo-open-file 'neo-open-dir))
 
+(defun neotree-enter-preview (&optional arg)
+  "Opens a neotree buffer and adds it to the preview buffer list"
+  (interactive "P")
+  (neo-buffer--execute arg 'neo-open-file-preview 'neo-open-dir)
+  )
+
 (defun neotree-quick-look (&optional arg)
   "Quick Look like NeoTree open event.
 ARG are the same as `neo-open-file'."
   (interactive "P")
-  (neotree-enter arg)
+  (neotree-enter-preview arg)
   (neo-global--select-window))
+
+(defun neotree-kill-preview-buffers ()
+  (interactive)
+  (set 'neo-buffer-preview-list (remove-if #'kill-buffer-if-not-modified neo-buffer-preview-list))
+  )
 
 (defun neotree-enter-vertical-split ()
   "NeoTree open event, file node will opened in new vertically split window."
