@@ -389,6 +389,11 @@ By default it is xdg-open."
   :type 'string
   :group 'neotree)
 
+(defcustom neo-hide-cursor nil
+  "If not nil, hide cursor in NeoTree buffer and turn on line higlight."
+  :type 'boolean
+  :group 'neotree)
+
 ;;
 ;; Faces
 ;;
@@ -660,6 +665,10 @@ The car of the pair will store fullpath, and cdr will store line number.")
         buffer-read-only t              ; read only
         truncate-lines -1
         neo-buffer--show-hidden-file-p neo-show-hidden-files)
+  (when neo-hide-cursor
+    (progn
+      (setq cursor-type nil)
+      (hl-line-mode +1)))
   (pcase neo-mode-line-type
     (`neotree
      (setq-local mode-line-format neo-mode-line-format)
