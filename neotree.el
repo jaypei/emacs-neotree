@@ -2041,10 +2041,11 @@ If the current node is the first node then the last node is selected."
       (neo-window--zoom 'minimize))))
 
 (defun neotree-collapse-all ()
+  (interactive)
   "Collapse all expanded folders in the neotree buffer"
-  (setq test neo-buffer--expanded-node-list)
-  (dolist (p test)
-    (neo-buffer--toggle-expand p)
+  (setq list-of-expanded-folders neo-buffer--expanded-node-list)
+  (dolist (folder list-of-expanded-folders)
+    (neo-buffer--toggle-expand folder)
     (neo-buffer--refresh t)
     )
   )
