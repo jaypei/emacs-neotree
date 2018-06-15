@@ -724,6 +724,9 @@ _ALIST is ignored."
     (neo-window--init window buffer)
     (neo-global--attach)
     (neo-global--reset-width)
+    ;; Use inside helm window in NeoTree
+    ;; Refs https://github.com/jaypei/emacs-neotree/issues/226
+    (setq-local helm-split-window-inside-p t)
     window))
 
 (defun neo-global--get-buffer (&optional init-p)
