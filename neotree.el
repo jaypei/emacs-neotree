@@ -4,7 +4,7 @@
 
 ;; Author: jaypei <jaypei97159@gmail.com>
 ;; URL: https://github.com/jaypei/emacs-neotree
-;; Version: 0.5
+;; Version: 0.5.1
 ;; Package-Requires: ((cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -724,9 +724,6 @@ _ALIST is ignored."
     (neo-window--init window buffer)
     (neo-global--attach)
     (neo-global--reset-width)
-    ;; Use inside helm window in NeoTree
-    ;; Refs https://github.com/jaypei/emacs-neotree/issues/226
-    (setq-local helm-split-window-inside-p t)
     window))
 
 (defun neo-global--get-buffer (&optional init-p)
@@ -1331,6 +1328,9 @@ PATH is value."
   (when (and (boundp 'linum-mode)
              (not (null linum-mode)))
     (linum-mode -1))
+  ;; Use inside helm window in NeoTree
+  ;; Refs https://github.com/jaypei/emacs-neotree/issues/226
+  (setq-local helm-split-window-inside-p t)
   (current-buffer))
 
 (defun neo-buffer--insert-banner ()
@@ -1725,6 +1725,7 @@ If DIR-FN is non-nil, it will executed when a dir node."
 NeoTree buffer is BUFFER."
   (neo-buffer--with-resizable-window
    (switch-to-buffer buffer)
+   (set-window-parameter window 'no-delete-other-windows t)
    (set-window-dedicated-p window t))
   window)
 
