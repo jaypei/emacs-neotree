@@ -4,7 +4,7 @@
 
 ;; Author: jaypei <jaypei97159@gmail.com>
 ;; URL: https://github.com/jaypei/emacs-neotree
-;; Version: 0.5
+;; Version: 0.5.1
 ;; Package-Requires: ((cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -235,7 +235,7 @@ the mode-line format."
   :type 'boolean
   :group 'neotree)
 
-(defcustom neo-autorefresh t
+(defcustom neo-autorefresh nil
   "*If non-nil, the neotree buffer will auto refresh."
   :type 'boolean
   :group 'neotree)
@@ -383,6 +383,12 @@ This variable is used in `neo-vc-for-node' when
                  (function :tag "Other"))
   :group 'neotree)
 
+(defcustom neo-default-system-application "xdg-open"
+  "*Name of the application that is used to open a file under point.
+By default it is xdg-open."
+  :type 'string
+  :group 'neotree)
+
 ;;
 ;; Faces
 ;;
@@ -414,6 +420,27 @@ This variable is used in `neo-vc-for-node' when
   "*Face used for expand sign [+] in neotree buffer."
   :group 'neotree :group 'font-lock-highlighting-faces)
 (defvar neo-dir-link-face 'neo-dir-link-face)
+
+(defface neo-open-dir-link-face
+  '((t (:foreground "DeepSkyBlue"))
+    )
+  "*Face used when a directory is expanded."
+  :group 'neotree :group 'font-lock-highlighting-faces)
+(defvar neo-open-dir-link-face 'neo-open-dir-link-face)
+
+(defface neo-dir-icon-face
+  '((t (:foreground "DeepSkyBlue"))
+    )
+  "*Face used for the icon of a directory"
+  :group 'neotree :group 'font-lock-highlighting-faces)
+(defvar neo-dir-icon-face 'neo-dir-icon-face)
+
+(defface neo-open-dir-icon-face
+  '((t (:foreground "gold"))
+    )
+  "*Face used for the icon of a opened directory"
+  :group 'neotree :group 'font-lock-highlighting-faces)
+(defvar neo-open-dir-icon-face 'neo-open-dir-icon-face)
 
 (defface neo-file-link-face
   '((((background dark)) (:foreground "White"))
@@ -624,6 +651,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "H")       'neotree-hidden-file-toggle)
     (define-key map (kbd "S")       'neotree-select-previous-sibling-node)
     (define-key map (kbd "s")       'neotree-select-next-sibling-node)
+    (define-key map (kbd "o")       'neotree-open-file-in-system-application)
     (define-key map (kbd "C-x C-f") 'find-file-other-window)
     (define-key map (kbd "C-x 1")   'neotree-empty-fn)
     (define-key map (kbd "C-x 2")   'neotree-empty-fn)
@@ -969,11 +997,11 @@ This procedure does not work when CONDP is the `null' function."
   (neo-str--trim-left (neo-str--trim-right s)))
 
 (defun neo-path--expand-name (path &optional current-dir)
-  (or (if (file-name-absolute-p path) path)
-      (let ((r-path path))
-        (setq r-path (substitute-in-file-name r-path))
-        (setq r-path (expand-file-name r-path current-dir))
-        r-path)))
+  (expand-file-name (or (if (file-name-absolute-p path) path)
+			(let ((r-path path))
+			  (setq r-path (substitute-in-file-name r-path))
+			  (setq r-path (expand-file-name r-path current-dir))
+			  r-path))))
 
 (defun neo-path--shorten (path len)
   "Shorten a given PATH to a specified LEN.
@@ -1233,8 +1261,14 @@ Optional NODE-NAME is used for the `icons' theme"
       (unless (require 'all-the-icons nil 'noerror)
         (error "Package `all-the-icons' isn't installed"))
       (setq-local tab-width 1)
-      (or (and (equal name 'open)  (insert (all-the-icons-icon-for-dir node-name "down")))
-          (and (equal name 'close) (insert (all-the-icons-icon-for-dir node-name "right")))
+      (or (and (equal name 'open)
+               (neo-buffer--insert-with-face
+                (all-the-icons-icon-for-dir node-name "down")
+                neo-open-dir-icon-face))
+          (and (equal name 'close)
+               (neo-buffer--insert-with-face
+                (all-the-icons-icon-for-dir node-name "right")
+                neo-dir-icon-face))
           (and (equal name 'leaf)  (insert (format "\t\t\t%s\t" (all-the-icons-icon-for-file node-name))))))
      (t
       (or (and (equal name 'open)  (funcall n-insert-symbol "- "))
@@ -1321,6 +1355,9 @@ PATH is value."
   (when (and (boundp 'linum-mode)
              (not (null linum-mode)))
     (linum-mode -1))
+  ;; Use inside helm window in NeoTree
+  ;; Refs https://github.com/jaypei/emacs-neotree/issues/226
+  (setq-local helm-split-window-inside-p t)
   (current-buffer))
 
 (defun neo-buffer--insert-banner ()
@@ -1368,7 +1405,7 @@ PATH is value."
      (if expanded 'open 'close) node)
     (insert-button (concat node-short-name "/")
                    'follow-link t
-                   'face neo-dir-link-face
+                   'face (if expanded neo-open-dir-link-face neo-dir-link-face)
                    'neo-full-path node
                    'keymap neotree-dir-button-keymap
                    'help-echo (neo-buffer--help-echo-message node-short-name))
@@ -1715,6 +1752,7 @@ If DIR-FN is non-nil, it will executed when a dir node."
 NeoTree buffer is BUFFER."
   (neo-buffer--with-resizable-window
    (switch-to-buffer buffer)
+   (set-window-parameter window 'no-delete-other-windows t)
    (set-window-dedicated-p window t))
   window)
 
@@ -1828,6 +1866,12 @@ FULL-PATH and ARG are the same as `neo-open-file'."
   "Open the current node in a window chosen by ace-window.
 FULL-PATH and ARG are the same as `neo-open-file'."
   (neo-open-file full-path "a"))
+
+(defun neotree-open-file-in-system-application ()
+  "Open a file under point in the system application."
+  (interactive)
+  (call-process neo-default-system-application nil 0 nil
+                (neo-buffer--get-filename-current-line)))
 
 (defun neotree-change-root ()
   "Change root to current node dir.
@@ -2005,7 +2049,16 @@ If the current node is the first node then the last node is selected."
       (neo-buffer--refresh t)
     (save-excursion
       (let ((cw (selected-window)))  ;; save current window
-        (neo-buffer--refresh t t)
+        (if is-auto-refresh
+            (let ((origin-buffer-file-name (buffer-file-name)))
+              (when (and (fboundp 'projectile-project-p)
+                         (projectile-project-p)
+                         (fboundp 'projectile-project-root))
+                (neo-global--open-dir (projectile-project-root))
+                (neotree-find (projectile-project-root)))
+              (neotree-find origin-buffer-file-name))
+          (neo-buffer--refresh t t))
+        (recenter)
         (when (or is-auto-refresh neo-toggle-window-keep-p)
           (select-window cw))))))
 
