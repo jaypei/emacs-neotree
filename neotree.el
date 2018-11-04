@@ -193,6 +193,11 @@ window."
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-show-slash-for-folder t
+  "*If non-nil, show the slash at the end of folder (folder/)"
+  :type 'boolean
+  :group 'neotree)
+
 (defcustom neo-theme 'classic
   "*The tree style to display.
 `classic' use icon to display, it only it suitable for GUI mode.
@@ -1376,7 +1381,7 @@ PATH is value."
       (insert-char ?\s 2))
     (neo-buffer--insert-fold-symbol
      (if expanded 'open 'close) node)
-    (insert-button (concat node-short-name "/")
+    (insert-button (if neo-show-slash-for-folder (concat node-short-name "/") node-short-name)
                    'follow-link t
                    'face neo-dir-link-face
                    'neo-full-path node
