@@ -1346,24 +1346,21 @@ PATH is value."
     (neo-buffer--newline-and-begin)))
 
 (defun neo-buffer--insert-root-entry (node)
+  (neo-buffer--node-list-set nil node)
+  (cond ((eq neo-cwd-line-style 'button)
+         (neo-path--insert-header-buttonized node))
+        (t
+         (neo-buffer--insert-with-face (neo-path--shorten node (window-body-width))
+                                       'neo-root-dir-face)))
+  (neo-buffer--newline-and-begin)
   (when neo-show-updir-line
+    (neo-buffer--insert-fold-symbol 'close node)
     (insert-button ".."
                    'action '(lambda (x) (neotree-change-root))
                    'follow-link t
-                   'face neo-file-link-face
+                   'face neo-dir-link-face
                    'neo-full-path (neo-path--updir node))
-    (let ((start (point)))
-      (insert " (up a dir)")
-      (set-text-properties start (point) '(face neo-header-face)))
-    (neo-buffer--newline-and-begin))
-  (neo-buffer--node-list-set nil node)
-  (cond
-   ((eq neo-cwd-line-style 'button)
-    (neo-path--insert-header-buttonized node))
-   (t
-    (neo-buffer--insert-with-face (neo-path--shorten node (window-body-width))
-                                  'neo-root-dir-face)))
-  (neo-buffer--newline-and-begin))
+    (neo-buffer--newline-and-begin)))
 
 (defun neo-buffer--help-echo-message (node-name)
   (cond
