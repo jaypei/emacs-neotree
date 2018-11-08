@@ -2071,9 +2071,15 @@ automatically."
 (defun neotree-show ()
   "Show the NeoTree window."
   (interactive)
-  (let ((cw (selected-window)))  ;; save current window
+  (let ((cw (selected-window))
+         (path (buffer-file-name)))  ;; save current window and buffer
     (if neo-smart-open
-        (neotree-find)
+      (progn
+        (when (and (fboundp 'projectile-project-p)
+              (projectile-project-p)
+              (fboundp 'projectile-project-root))
+          (neotree-dir (projectile-project-root)))
+        (neotree-find path))
       (neo-global--open))
     (neo-global--select-window)
     (when neo-toggle-window-keep-p
