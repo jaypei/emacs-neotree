@@ -617,8 +617,8 @@ The car of the pair will store fullpath, and cdr will store line number.")
                                      :file-fn 'neo-open-file-ace-window))
     (define-key map (kbd "d")       (neotree-make-executor
                                      :dir-fn 'neo-open-dired))
-    (define-key map (kbd "r")       (neotree-make-executor
-                                   :dir-fn  'neo-open-dir-recursive))
+    (define-key map (kbd "O")       (neotree-make-executor
+                                     :dir-fn  'neo-open-dir-recursive))
     (define-key map (kbd "SPC")     'neotree-quick-look)
     (define-key map (kbd "g")       'neotree-refresh)
     (define-key map (kbd "q")       'neotree-hide)
@@ -1809,21 +1809,29 @@ ARG is ignored."
           (neo-point-auto-indent))))))
 
 
+(defun neo--expand-recursive (path state)
+  "Set the state of children recursively.
 
-(defun neo-open-dir-recursive (full-path &optional arg)
-  
+The children of PATH will have state STATE."
+  (let ((children (car (neo-buffer--get-nodes path) )))
+    (dolist (node children)
+      (neo-buffer--set-expand node state)
+      (neo--expand-recursive node state ))))
+
+(defun neo-open-dir-recursive (full-path &optional arg)  
   "Toggle fold a directory node recursively.
 
 The children of the node will also be opened recursively.
 FULL-PATH is the path of the directory.
 ARG is ignored."
   (if neo-click-changes-root
-      (neotree-change-root)
-    (when (neo-buffer--expanded-node-p full-path)
-      (let ((children (car (neo-buffer--get-nodes full-path) )))
-        (dolist (node children)
-          (neo-buffer--toggle-expand node))
-        (neo-buffer--refresh t)))))
+      (neotree-change-root)    
+    (let ((new-state (neo-buffer--toggle-expand full-path))
+          (children (car (neo-buffer--get-nodes full-path))))
+      (dolist (node children)
+        (neo-buffer--set-expand node new-state)
+        (neo--expand-recursive node new-state))
+      (neo-buffer--refresh t))))
 
 (defun neo-open-dired (full-path &optional arg)
   "Open file or directory node in `dired-mode'.
@@ -2186,3 +2194,4 @@ which is used to fix issue #209.
 
 (provide 'neotree)
 ;;; neotree.el ends here
+
