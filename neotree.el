@@ -2000,7 +2000,8 @@ If the current node is the first node then the last node is selected."
   (interactive)
   (let* ((filename (neo-buffer--get-filename-current-line))
          (buffer (find-buffer-visiting filename))
-         (deleted-p nil))
+         (deleted-p nil)
+         (trash delete-by-moving-to-trash))
     (catch 'end
       (if (null filename) (throw 'end nil))
       (if (not (file-exists-p filename)) (throw 'end nil))
@@ -2011,7 +2012,7 @@ If the current node is the first node then the last node is selected."
           ;; delete directory
           (progn
             (unless (neo-path--has-subfile-p filename)
-              (delete-directory filename)
+              (delete-directory filename nil trash)
               (setq deleted-p t)
               (throw 'end nil))
             (when (funcall neo-confirm-delete-directory-recursively
@@ -2021,11 +2022,11 @@ If the current node is the first node then the last node is selected."
                              (format "kill buffers for files in directory %S?"
                                      filename))
                 (neo-util--kill-buffers-for-path filename))
-              (delete-directory filename t)
+              (delete-directory filename t trash)
               (setq deleted-p t)))
         ;; delete file
         (progn
-          (delete-file filename)
+          (delete-file filename trash)
           (when buffer
             (kill-buffer-ask buffer))
           (setq deleted-p t))))
