@@ -198,6 +198,11 @@ window."
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-reset-size-on-open nil
+  "*If non-nil, the width of the noetree window will be reseted every time a file is open."
+  :type 'boolean
+  :group 'neotree)
+
 (defcustom neo-theme 'classic
   "*The tree style to display.
 `classic' use icon to display, it only it suitable for GUI mode.
@@ -809,8 +814,9 @@ The description of ARG is in `neotree-enter'."
   (when (eq (safe-length (window-list)) 1)
     (neo-buffer--with-resizable-window
      (split-window-horizontally)))
-  (neo-global--when-window
-    (neo-window--zoom 'minimize))
+  (when neo-reset-size-on-open
+    (neo-global--when-window
+      (neo-window--zoom 'minimize)))
   ;; select target window
   (cond
    ;; select window with winum
@@ -2111,14 +2117,14 @@ automatically."
   "Show the NeoTree window."
   (interactive)
   (let ((cw (selected-window))
-         (path (buffer-file-name)))  ;; save current window and buffer
+        (path (buffer-file-name)))  ;; save current window and buffer
     (if neo-smart-open
-      (progn
-        (when (and (fboundp 'projectile-project-p)
-              (projectile-project-p)
-              (fboundp 'projectile-project-root))
-          (neotree-dir (projectile-project-root)))
-        (neotree-find path))
+        (progn
+          (when (and (fboundp 'projectile-project-p)
+                     (projectile-project-p)
+                     (fboundp 'projectile-project-root))
+            (neotree-dir (projectile-project-root)))
+          (neotree-find path))
       (neo-global--open))
     (neo-global--select-window)
     (when neo-toggle-window-keep-p
