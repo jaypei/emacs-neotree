@@ -381,7 +381,7 @@ This variable is used in `neo-vc-for-node' when
   :type 'boolean
   :group 'neotree)
 
-(defcustom neo-force-change-root nil
+(defcustom neo-force-change-root t
   "If not nil, do not prompt when switching root."
   :type 'boolean
   :group 'neotree)
@@ -777,7 +777,8 @@ If INIT-P is non-nil and global NeoTree buffer not exists, then create it."
 (defun neo-global--do-autorefresh ()
   "Do auto refresh."
   (interactive)
-  (when (and neo-autorefresh (neo-global--window-exists-p))
+  (when (and neo-autorefresh (neo-global--window-exists-p)
+             (buffer-file-name))
     (neotree-refresh t)))
 
 (defun neo-global--open ()
