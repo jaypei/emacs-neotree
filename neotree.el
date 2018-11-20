@@ -655,6 +655,7 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "C-c C-f") 'find-file-other-window)
     (define-key map (kbd "C-c C-c") 'neotree-change-root)
     (define-key map (kbd "C-c c")   'neotree-dir)
+    (define-key map (kbd "C-c C-a")  'neotree-collapse-all)
     (cond
      ((eq neo-keymap-style 'default)
       (define-key map (kbd "C-c C-n") 'neotree-create-node)
@@ -2088,6 +2089,15 @@ If the current node is the first node then the last node is selected."
         (neo-window--zoom 'maximize)
       (neo-window--zoom 'minimize))))
 
+(defun neotree-collapse-all ()
+  (interactive)
+  "Collapse all expanded folders in the neotree buffer"
+  (setq list-of-expanded-folders neo-buffer--expanded-node-list)
+  (dolist (folder list-of-expanded-folders)
+    (neo-buffer--toggle-expand folder)
+    (neo-buffer--refresh t)
+    )
+  )
 ;;;###autoload
 (defun neotree-projectile-action ()
   "Integration with `Projectile'.
