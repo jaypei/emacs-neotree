@@ -1533,7 +1533,7 @@ If SAVE-POS-P is non-nil, it will be auto save current line number."
        (setq default-directory (neo-path--updir btn-full-path)))
     :dir-fn
     '(lambda (path _)
-       (setq default-directory path)))))
+       (setq default-directory (file-name-as-directory path))))))
 
 (defun neo-buffer--get-button-current-line ()
   "Return the first button in current line."
