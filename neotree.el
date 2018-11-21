@@ -1148,8 +1148,7 @@ Return nil if DIR is not an existing directory."
   (let ((nfile (neo-path--strip file))
         (ndir (neo-path--strip dir)))
     (setq ndir (concat ndir "/"))
-    (cl-some (lambda (n) (file-equal-p (concat (file-truename ndir) nfile) n))
-             (mapc 'file-truename (directory-files-recursively ndir ".*")))))
+    (file-in-directory-p nfile ndir)))
 
 (defun neo-util--kill-buffers-for-path (path)
   "Kill all buffers for files in PATH."
