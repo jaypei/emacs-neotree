@@ -765,7 +765,9 @@ If INIT-P is non-nil and global NeoTree buffer not exists, then create it."
   "Return non-nil if PATH in root dir."
   (neo-global--with-buffer
     (and (not (null neo-buffer--start-node))
-         (neo-path--file-in-directory-p path neo-buffer--start-node))))
+         (or
+          (string-prefix-p neo-buffer--start-node path)
+          (neo-path--file-in-directory-p path neo-buffer--start-node)))))
 
 (defun neo-global--alone-p ()
   "Check whether the global neotree window is alone with some other window."
@@ -1837,14 +1839,14 @@ The children of PATH will have state STATE."
       (neo-buffer--set-expand node state)
       (neo--expand-recursive node state ))))
 
-(defun neo-open-dir-recursive (full-path &optional arg)  
+(defun neo-open-dir-recursive (full-path &optional arg)
   "Toggle fold a directory node recursively.
 
 The children of the node will also be opened recursively.
 FULL-PATH is the path of the directory.
 ARG is ignored."
   (if neo-click-changes-root
-      (neotree-change-root)    
+      (neotree-change-root)
     (let ((new-state (neo-buffer--toggle-expand full-path))
           (children (car (neo-buffer--get-nodes full-path))))
       (dolist (node children)
@@ -2223,4 +2225,3 @@ which is used to fix issue #209.
 
 (provide 'neotree)
 ;;; neotree.el ends here
-
