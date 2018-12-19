@@ -207,14 +207,16 @@ window."
   "*The tree style to display.
 `classic' use icon to display, it only it suitable for GUI mode.
 `ascii' is the simplest style, it will use +/- to display the fold state,
-it suitable for terminal.
+it is suitable for terminal.
 `arrow' use unicode arrow.
+`emoji' use emojis as icons, it is suitable for terminal.
 `nerd' use the nerdtree indentation mode and arrow."
   :group 'neotree
   :type '(choice (const classic)
                  (const ascii)
                  (const arrow)
                  (const icons)
+                 (const emoji)
                  (const nerd)))
 
 (defcustom neo-mode-line-type 'neotree
@@ -1237,12 +1239,70 @@ Return nil if DIR is not an existing directory."
                  'xpm nil :ascent 'center :mask '(heuristic t)))
     image))
 
+;; create neo-emoji-icon-of-file
+(defvar neo-emoji-icons-map
+      '
+  (
+   (".cfg" . "🔧")
+   (".conf" . "🔧")
+   (".el" . "🐏")
+   (".go" . "🐭")
+   (".ini" . "🔧")
+   (".java" . "☕️")
+   (".jpeg" . "🌄")
+   (".jpg" . "🌄")
+   (".key" . "🔒")
+   (".md" . "📘")
+   (".mp3" . "🔈")
+   (".ocaml" . "🐪")
+   (".pdf" . "📰")
+   (".php" . "🐘")
+   (".png" . "🌄")
+   (".pubkey" . "🔑")
+   (".py" . "🐍")
+   (".rb" . "🔺")
+   (".rst" . "📗")
+   (".sh" . "🐚")
+   (".sls" . "🧂")
+   (".text" . "📝")
+   (".txt" . "📝")
+   (".vbox" . "💻")
+   (".wav" . "🔈")
+   (".yaml" . "🔧")
+   (".yml" . "🔧")
+   (".zsh" . "🐚")
+   ("Dockerfile" . "🐋")
+   ("LICENSE" . "📕")
+   ("Makefile" . "🔧")
+   ("README" . "📕")
+   ("Vagrantfile" . "💻")
+   )
+  )
+
+(defun neo-emoji-get-extension (filename)
+  "Return the extension of 'FILENAME'.
+The extension is defined as the substring after the last dot, last dot included.
+If no extension can be found, return the whole 'FILENAME'."
+  (let ((extension (file-name-extension filename t)))
+    (if (string-blank-p extension) filename extension))
+  )
+
+(defun neo-emoji-icon-for-dir (dirname direction)
+  "Return a string with an emoji icon for 'DIRNAME' depending  on 'DIRECTION'."
+  (if (string= direction "open") "📂" "📁"))
+
+(defun neo-emoji-icon-for-file (filename)
+  "Return an icon for `FILENAME` depending of its extension."
+  (let ((emoji (cdr (assoc (neo-emoji-get-extension filename) neo-emoji-icons-map))))
+    (if emoji emoji "📄"))
+   )
+
 (defun neo-buffer--insert-fold-symbol (name &optional node-name)
   "Write icon by NAME, the icon style affected by neo-theme.
 `open' write opened folder icon.
 `close' write closed folder icon.
 `leaf' write leaf icon.
-Optional NODE-NAME is used for the `icons' theme"
+Optional NODE-NAME is used for the `icons' and `emoji' themes"
   (let ((n-insert-image (lambda (n)
                           (insert-image (neo-buffer--get-icon n))))
         (n-insert-symbol (lambda (n)
@@ -1260,6 +1320,10 @@ Optional NODE-NAME is used for the `icons' theme"
       (or (and (equal name 'open)  (funcall n-insert-symbol "▾ "))
           (and (equal name 'close) (funcall n-insert-symbol "▸ "))
           (and (equal name 'leaf)  (funcall n-insert-symbol "  "))))
+     ((equal neo-theme 'emoji)
+      (or (and (equal name 'open)  (insert (neo-emoji-icon-for-dir (directory-file-name node-name) "open")))
+          (and (equal name 'close) (insert (neo-emoji-icon-for-dir (directory-file-name node-name) "close")))
+          (and (equal name 'leaf) (insert (neo-emoji-icon-for-file node-name)))))
      ((and (display-graphic-p) (equal neo-theme 'icons))
       (unless (require 'all-the-icons nil 'noerror)
         (error "Package `all-the-icons' isn't installed"))
