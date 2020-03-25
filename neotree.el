@@ -1818,7 +1818,8 @@ the directory instead of showing the directory contents."
 
 FULL-PATH is the path of the directory.
 ARG is ignored."
-  (if neo-click-changes-root
+  (if (or neo-click-changes-root
+          (equal full-path (neo-path--updir neo-buffer--start-node)))
       (neotree-change-root)
     (progn
       (let ((new-state (neo-buffer--toggle-expand full-path)))
