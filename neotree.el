@@ -1837,14 +1837,14 @@ The children of PATH will have state STATE."
       (neo-buffer--set-expand node state)
       (neo--expand-recursive node state ))))
 
-(defun neo-open-dir-recursive (full-path &optional arg)  
+(defun neo-open-dir-recursive (full-path &optional arg)
   "Toggle fold a directory node recursively.
 
 The children of the node will also be opened recursively.
 FULL-PATH is the path of the directory.
 ARG is ignored."
   (if neo-click-changes-root
-      (neotree-change-root)    
+      (neotree-change-root)
     (let ((new-state (neo-buffer--toggle-expand full-path))
           (children (car (neo-buffer--get-nodes full-path))))
       (dolist (node children)
@@ -2223,4 +2223,3 @@ which is used to fix issue #209.
 
 (provide 'neotree)
 ;;; neotree.el ends here
-
