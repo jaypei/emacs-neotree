@@ -31,7 +31,7 @@
 ;; Type M-x neotree to start.
 ;;
 ;; To set options for NeoTree, type M-x customize, then select
-;; Applications, NeoTree.
+;; Files, NeoTree.
 ;;
 
 ;;; Code:
