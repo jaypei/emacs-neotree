@@ -707,7 +707,8 @@ The car of the pair will store fullpath, and cdr will store line number.")
 
 (defun neo-global--window-exists-p ()
   "Return non-nil if neotree window exists."
-  (and (not (null (window-buffer neo-global--window)))
+  (and (window-valid-p neo-global--window)
+       (not (null (window-buffer neo-global--window)))
        (eql (window-buffer neo-global--window) (neo-global--get-buffer))))
 
 (defun neo-global--select-window ()
