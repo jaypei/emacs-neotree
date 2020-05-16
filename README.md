@@ -76,7 +76,7 @@ Only in Neotree Buffer:
 ## Configurations
 
 ### Theme config
-NeoTree provides following themes: *classic*(default) *ascii* *arrow* *icons* *nerd*. 
+NeoTree provides following themes: *classic*(default) *ascii* *arrow* *emoji* *icons* *nerd*.
 Theme can be configed by setting **neo-theme**. For example, use *icons* for window 
 system and *arrow* terminal.
 
@@ -90,6 +90,9 @@ system and *arrow* terminal.
 
 * all-the-icons theme screenshots  
 ![](screenshots/icons.png "neotree icons theme")
+
+* emoji theme screenshots
+![](screenshots/emoji.png "neotree emoji theme")
 
 ## More documentation
 
