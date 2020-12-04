@@ -1219,6 +1219,22 @@ Return nil if DIR is not an existing directory."
             ))))
     rlist))
 
+(defun neo-get-collapse-node (node)
+  (condition-case nil
+      (let ((entries (cl-remove-if
+                      (lambda (file)
+                        (or
+                         (equal (file-name-nondirectory (directory-file-name file)) ".")
+                         (equal (file-name-nondirectory (directory-file-name file)) "..")))
+                      (directory-files node t))))
+        (if (and (= (length entries) 1)
+                 (file-directory-p (car entries)))
+            (neo-get-collapse-node (car entries))
+          node))
+    ('file-error
+     (message "Walk directory %S failed." node)
+     node)))
+
 ;;
 ;; Buffer methods
 ;;
@@ -1390,8 +1406,8 @@ PATH is value."
       node-name))
    (t nil)))
 
-(defun neo-buffer--insert-dir-entry (node depth expanded)
-  (let ((node-short-name (neo-path--file-short-name node)))
+(defun neo-buffer--insert-dir-entry (node depth expanded &optional short-name)
+  (let ((node-short-name (or short-name (neo-path--file-short-name node))))
     (insert-char ?\s (* (- depth 1) 2)) ; indent
     (when (memq 'char neo-vc-integration)
       (insert-char ?\s 2))
@@ -1496,9 +1512,15 @@ Return the new expand state for NODE (t for expanded, nil for collapsed)."
          (leafs (cdr contents))
          (default-directory path))
     (dolist (node nodes)
-      (let ((expanded (neo-buffer--expanded-node-p node)))
+      (let* ((collapse-node (neo-get-collapse-node node))
+             (expanded (neo-buffer--expanded-node-p collapse-node))
+             (collapsed (> (length collapse-node) (length node)))
+             (short-name (if collapsed
+                             (substring collapse-node (1+ (length (neo-path--updir node))))
+                           nil))
+             (node (if collapsed collapse-node node)))
         (neo-buffer--insert-dir-entry
-         node depth expanded)
+         node depth expanded short-name)
         (if expanded (neo-buffer--insert-tree (concat node "/") (+ depth 1)))))
     (dolist (leaf leafs)
       (neo-buffer--insert-file-entry leaf depth))))
