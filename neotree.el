@@ -404,6 +404,11 @@ By default it is xdg-open."
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-auto-forward-on-open-dir t
+  "If not nil, forwards cursor to first file when opening directory."
+  :type 'boolean
+  :group 'neotree)
+
 ;;
 ;; Faces
 ;;
@@ -1824,7 +1829,7 @@ ARG is ignored."
       (let ((new-state (neo-buffer--toggle-expand full-path)))
         (neo-buffer--refresh t)
         (when neo-auto-indent-point
-          (when new-state (forward-line 1))
+          (if neo-auto-forward-on-open-dir (when new-state (forward-line 1)))
           (neo-point-auto-indent))))))
 
 
