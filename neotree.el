@@ -2133,7 +2133,8 @@ automatically."
         (progn
           (when (and (fboundp 'projectile-project-p)
                      (projectile-project-p)
-                     (fboundp 'projectile-project-root))
+                     (fboundp 'projectile-project-root)
+                     (setq path (file-truename path)))
             (neotree-dir (projectile-project-root)))
           (neotree-find path))
       (neo-global--open))
