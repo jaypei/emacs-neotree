@@ -2131,10 +2131,18 @@ automatically."
         (path (buffer-file-name)))  ;; save current window and buffer
     (if neo-smart-open
         (progn
-          (when (and (fboundp 'projectile-project-p)
-                     (projectile-project-p)
-                     (fboundp 'projectile-project-root))
-            (neotree-dir (projectile-project-root)))
+          (cond ((and (fboundp 'projectile-project-p)
+                      (projectile-project-p)
+                      (fboundp 'projectile-project-root))
+                 (neotree-dir (projectile-project-root)))
+                (t
+                 (neotree-dir
+                  (project-root
+                   (or (project--find-in-directory default-directory)
+                       (progn
+                         (message "Using `%s' as a transient project root"
+                                  default-directory)
+                         (cons 'transient default-directory)))))))
           (neotree-find path))
       (neo-global--open))
     (neo-global--select-window)
