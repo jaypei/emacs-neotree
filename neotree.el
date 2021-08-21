@@ -250,6 +250,12 @@ the mode-line format."
   :type 'boolean
   :group 'neotree)
 
+(defcustom neo-autorefresh-idle-time 2
+  "*If neotree autorefresh is enabled, the neotree buffer will auto refresh
+when Emacs is idle for `neo-autorefresh-idle-time` seconds."
+  :type 'integer
+  :group 'neotree)
+
 (defcustom neo-window-width 25
   "*Specifies the width of the NeoTree window."
   :type 'integer
@@ -863,7 +869,7 @@ The description of ARG is in `neotree-enter'."
     (cancel-timer neo-global--autorefresh-timer))
   (when neo-autorefresh
     (setq neo-global--autorefresh-timer
-          (run-with-idle-timer 2 10 'neo-global--do-autorefresh)))
+          (run-with-idle-timer neo-autorefresh-idle-time 10 'neo-global--do-autorefresh)))
   (setq neo-global--buffer (get-buffer neo-buffer-name))
   (setq neo-global--window (get-buffer-window
                             neo-global--buffer))
