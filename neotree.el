@@ -148,29 +148,29 @@ buffer-local wherever it is set."
 ;;
 
 (defgroup neotree nil
-  "Options for neotree."
+  "Options for NeoTree."
   :prefix "neo-"
   :group 'files)
 
 (defgroup neotree-vc-options nil
-  "Neotree-VC customizations."
+  "NeoTree-VC customizations."
   :prefix "neo-vc-"
   :group 'neotree
   :link '(info-link "(neotree)Configuration"))
 
 (defgroup neotree-confirmations nil
-  "Neotree confirmation customizations."
+  "NeoTree confirmation customizations."
   :prefix "neo-confirm-"
   :group 'neotree)
 
 (defcustom neo-window-position 'left
-  "*The position of NeoTree window."
+  "*The alignment of the NeoTree window"
   :group 'neotree
   :type '(choice (const left)
                  (const right)))
 
 (defcustom neo-display-action '(neo-default-display-fn)
-  "*Action to use for displaying NeoTree window.
+  "*Action to use for displaying the NeoTree window.
 If you change the action so it doesn't use
 `neo-default-display-fn', then other variables such as
 `neo-window-position' won't be respected when opening NeoTree
@@ -179,37 +179,37 @@ window."
   :group 'neotree)
 
 (defcustom neo-create-file-auto-open nil
-  "*If non-nil, the file will auto open when created."
+  "*If set, the file will automatically open when created."
   :type 'boolean
   :group 'neotree)
 
 (defcustom neo-banner-message nil
-  "*The banner message of neotree window."
+  "*The NeoTree window's banner message
+displayed on the first line of the window"
   :type 'string
   :group 'neotree)
 
 (defcustom neo-show-updir-line t
-  "*If non-nil, show the updir line (..)."
+  "*If set, displays the current directory and the parent directory."
   :type 'boolean
   :group 'neotree)
 
 (defcustom neo-show-slash-for-folder t
-  "*If non-nil, show the slash at the end of folder (folder/)"
+  "If set, displays trailing slash on directories."
   :type 'boolean
   :group 'neotree)
 
 (defcustom neo-reset-size-on-open nil
-  "*If non-nil, the width of the noetree window will be reseted every time a file is open."
+  "*If set, the width of the noetree window will be reset each time a file is open."
   :type 'boolean
   :group 'neotree)
 
 (defcustom neo-theme 'classic
-  "*The tree style to display.
-`classic' use icon to display, it only it suitable for GUI mode.
-`ascii' is the simplest style, it will use +/- to display the fold state,
-it suitable for terminal.
-`arrow' use unicode arrow.
-`nerd' use the nerdtree indentation mode and arrow."
+  "*How NeoTree renders the tree itself.
+`classic' uses images to represent files and folders.
+`ascii' uses '+' and '-' for directories.
+`arrow' uses '▸' and '▾' for directories.
+`nerd' uses nerdtree-style indentation."
   :group 'neotree
   :type '(choice (const classic)
                  (const ascii)
@@ -236,17 +236,18 @@ the mode-line format."
   :group 'neotree)
 
 (defcustom neo-smart-open nil
-  "*If non-nil, every time when the neotree window is opened, it will try to find current file and jump to node."
+  "*If set, the cursor will attempt to jump to the node
+representing the currently open file"
   :type 'boolean
   :group 'neotree)
 
 (defcustom neo-show-hidden-files nil
-  "*If non-nil, the hidden files are shown by default."
+  "*If set, hidden files are displayed in the tree."
   :type 'boolean
   :group 'neotree)
 
 (defcustom neo-autorefresh nil
-  "*If non-nil, the neotree buffer will auto refresh."
+  "*If set, the neotree buffer will refresh automatically."
   :type 'boolean
   :group 'neotree)
 
@@ -256,7 +257,7 @@ the mode-line format."
   :group 'neotree)
 
 (defcustom neo-window-fixed-size t
-  "*If the neotree windows is fixed, it won't be resize when rebalance windows."
+  "*If set, NeoTree's window will not change size."
   :type 'boolean
   :group 'neotree)
 
@@ -282,12 +283,12 @@ width (including the indent) larger than `neo-window-width', and
                  (const none)))
 
 (defcustom neo-click-changes-root nil
-  "*If non-nil, clicking on a directory will change the current root to the directory."
+  "*If set, clicking on a directory will change the tree's root."
   :type 'boolean
   :group 'neotree)
 
 (defcustom neo-auto-indent-point nil
-  "*If non-nil the point is autmotically put on the first letter of a node."
+  "*If set, the cursor follows the indent of the tree."
   :type 'boolean
   :group 'neotree)
 
@@ -298,17 +299,17 @@ width (including the indent) larger than `neo-window-width', and
   :group 'neotree)
 
 (defcustom neo-enter-hook nil
-  "Functions to run if enter node occured."
+  "The hooks called when entering a node of the tree."
   :type 'hook
   :group 'neotree)
 
 (defcustom neo-after-create-hook nil
-  "Hooks called after creating the neotree buffer."
+  "Hooks called after creating the NeoTree buffer."
   :type 'hook
   :group 'neotree)
 
 (defcustom neo-vc-integration nil
-  "If non-nil, show VC status."
+  "If set, show the current status of the VCS in the NeoTree window."
   :group 'neotree-vc
   :type '(set (const :tag "Use different faces" face)
               (const :tag "Use different characters" char)))
