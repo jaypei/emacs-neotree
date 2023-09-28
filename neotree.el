@@ -2108,7 +2108,7 @@ If the current node is the first node then the last node is selected."
     (neo-window--zoom 'zoom-out)))
 
 (defun neotree-zoom-reset ()
-  "Expands the NeoTree window."
+  "Resets the NeoTree window."
   (interactive)
   (neo-global--with-window
     (neo-window--zoom 'minimize)))
