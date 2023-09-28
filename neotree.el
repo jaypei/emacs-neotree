@@ -624,9 +624,9 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "RET")     (neotree-make-executor
                                      :file-fn 'neo-open-file
                                      :dir-fn  'neo-open-dir))
-    (define-key map (kbd "|")       (neotree-make-executor
+    (define-key map (kbd "v")       (neotree-make-executor
                                      :file-fn 'neo-open-file-vertical-split))
-    (define-key map (kbd "-")       (neotree-make-executor
+    (define-key map (kbd "h")       (neotree-make-executor
                                      :file-fn 'neo-open-file-horizontal-split))
     (define-key map (kbd "a")       (neotree-make-executor
                                      :file-fn 'neo-open-file-ace-window))
@@ -642,6 +642,9 @@ The car of the pair will store fullpath, and cdr will store line number.")
     (define-key map (kbd "n")       'neotree-next-line)
     (define-key map (kbd "C-n")     'neotree-next-line)
     (define-key map (kbd "A")       'neotree-stretch-toggle)
+    (define-key map (kbd "-")       'neotree-zoom-in)
+    (define-key map (kbd "=")       'neotree-zoom-out)
+    (define-key map (kbd "0")       'neotree-zoom-reset)
     (define-key map (kbd "U")       'neotree-select-up-node)
     (define-key map (kbd "D")       'neotree-select-down-node)
     (define-key map (kbd "H")       'neotree-hidden-file-toggle)
@@ -2091,6 +2094,24 @@ If the current node is the first node then the last node is selected."
     (if (neo-window--minimize-p)
         (neo-window--zoom 'maximize)
       (neo-window--zoom 'minimize))))
+
+(defun neotree-zoom-in ()
+  "Shrinks the NeoTree window."
+  (interactive)
+  (neo-global--with-window
+    (neo-window--zoom 'zoom-in)))
+
+(defun neotree-zoom-out ()
+  "Expands the NeoTree window."
+  (interactive)
+  (neo-global--with-window
+    (neo-window--zoom 'zoom-out)))
+
+(defun neotree-zoom-reset ()
+  "Expands the NeoTree window."
+  (interactive)
+  (neo-global--with-window
+    (neo-window--zoom 'minimize)))
 
 (defun neotree-collapse-all ()
   (interactive)
