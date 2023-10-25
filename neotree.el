@@ -1274,9 +1274,7 @@ Optional NODE-NAME is used for the `icons' theme"
                                (nerd-icons-octicon "nf-oct-chevron_right" :v-adjust 0.1 :face neo-expand-btn-face)
                                (nerd-icons-icon-for-dir (directory-file-name node-name) :v-adjust 0.1))))
           (and (equal name 'leaf)
-               (insert (format "\t\t\t%s "
-                               ;;(nerd-icons-octicon "nf-oct-dot_fill")
-                               (nerd-icons-icon-for-file node-name :v-adjust 0.1))))))
+               (insert (format "\t\t\t%s " (nerd-icons-icon-for-file node-name :v-adjust 0.1))))))
 
      ((and (display-graphic-p) (equal neo-theme 'icons))
       (unless (require 'all-the-icons nil 'noerror)
