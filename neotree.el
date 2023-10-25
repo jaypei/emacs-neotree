@@ -1260,6 +1260,24 @@ Optional NODE-NAME is used for the `icons' theme"
       (or (and (equal name 'open)  (funcall n-insert-symbol "▾ "))
           (and (equal name 'close) (funcall n-insert-symbol "▸ "))
           (and (equal name 'leaf)  (funcall n-insert-symbol "  "))))
+
+     ((equal neo-theme 'nerd-icons)
+      (unless (require 'nerd-icons nil 'noerror)
+        (error "Package `nerd-icons' isn't installed"))
+      (setq-local tab-width 1)
+      (or (and (equal name 'open)
+               (insert (format "%s\t%s "
+                               (nerd-icons-octicon "nf-oct-chevron_down" :v-adjust 0.1 :face neo-expand-btn-face)
+                               (nerd-icons-icon-for-dir (directory-file-name node-name) :v-adjust 0.1))))
+          (and (equal name 'close)
+               (insert (format "%s\t%s "
+                               (nerd-icons-octicon "nf-oct-chevron_right" :v-adjust 0.1 :face neo-expand-btn-face)
+                               (nerd-icons-icon-for-dir (directory-file-name node-name) :v-adjust 0.1))))
+          (and (equal name 'leaf)
+               (insert (format "\t\t\t%s "
+                               ;;(nerd-icons-octicon "nf-oct-dot_fill")
+                               (nerd-icons-icon-for-file node-name :v-adjust 0.1))))))
+
      ((and (display-graphic-p) (equal neo-theme 'icons))
       (unless (require 'all-the-icons nil 'noerror)
         (error "Package `all-the-icons' isn't installed"))
