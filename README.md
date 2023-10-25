@@ -76,7 +76,7 @@ Only in Neotree Buffer:
 ## Configurations
 
 ### Theme config
-NeoTree provides following themes: *classic*(default) *ascii* *arrow* *icons* *nerd*. 
+NeoTree provides following themes: *classic*(default) *ascii* *arrow* *icons* *nerd* *nerd-icons*.
 Theme can be configed by setting **neo-theme**. For example, use *icons* for window 
 system and *arrow* terminal.
 
@@ -84,7 +84,13 @@ system and *arrow* terminal.
 (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
 ```
 
-**Note**: For users who want to use the `icons` theme. Pls make sure you have installed the
+**Note**:
+
+For user who want to use the `nerd-icons` theme. Pls make sure you have installed the
+[nerd-icons](https://github.com/rainstormstudio/nerd-icons.el) package and its
+[fonts](https://github.com/rainstormstudio/nerd-icons.el#installing-fonts).
+
+For users who want to use the `icons` theme. Pls make sure you have installed the
 [all-the-icons](https://github.com/domtronn/all-the-icons.el) package and its
 [fonts](https://github.com/domtronn/all-the-icons.el/tree/master/fonts).
 

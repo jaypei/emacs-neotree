@@ -209,12 +209,16 @@ window."
 `ascii' is the simplest style, it will use +/- to display the fold state,
 it suitable for terminal.
 `arrow' use unicode arrow.
-`nerd' use the nerdtree indentation mode and arrow."
+`nerd' use the nerdtree indentation mode and arrow.
+`nerd-icons' use `nerd-icons', requires that to be installed.
+`icons' use `all-the-icons', requires that to be installed.
+"
   :group 'neotree
   :type '(choice (const classic)
                  (const ascii)
                  (const arrow)
                  (const icons)
+                 (const nerd-icons)
                  (const nerd)))
 
 (defcustom neo-mode-line-type 'neotree
