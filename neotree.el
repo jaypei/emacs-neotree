@@ -209,12 +209,16 @@ window."
 `ascii' is the simplest style, it will use +/- to display the fold state,
 it suitable for terminal.
 `arrow' use unicode arrow.
-`nerd' use the nerdtree indentation mode and arrow."
+`nerd' use the nerdtree indentation mode and arrow.
+`nerd-icons' use `nerd-icons', requires that to be installed.
+`icons' use `all-the-icons', requires that to be installed.
+"
   :group 'neotree
   :type '(choice (const classic)
                  (const ascii)
                  (const arrow)
                  (const icons)
+                 (const nerd-icons)
                  (const nerd)))
 
 (defcustom neo-mode-line-type 'neotree
@@ -1260,6 +1264,22 @@ Optional NODE-NAME is used for the `icons' theme"
       (or (and (equal name 'open)  (funcall n-insert-symbol "▾ "))
           (and (equal name 'close) (funcall n-insert-symbol "▸ "))
           (and (equal name 'leaf)  (funcall n-insert-symbol "  "))))
+
+     ((equal neo-theme 'nerd-icons)
+      (unless (require 'nerd-icons nil 'noerror)
+        (error "Package `nerd-icons' isn't installed"))
+      (setq-local tab-width 1)
+      (or (and (equal name 'open)
+               (insert (format "%s\t%s "
+                               (nerd-icons-octicon "nf-oct-chevron_down" :v-adjust 0.1 :face neo-expand-btn-face)
+                               (nerd-icons-icon-for-dir (directory-file-name node-name) :v-adjust 0.1))))
+          (and (equal name 'close)
+               (insert (format "%s\t%s "
+                               (nerd-icons-octicon "nf-oct-chevron_right" :v-adjust 0.1 :face neo-expand-btn-face)
+                               (nerd-icons-icon-for-dir (directory-file-name node-name) :v-adjust 0.1))))
+          (and (equal name 'leaf)
+               (insert (format "\t\t\t%s " (nerd-icons-icon-for-file node-name :v-adjust 0.1))))))
+
      ((and (display-graphic-p) (equal neo-theme 'icons))
       (unless (require 'all-the-icons nil 'noerror)
         (error "Package `all-the-icons' isn't installed"))
