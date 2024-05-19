@@ -209,12 +209,15 @@ window."
 `ascii' is the simplest style, it will use +/- to display the fold state,
 it suitable for terminal.
 `arrow' use unicode arrow.
-`nerd' use the nerdtree indentation mode and arrow."
+`nerd' use the nerdtree indentation mode and arrow.
+`icons' use icons from `all-the-icons' when installed.
+`nerd-icons' use icons from `nerd-icons' when installed."
   :group 'neotree
   :type '(choice (const classic)
                  (const ascii)
                  (const arrow)
                  (const icons)
+                 (const nerd-icons)
                  (const nerd)))
 
 (defcustom neo-mode-line-type 'neotree
@@ -1237,6 +1240,12 @@ Return nil if DIR is not an existing directory."
                  'xpm nil :ascent 'center :mask '(heuristic t)))
     image))
 
+(defun neo--nerd-icons-icon-for-dir-with-chevron (dir &optional chevron padding)
+  (let ((icon (nerd-icons-icon-for-dir dir))
+        (chevron (if chevron (nerd-icons-octicon (format "nf-oct-chevron_%s" chevron) :height 0.8 :v-adjust -0.1) ""))
+        (padding (or padding "\t")))
+    (format "%s%s%s%s%s" padding chevron padding icon padding)))
+
 (defun neo-buffer--insert-fold-symbol (name &optional node-name)
   "Write icon by NAME, the icon style affected by neo-theme.
 `open' write opened folder icon.
@@ -1267,6 +1276,13 @@ Optional NODE-NAME is used for the `icons' theme"
       (or (and (equal name 'open)  (insert (all-the-icons-icon-for-dir-with-chevron (directory-file-name node-name) "down")))
           (and (equal name 'close) (insert (all-the-icons-icon-for-dir-with-chevron (directory-file-name node-name) "right")))
           (and (equal name 'leaf)  (insert (format "\t\t\t%s\t" (all-the-icons-icon-for-file node-name))))))
+     ((and (display-graphic-p) (equal neo-theme 'nerd-icons))
+      (unless (require 'nerd-icons nil 'noerror)
+        (error "Package `nerd-icons' isn't installed"))
+      (setq-local tab-width 1)
+      (or (and (equal name 'open)  (insert (neo--nerd-icons-icon-for-dir-with-chevron (directory-file-name node-name) "down")))
+          (and (equal name 'close) (insert (neo--nerd-icons-icon-for-dir-with-chevron (directory-file-name node-name) "right")))
+          (and (equal name 'leaf)  (insert (format "\t\t\t%s\t" (nerd-icons-icon-for-file node-name))))))
      (t
       (or (and (equal name 'open)  (funcall n-insert-symbol "- "))
           (and (equal name 'close) (funcall n-insert-symbol "+ ")))))))
