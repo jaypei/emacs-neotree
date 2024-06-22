@@ -1276,7 +1276,7 @@ Optional NODE-NAME is used for the `icons' theme"
       (or (and (equal name 'open)  (insert (all-the-icons-icon-for-dir-with-chevron (directory-file-name node-name) "down")))
           (and (equal name 'close) (insert (all-the-icons-icon-for-dir-with-chevron (directory-file-name node-name) "right")))
           (and (equal name 'leaf)  (insert (format "\t\t\t%s\t" (all-the-icons-icon-for-file node-name))))))
-     ((and (display-graphic-p) (equal neo-theme 'nerd-icons))
+     ((equal neo-theme 'nerd-icons)
       (unless (require 'nerd-icons nil 'noerror)
         (error "Package `nerd-icons' isn't installed"))
       (setq-local tab-width 1)
