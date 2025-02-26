@@ -76,7 +76,14 @@ Only in Neotree Buffer:
 ## Configurations
 
 ### Theme config
-NeoTree provides following themes: *classic*(default) *ascii* *arrow* *icons* *nerd*. 
+NeoTree provides following themes: 
+- *classic* (default)
+- *ascii*
+- *arrow*
+- *icons*[^1]
+- *nerd-icons*[^2]
+- *nerd*
+
 Theme can be configed by setting **neo-theme**. For example, use *icons* for window 
 system and *arrow* terminal.
 
@@ -84,9 +91,6 @@ system and *arrow* terminal.
 (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
 ```
 
-**Note**: For users who want to use the `icons` theme. Pls make sure you have installed the
-[all-the-icons](https://github.com/domtronn/all-the-icons.el) package and its
-[fonts](https://github.com/domtronn/all-the-icons.el/tree/master/fonts).
 
 * all-the-icons theme screenshots  
 ![](screenshots/icons.png "neotree icons theme")
@@ -96,3 +100,12 @@ system and *arrow* terminal.
 EmacsWiki:
 [En](http://www.emacswiki.org/emacs/NeoTree)
 [中文版](http://www.emacswiki.org/emacs/NeoTree_%E4%B8%AD%E6%96%87wiki)
+
+
+[^1]: For users who want to use the `icons` theme. Please make sure you have installed the
+[all-the-icons](https://github.com/domtronn/all-the-icons.el) package and its
+[fonts](https://github.com/domtronn/all-the-icons.el/tree/master/fonts).
+
+[^2]: For users who want to use the `nerd-icons` theme. Please make sure you have installed the
+[nerd-icons](https://github.com/rainstormstudio/nerd-icons.el?tab=readme-ov-file) package and
+one of its [fonts](https://www.nerdfonts.com/).
