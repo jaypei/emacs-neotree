@@ -1991,7 +1991,7 @@ If the current node is the first node then the last node is selected."
   (interactive
    (let* ((current-dir (neo-buffer--get-filename-current-line neo-buffer--start-node))
           (current-dir (neo-path--match-path-directory current-dir))
-          (filename (read-file-name "Filename:" current-dir)))
+          (filename (read-file-name "Filename: " current-dir)))
      (if (file-directory-p filename)
          (setq filename (concat filename "/")))
      (list filename)))
