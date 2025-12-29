@@ -2088,12 +2088,23 @@ If the current node is the first node then the last node is selected."
     (save-excursion
       (let ((cw (selected-window)))  ;; save current window
         (if is-auto-refresh
-            (let ((origin-buffer-file-name (buffer-file-name)))
+            (let ((origin-buffer-file-name (buffer-file-name))
+                  (project-root nil))
+              ;; Try projectile first
               (when (and (fboundp 'projectile-project-p)
                          (projectile-project-p)
                          (fboundp 'projectile-project-root))
-                (neo-global--open-dir (projectile-project-root))
-                (neotree-find (projectile-project-root)))
+                (setq project-root (projectile-project-root)))
+              ;; Fall back to project.el
+              (when (and (not project-root)
+                         (fboundp 'project-current))
+                (let ((proj (project-current)))
+                  (when proj
+                    (setq project-root (project-root proj)))))
+              ;; Open the project root if found
+              (when project-root
+                (neo-global--open-dir project-root)
+                (neotree-find project-root))
               (neotree-find origin-buffer-file-name))
           (neo-buffer--refresh t t))
         (recenter)
